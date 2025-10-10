@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"my-mcp-server-52101023": {
+			"url": "https://api.ref.tools/mcp?apiKey=ref-dd7d1df1311f25727f48",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}
