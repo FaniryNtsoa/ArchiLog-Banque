@@ -1,8 +1,8 @@
 package com.banque.situationbancaire.ejb.remote;
 
-import com.banque.situationbancaire.dto.CompteCourantDTO;
-
+import com.banque.situationbancaire.entity.CompteCourant;
 import jakarta.ejb.Remote;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -13,38 +13,46 @@ public interface CompteCourantServiceRemote {
     
     /**
      * Crée un nouveau compte courant
-     * @param compteDTO Informations du compte
+     * @param compte Informations du compte
+     * @param idClient ID du client propriétaire
      * @return Le compte créé
      */
-    CompteCourantDTO creerCompte(CompteCourantDTO compteDTO);
+    CompteCourant creerCompte(CompteCourant compte, Long idClient);
     
     /**
      * Récupère un compte par son ID
      * @param idCompte ID du compte
      * @return Le compte trouvé ou null
      */
-    CompteCourantDTO getCompteParId(Long idCompte);
+    CompteCourant rechercherCompteParId(Long idCompte);
     
     /**
      * Récupère un compte par son numéro
      * @param numeroCompte Numéro du compte
      * @return Le compte trouvé ou null
      */
-    CompteCourantDTO getCompteParNumero(String numeroCompte);
+    CompteCourant rechercherCompteParNumero(String numeroCompte);
     
     /**
      * Récupère tous les comptes d'un client
      * @param idClient ID du client
      * @return Liste des comptes du client
      */
-    List<CompteCourantDTO> getComptesParClient(Long idClient);
+    List<CompteCourant> listerComptesParClient(Long idClient);
     
     /**
-     * Récupère le solde actuel d'un compte
+     * Calcule le solde actuel d'un compte (solde + tous les mouvements)
      * @param numeroCompte Numéro du compte
-     * @return Le solde actuel ou null si compte inexistant
+     * @return Le solde actuel calculé
      */
-    java.math.BigDecimal getSoldeActuel(String numeroCompte);
+    BigDecimal calculerSoldeActuel(String numeroCompte);
+    
+    /**
+     * Obtient les informations complètes d'un compte avec son solde
+     * @param numeroCompte Numéro du compte
+     * @return Les informations du compte
+     */
+    CompteCourant obtenirInfosCompte(String numeroCompte);
     
     /**
      * Ferme un compte
@@ -64,4 +72,11 @@ public interface CompteCourantServiceRemote {
      * @param numeroCompte Numéro du compte à débloquer
      */
     void debloquerCompte(String numeroCompte);
+    
+    /**
+     * Vérifie si un compte existe et est actif
+     * @param numeroCompte Numéro du compte
+     * @return true si le compte existe et est actif
+     */
+    boolean compteExisteEtActif(String numeroCompte);
 }

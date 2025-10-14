@@ -1,7 +1,7 @@
 package com.banque.situationbancaire.ejb.remote;
 
-import com.banque.situationbancaire.dto.OperationDTO;
-
+import com.banque.situationbancaire.entity.Mouvement;
+import com.banque.situationbancaire.entity.Virement;
 import jakarta.ejb.Remote;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,7 +20,7 @@ public interface OperationServiceRemote {
      * @param libelle Libellé de l'opération
      * @return L'opération créée
      */
-    OperationDTO deposer(String numeroCompte, BigDecimal montant, String libelle);
+    Mouvement effectuerDepot(String numeroCompte, BigDecimal montant, String libelle);
     
     /**
      * Effectue un retrait sur un compte
@@ -29,7 +29,7 @@ public interface OperationServiceRemote {
      * @param libelle Libellé de l'opération
      * @return L'opération créée
      */
-    OperationDTO retirer(String numeroCompte, BigDecimal montant, String libelle);
+    Mouvement effectuerRetrait(String numeroCompte, BigDecimal montant, String libelle);
     
     /**
      * Effectue un virement entre deux comptes
@@ -37,23 +37,46 @@ public interface OperationServiceRemote {
      * @param numeroCompteCrediteur Compte à créditer
      * @param montant Montant du virement
      * @param libelle Libellé du virement
-     * @return L'ID du virement créé
+     * @return Le virement créé
      */
-    Long virer(String numeroCompteDebiteur, String numeroCompteCrediteur, BigDecimal montant, String libelle);
+    Virement effectuerVirement(String numeroCompteDebiteur, String numeroCompteCrediteur, BigDecimal montant, String libelle);
     
     /**
-     * Récupère l'historique des opérations d'un compte
+     * Récupère l'historique des mouvements d'un compte
      * @param numeroCompte Numéro du compte
      * @param dateDebut Date de début (optionnel)
      * @param dateFin Date de fin (optionnel)
-     * @return Liste des opérations
+     * @return Liste des mouvements
      */
-    List<OperationDTO> getHistoriqueOperations(String numeroCompte, LocalDate dateDebut, LocalDate dateFin);
+    List<Mouvement> obtenirHistoriqueMouvements(String numeroCompte, LocalDate dateDebut, LocalDate dateFin);
     
     /**
-     * Récupère une opération par sa référence
-     * @param reference Référence de l'opération
-     * @return L'opération trouvée ou null
+     * Applique les frais de tenue de compte périodiques
+     * @param numeroCompte Numéro du compte
+     * @return Le mouvement de frais créé
      */
-    OperationDTO getOperationParReference(String reference);
+    Mouvement appliquerFraisTenueCompte(String numeroCompte);
+    
+    /**
+     * Calcule et applique les intérêts de découvert
+     * @param numeroCompte Numéro du compte
+     * @return Le mouvement d'intérêts créé (si applicable)
+     */
+    Mouvement appliquerInteretsDecouvert(String numeroCompte);
+    
+    /**
+     * Vérifie les plafonds et limites avant une opération
+     * @param numeroCompte Numéro du compte
+     * @param montant Montant de l'opération
+     * @param typeOperation Type d'opération (DEBIT/CREDIT)
+     * @return true si l'opération est autorisée
+     */
+    boolean verifierPlafonds(String numeroCompte, BigDecimal montant, String typeOperation);
+    
+    /**
+     * Récupère un mouvement par sa référence
+     * @param reference Référence du mouvement
+     * @return Le mouvement trouvé ou null
+     */
+    Mouvement rechercherMouvementParReference(String reference);
 }

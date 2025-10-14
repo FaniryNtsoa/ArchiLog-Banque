@@ -27,4 +27,10 @@ public class TypeCompteRepository {
     public Optional<TypeCompte> findById(Long id) {
         return Optional.ofNullable(em.find(TypeCompte.class, id));
     }
+
+    public Optional<TypeCompte> findByDefaut() {
+        TypedQuery<TypeCompte> query = em.createQuery(
+            "SELECT t FROM TypeCompte t WHERE t.parDefaut = true", TypeCompte.class);
+        return query.getResultList().stream().findFirst();
+    }
 }

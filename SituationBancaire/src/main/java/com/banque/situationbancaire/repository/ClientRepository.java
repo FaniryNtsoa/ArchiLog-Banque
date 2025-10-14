@@ -58,10 +58,28 @@ public class ClientRepository {
         }
     }
 
+    public Optional<Client> findByNumCin(String numCin) {
+        TypedQuery<Client> query = em.createQuery(
+            "SELECT c FROM Client c WHERE c.numCin = :numCin", Client.class);
+        query.setParameter("numCin", numCin);
+        return query.getResultList().stream().findFirst();
+    }
+
     public boolean existsByNumeroClient(String numeroClient) {
         TypedQuery<Long> query = em.createQuery(
             "SELECT COUNT(c) FROM Client c WHERE c.numeroClient = :numeroClient", Long.class);
         query.setParameter("numeroClient", numeroClient);
         return query.getSingleResult() > 0;
+    }
+
+    public Client update(Client client) {
+        return em.merge(client);
+    }
+
+    public void deleteById(Long id) {
+        Client client = em.find(Client.class, id);
+        if (client != null) {
+            em.remove(client);
+        }
     }
 }

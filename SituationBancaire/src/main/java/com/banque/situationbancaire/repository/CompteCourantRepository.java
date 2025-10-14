@@ -57,4 +57,15 @@ public class CompteCourantRepository {
             em.remove(em.merge(compte));
         }
     }
+
+    public CompteCourant update(CompteCourant compte) {
+        return em.merge(compte);
+    }
+
+    public void deleteById(Long id) {
+        CompteCourant compte = em.find(CompteCourant.class, id);
+        if (compte != null) {
+            em.remove(compte);
+        }
+    }
 }

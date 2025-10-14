@@ -1,4 +1,4 @@
 com\banque\centralisateur\filter\CorsFilter.class
 com\banque\centralisateur\config\ApplicationConfig.class
-com\banque\centralisateur\dto\ReponseDTO.class
+com\banque\centralisateur\config\RestApplication.class
 com\banque\centralisateur\client\SituationBancaireClient.class

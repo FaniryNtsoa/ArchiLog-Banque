@@ -67,4 +67,12 @@ public class MouvementRepository {
         query.setMaxResults(1);
         return query.getResultList().stream().findFirst();
     }
+
+    public java.math.BigDecimal calculerSoldeMouvements(Long compteId) {
+        TypedQuery<java.math.BigDecimal> query = em.createQuery(
+            "SELECT COALESCE(SUM(m.montant), 0) FROM Mouvement m WHERE m.compte.idCompte = :compteId", 
+            java.math.BigDecimal.class);
+        query.setParameter("compteId", compteId);
+        return query.getSingleResult();
+    }
 }

@@ -32,7 +32,6 @@ public class Client implements Serializable {
     private Long idClient;
 
     @Column(name = "numero_client", unique = true, nullable = false, length = 20)
-    @NotBlank(message = "Le numéro client est obligatoire")
     private String numeroClient;
 
     @Column(name = "nom", nullable = false, length = 100)
@@ -105,8 +104,27 @@ public class Client implements Serializable {
     @Builder.Default
     private List<CompteCourant> comptes = new ArrayList<>();
 
+    @PrePersist
+    protected void onCreate() {
+        if (this.numeroClient == null || this.numeroClient.isEmpty()) {
+            this.numeroClient = generateNumeroClient();
+        }
+        this.dateCreation = LocalDateTime.now();
+        this.dateModification = LocalDateTime.now();
+    }
+
     @PreUpdate
     protected void onUpdate() {
         this.dateModification = LocalDateTime.now();
+    }
+
+    /**
+     * Génère un numéro de client automatiquement
+     * Format: CLI + timestamp + 4 chiffres aléatoires
+     */
+    private String generateNumeroClient() {
+        long timestamp = System.currentTimeMillis();
+        int random = (int) (Math.random() * 9999);
+        return String.format("CLI%d%04d", timestamp, random);
     }
 }

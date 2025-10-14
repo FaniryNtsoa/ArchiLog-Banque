@@ -1,0 +1,110 @@
+# =========================
+# Java général
+# =========================
+*.class
+*.log
+*.ctxt
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# Fichiers compilés et temporaires
+*.out
+*.tmp
+*.swp
+*.bak
+*.DS_Store
+*.orig
+
+# =========================
+# Dossiers de build
+# =========================
+bin/
+build/
+target/
+out/
+dist/
+classes/
+generated/
+
+# =========================
+# IDE et outils
+# =========================
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# --- Eclipse ---
+.project
+.classpath
+.settings/
+.loadpath
+
+# --- NetBeans ---
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# --- VS Code ---
+.vscode/
+.history/
+.settings/
+
+# =========================
+# Maven / Gradle
+# =========================
+
+# Maven
+log/
+target/
+dependency-reduced-pom.xml
+release.properties
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# =========================
+# Système d’exploitation
+# =========================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.nfs*
+
+# =========================
+# Environnements & secrets
+# =========================
+.env
+*.env
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+secrets/
+credentials/
+config/
+
+texte.md
+texte.txt
