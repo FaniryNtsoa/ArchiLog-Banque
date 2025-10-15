@@ -1,4 +1,9 @@
-com\banque\centralisateur\filter\CorsFilter.class
-com\banque\centralisateur\config\ApplicationConfig.class
-com\banque\centralisateur\config\RestApplication.class
+com\banque\centralisateur\dto\ClientInfoDTO.class
+com\banque\centralisateur\rest\TestCommunicationResource.class
 com\banque\centralisateur\client\SituationBancaireClient.class
+com\banque\centralisateur\config\RestConfiguration.class
+com\banque\centralisateur\dto\CompteInfoDTO.class
+com\banque\centralisateur\interfaces\CompteCourantServiceRemoteTemp.class
+com\banque\centralisateur\interfaces\ClientServiceRemoteTemp.class
+com\banque\centralisateur\service\CentralisateurClientService.class
+com\banque\centralisateur\test\TestEjbClient.class

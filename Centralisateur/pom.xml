@@ -97,6 +97,37 @@
             <groupId>org.wildfly</groupId>
             <artifactId>wildfly-naming-client</artifactId>
             <version>1.0.16.Final</version>
+        </dependency>
+
+        <!-- WildFly EJB Client pour la communication EJB distante -->
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-ejb-client</artifactId>
+            <version>4.0.44.Final</version>
+        </dependency>
+
+        <!-- CDI API -->
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
+            <version>4.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Bean Validation -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>3.0.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Dépendance vers le module SituationBancaire pour les interfaces -->
+        <dependency>
+            <groupId>com.banque</groupId>
+            <artifactId>situation-bancaire</artifactId>
+            <version>1.0.0</version>
+            <classifier>client</classifier>
             <scope>provided</scope>
         </dependency>
         

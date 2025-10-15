@@ -1,27 +1,44 @@
 package com.banque.centralisateur.client;
 
-import jakarta.ejb.Stateless;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import jakarta.annotation.PostConstruct;
+import jakarta.ejb.Singleton;
+import jakarta.ejb.Startup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import java.util.Properties;
 
 /**
  * Client EJB pour communiquer avec le module SituationBancaire
  * Ce client sera injecté dans les services du centralisateur
  */
-@Stateless
+@Singleton
+@Startup
 public class SituationBancaireClient {
     
     private static final Logger logger = LoggerFactory.getLogger(SituationBancaireClient.class);
     
-    // Ces valeurs seront configurées selon le serveur d'applications
+    // Configuration pour WildFly remote EJB
     private static final String JNDI_PREFIX = "ejb:";
     private static final String APP_NAME = "situation-bancaire";
     private static final String MODULE_NAME = "situation-bancaire";
+    private static final String DISTINCT_NAME = "";
+    
+    private Context initialContext;
+    
+    @PostConstruct
+    public void init() {
+        try {
+            this.initialContext = getInitialContext();
+            logger.info("Client EJB SituationBancaire initialisé avec succès");
+        } catch (NamingException e) {
+            logger.error("Erreur lors de l'initialisation du client EJB", e);
+            throw new RuntimeException("Impossible d'initialiser le client EJB", e);
+        }
+    }
     
     /**
      * Obtient le contexte JNDI pour les lookups EJB
@@ -30,7 +47,8 @@ public class SituationBancaireClient {
         Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
         props.put(Context.PROVIDER_URL, "http-remoting://localhost:8080");
-        // Ajouter les credentials si nécessaire
+        
+        // Configuration pour l'authentification si nécessaire
         // props.put(Context.SECURITY_PRINCIPAL, "username");
         // props.put(Context.SECURITY_CREDENTIALS, "password");
         
@@ -41,10 +59,12 @@ public class SituationBancaireClient {
      * Construit le nom JNDI pour un EJB distant
      */
     private String buildJndiName(String beanName, String interfaceName) {
-        return String.format("%s%s/%s/%s!%s",
+        // Format: ejb:<app-name>/<module-name>/<distinct-name>/<bean-name>!<interface-name>
+        return String.format("%s%s/%s/%s/%s!%s",
                 JNDI_PREFIX,
                 APP_NAME,
                 MODULE_NAME,
+                DISTINCT_NAME,
                 beanName,
                 interfaceName);
     }
@@ -52,18 +72,32 @@ public class SituationBancaireClient {
     /**
      * Effectue un lookup pour obtenir un bean distant
      */
-    protected <T> T lookupRemoteBean(String beanName, Class<T> interfaceClass) throws NamingException {
+    public <T> T lookupRemoteBean(String beanName, Class<T> interfaceClass) throws NamingException {
         String jndiName = buildJndiName(beanName, interfaceClass.getName());
-        logger.info("Lookup EJB distant: {}", jndiName);
+        logger.info("Tentative de lookup EJB distant: {}", jndiName);
         
-        Context ctx = getInitialContext();
         try {
             @SuppressWarnings("unchecked")
-            T bean = (T) ctx.lookup(jndiName);
-            logger.info("Bean distant obtenu avec succès: {}", beanName);
+            T bean = (T) initialContext.lookup(jndiName);
+            logger.info("Bean distant obtenu avec succès: {} - {}", beanName, interfaceClass.getSimpleName());
             return bean;
-        } finally {
-            ctx.close();
+        } catch (NamingException e) {
+            logger.error("Erreur lors du lookup du bean {} : {}", beanName, e.getMessage());
+            throw e;
+        }
+    }
+    
+    /**
+     * Test de connexion au module distant
+     */
+    public boolean testConnection() {
+        try {
+            // Test simple pour vérifier la connectivité
+            initialContext.list("");
+            return true;
+        } catch (Exception e) {
+            logger.warn("Test de connexion échoué: {}", e.getMessage());
+            return false;
         }
     }
 }

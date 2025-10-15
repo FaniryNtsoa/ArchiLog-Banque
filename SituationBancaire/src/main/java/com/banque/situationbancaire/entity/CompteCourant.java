@@ -66,6 +66,11 @@ public class CompteCourant implements Serializable {
     @Column(name = "motif_fermeture", length = 255)
     private String motifFermeture;
 
+    @Column(name = "solde_initial", nullable = false, precision = 15, scale = 2)
+    @NotNull(message = "Le solde initial est obligatoire")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Le solde initial doit être positif ou nul")
+    private java.math.BigDecimal soldeInitial;
+
     @OneToMany(mappedBy = "compte", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     @Builder.Default
