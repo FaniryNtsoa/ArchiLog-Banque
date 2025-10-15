@@ -122,13 +122,13 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Dépendance vers le module SituationBancaire pour les interfaces -->
+        <!-- Dépendance temporaire vers le module SituationBancaire pour les interfaces et entités -->
         <dependency>
             <groupId>com.banque</groupId>
             <artifactId>situation-bancaire</artifactId>
             <version>1.0.0</version>
-            <classifier>client</classifier>
-            <scope>provided</scope>
+            <scope>compile</scope>
+            <type>jar</type>
         </dependency>
         
     </dependencies>

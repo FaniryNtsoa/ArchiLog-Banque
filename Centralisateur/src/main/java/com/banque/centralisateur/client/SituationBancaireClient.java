@@ -3,13 +3,13 @@ package com.banque.centralisateur.client;
 import jakarta.annotation.PostConstruct;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.util.Properties;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * Client EJB pour communiquer avec le module SituationBancaire
@@ -19,7 +19,7 @@ import java.util.Properties;
 @Startup
 public class SituationBancaireClient {
     
-    private static final Logger logger = LoggerFactory.getLogger(SituationBancaireClient.class);
+    private static final Logger logger = Logger.getLogger(SituationBancaireClient.class.getName());
     
     // Configuration pour WildFly remote EJB
     private static final String JNDI_PREFIX = "ejb:";
@@ -35,7 +35,7 @@ public class SituationBancaireClient {
             this.initialContext = getInitialContext();
             logger.info("Client EJB SituationBancaire initialisé avec succès");
         } catch (NamingException e) {
-            logger.error("Erreur lors de l'initialisation du client EJB", e);
+            logger.log(Level.SEVERE, "Erreur lors de l'initialisation du client EJB", e);
             throw new RuntimeException("Impossible d'initialiser le client EJB", e);
         }
     }
@@ -74,15 +74,15 @@ public class SituationBancaireClient {
      */
     public <T> T lookupRemoteBean(String beanName, Class<T> interfaceClass) throws NamingException {
         String jndiName = buildJndiName(beanName, interfaceClass.getName());
-        logger.info("Tentative de lookup EJB distant: {}", jndiName);
+        logger.info("Tentative de lookup EJB distant: " + jndiName);
         
         try {
             @SuppressWarnings("unchecked")
             T bean = (T) initialContext.lookup(jndiName);
-            logger.info("Bean distant obtenu avec succès: {} - {}", beanName, interfaceClass.getSimpleName());
+            logger.info("Bean distant obtenu avec succès: " + beanName + " - " + interfaceClass.getSimpleName());
             return bean;
         } catch (NamingException e) {
-            logger.error("Erreur lors du lookup du bean {} : {}", beanName, e.getMessage());
+            logger.log(Level.SEVERE, "Erreur lors du lookup du bean " + beanName + " : " + e.getMessage(), e);
             throw e;
         }
     }
@@ -96,7 +96,7 @@ public class SituationBancaireClient {
             initialContext.list("");
             return true;
         } catch (Exception e) {
-            logger.warn("Test de connexion échoué: {}", e.getMessage());
+            logger.warning("Test de connexion échoué: " + e.getMessage());
             return false;
         }
     }

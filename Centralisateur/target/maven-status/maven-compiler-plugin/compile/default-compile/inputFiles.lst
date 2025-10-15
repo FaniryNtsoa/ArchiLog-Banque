@@ -1,9 +1,10 @@
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\rest\TestCommunicationResource.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\dto\ClientInfoDTO.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\service\CentralisateurClientService.java
-C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\service\CentralisateurClientServiceReal.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\config\RestConfiguration.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\service\CentralisateurOperationService.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\test\TestEjbClient.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\interfaces\ClientServiceRemoteTemp.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\client\SituationBancaireClient.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\dto\CompteInfoDTO.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\service\CentralisateurCompteService.java
