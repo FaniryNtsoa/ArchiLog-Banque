@@ -1,7 +1,7 @@
 package com.banque.situationbancaire.ejb.remote;
 
-import com.banque.situationbancaire.entity.Mouvement;
-import com.banque.situationbancaire.entity.Virement;
+import com.banque.situationbancaire.dto.MouvementDTO;
+import com.banque.situationbancaire.dto.VirementDTO;
 import jakarta.ejb.Remote;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,7 +20,7 @@ public interface OperationServiceRemote {
      * @param libelle Libellé de l'opération
      * @return L'opération créée
      */
-    Mouvement effectuerDepot(String numeroCompte, BigDecimal montant, String libelle);
+    MouvementDTO effectuerDepot(String numeroCompte, BigDecimal montant, String libelle);
     
     /**
      * Effectue un retrait sur un compte
@@ -29,7 +29,7 @@ public interface OperationServiceRemote {
      * @param libelle Libellé de l'opération
      * @return L'opération créée
      */
-    Mouvement effectuerRetrait(String numeroCompte, BigDecimal montant, String libelle);
+    MouvementDTO effectuerRetrait(String numeroCompte, BigDecimal montant, String libelle);
     
     /**
      * Effectue un virement entre deux comptes
@@ -39,7 +39,7 @@ public interface OperationServiceRemote {
      * @param libelle Libellé du virement
      * @return Le virement créé
      */
-    Virement effectuerVirement(String numeroCompteDebiteur, String numeroCompteCrediteur, BigDecimal montant, String libelle);
+    VirementDTO effectuerVirement(String numeroCompteDebiteur, String numeroCompteCrediteur, BigDecimal montant, String libelle);
     
     /**
      * Récupère l'historique des mouvements d'un compte
@@ -48,21 +48,21 @@ public interface OperationServiceRemote {
      * @param dateFin Date de fin (optionnel)
      * @return Liste des mouvements
      */
-    List<Mouvement> obtenirHistoriqueMouvements(String numeroCompte, LocalDate dateDebut, LocalDate dateFin);
+    List<MouvementDTO> obtenirHistoriqueMouvements(String numeroCompte, LocalDate dateDebut, LocalDate dateFin);
     
     /**
      * Applique les frais de tenue de compte périodiques
      * @param numeroCompte Numéro du compte
      * @return Le mouvement de frais créé
      */
-    Mouvement appliquerFraisTenueCompte(String numeroCompte);
+    MouvementDTO appliquerFraisTenueCompte(String numeroCompte);
     
     /**
      * Calcule et applique les intérêts de découvert
      * @param numeroCompte Numéro du compte
      * @return Le mouvement d'intérêts créé (si applicable)
      */
-    Mouvement appliquerInteretsDecouvert(String numeroCompte);
+    MouvementDTO appliquerInteretsDecouvert(String numeroCompte);
     
     /**
      * Vérifie les plafonds et limites avant une opération
@@ -78,5 +78,5 @@ public interface OperationServiceRemote {
      * @param reference Référence du mouvement
      * @return Le mouvement trouvé ou null
      */
-    Mouvement rechercherMouvementParReference(String reference);
+    MouvementDTO rechercherMouvementParReference(String reference);
 }

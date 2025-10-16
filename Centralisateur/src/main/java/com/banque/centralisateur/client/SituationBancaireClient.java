@@ -1,5 +1,6 @@
 package com.banque.centralisateur.client;
 
+import com.banque.centralisateur.interfaces.ClientServiceRemote;
 import jakarta.annotation.PostConstruct;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
@@ -27,17 +28,37 @@ public class SituationBancaireClient {
     private static final String MODULE_NAME = "situation-bancaire";
     private static final String DISTINCT_NAME = "";
     
+    // Services EJB Remote
+    private ClientServiceRemote clientService;
+    
     private Context initialContext;
     
-    @PostConstruct
     public void init() {
         try {
             this.initialContext = getInitialContext();
+            this.clientService = lookupClientService();
             logger.info("Client EJB SituationBancaire initialisé avec succès");
         } catch (NamingException e) {
             logger.log(Level.SEVERE, "Erreur lors de l'initialisation du client EJB", e);
             throw new RuntimeException("Impossible d'initialiser le client EJB", e);
         }
+    }
+    
+    /**
+     * Obtient le service Client distant
+     */
+    public ClientServiceRemote getClientService() throws NamingException {
+        if (clientService == null) {
+            clientService = lookupClientService();
+        }
+        return clientService;
+    }
+    
+    /**
+     * Lookup pour le service Client
+     */
+    private ClientServiceRemote lookupClientService() throws NamingException {
+        return lookupRemoteBean("ClientServiceImpl", ClientServiceRemote.class);
     }
     
     /**

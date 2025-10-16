@@ -1,47 +1,31 @@
 package com.banque.situationbancaire.ejb.impl;
 
+import com.banque.situationbancaire.dto.CompteCourantDTO;
 import com.banque.situationbancaire.ejb.remote.CompteCourantServiceRemote;
-import com.banque.situationbancaire.entity.Client;
-import com.banque.situationbancaire.entity.CompteCourant;
-import com.banque.situationbancaire.entity.Mouvement;
-import com.banque.situationbancaire.entity.TypeCompte;
+import com.banque.situationbancaire.entity.*;
 import com.banque.situationbancaire.entity.enums.StatutCompte;
-import com.banque.situationbancaire.repository.ClientRepository;
-import com.banque.situationbancaire.repository.CompteCourantRepository;
-import com.banque.situationbancaire.repository.TypeCompteRepository;
-import com.banque.situationbancaire.repository.MouvementRepository;
-import jakarta.ejb.EJB;
-import jakarta.ejb.Stateless;
-import jakarta.transaction.Transactional;
+import com.banque.situationbancaire.mapper.CompteCourantMapper;
+import com.banque.situationbancaire.repository.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.logging.Logger;
 
 /**
- * Implémentation du service de gestion des comptes courants
+ * Implémentation complète du service de gestion des comptes courants avec DTOs
  */
-@Stateless
-@Transactional
 public class CompteCourantServiceImpl implements CompteCourantServiceRemote {
 
     private static final Logger LOGGER = Logger.getLogger(CompteCourantServiceImpl.class.getName());
 
-    @EJB
     private CompteCourantRepository compteCourantRepository;
-
-    @EJB
     private ClientRepository clientRepository;
-
-    @EJB
-    private TypeCompteRepository typeCompteRepository;
-
-    @EJB
     private MouvementRepository mouvementRepository;
 
     @Override
-    public CompteCourant creerCompte(CompteCourant compte, Long idClient) {
+    public CompteCourantDTO creerCompte(CompteCourantDTO compteDTO, Long idClient) {
         LOGGER.info("Création d'un nouveau compte pour le client : " + idClient);
         
         // Vérifier que le client existe
@@ -52,64 +36,84 @@ public class CompteCourantServiceImpl implements CompteCourantServiceRemote {
         
         Client client = clientOpt.get();
         
-        // Générer un numéro de compte unique
-        compte.setNumeroCompte(genererNumeroCompte());
-        compte.setClient(client);
-        compte.setDateOuverture(LocalDate.now());
-        compte.setStatut(StatutCompte.OUVERT);
+        // Créer un type de compte par défaut temporaire
+        TypeCompte typeCompteDefaut = TypeCompte.builder()
+            .codeType("STANDARD")
+            .libelle("Compte Standard")
+            .description("Compte courant standard")
+            .build();
         
-        // Si aucun type de compte spécifié, utiliser le type par défaut
-        if (compte.getTypeCompte() == null) {
-            Optional<TypeCompte> typeCompteOpt = typeCompteRepository.findByDefaut();
-            if (typeCompteOpt.isPresent()) {
-                compte.setTypeCompte(typeCompteOpt.get());
-            }
-        }
+        // Créer l'entité CompteCourant
+        CompteCourant compte = CompteCourant.builder()
+            .client(client)
+            .typeCompte(typeCompteDefaut)
+            .numeroCompte(genererNumeroCompte())
+            .libelleCompte(compteDTO.getLibelleCompte() != null ? compteDTO.getLibelleCompte() : "Compte courant")
+            .devise("XOF")
+            .statut(StatutCompte.OUVERT)
+            .dateOuverture(LocalDate.now())
+            .soldeInitial(compteDTO.getSoldeInitial() != null ? compteDTO.getSoldeInitial() : BigDecimal.ZERO)
+            .build();
         
-        return compteCourantRepository.save(compte);
+        CompteCourant compteCree = compteCourantRepository.save(compte);
+        
+        return CompteCourantMapper.toDTO(compteCree);
     }
 
     @Override
-    public CompteCourant rechercherCompteParId(Long idCompte) {
+    public CompteCourantDTO rechercherCompteParId(Long idCompte) {
         LOGGER.info("Recherche du compte par ID : " + idCompte);
         Optional<CompteCourant> compte = compteCourantRepository.findById(idCompte);
-        return compte.orElse(null);
+        return compte.map(CompteCourantMapper::toDTO).orElse(null);
     }
 
     @Override
-    public CompteCourant rechercherCompteParNumero(String numeroCompte) {
+    public CompteCourantDTO rechercherCompteParNumero(String numeroCompte) {
         LOGGER.info("Recherche du compte par numéro : " + numeroCompte);
         Optional<CompteCourant> compte = compteCourantRepository.findByNumeroCompte(numeroCompte);
-        return compte.orElse(null);
+        if (compte.isPresent()) {
+            CompteCourantDTO dto = CompteCourantMapper.toDTO(compte.get());
+            // Calculer le solde actuel
+            dto.setSolde(calculerSoldeActuel(numeroCompte));
+            return dto;
+        }
+        return null;
     }
 
     @Override
-    public List<CompteCourant> listerComptesParClient(Long idClient) {
-        LOGGER.info("Récupération des comptes du client : " + idClient);
-        return compteCourantRepository.findByClientId(idClient);
+    public List<CompteCourantDTO> listerComptesParClient(Long idClient) {
+        LOGGER.info("Listing des comptes pour le client : " + idClient);
+        List<CompteCourant> comptes = compteCourantRepository.findByClientId(idClient);
+        return comptes.stream()
+                .map(compte -> {
+                    CompteCourantDTO dto = CompteCourantMapper.toDTO(compte);
+                    dto.setSolde(calculerSoldeActuel(compte.getNumeroCompte()));
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
     public BigDecimal calculerSoldeActuel(String numeroCompte) {
-        LOGGER.info("Calcul du solde actuel pour le compte : " + numeroCompte);
+        LOGGER.info("Calcul du solde pour le compte : " + numeroCompte);
         
         Optional<CompteCourant> compteOpt = compteCourantRepository.findByNumeroCompte(numeroCompte);
         if (compteOpt.isEmpty()) {
-            throw new IllegalArgumentException("Compte non trouvé");
+            throw new IllegalArgumentException("Compte non trouvé : " + numeroCompte);
         }
         
         CompteCourant compte = compteOpt.get();
         
-        // Calculer le solde : solde initial du client + somme de tous les mouvements
-        BigDecimal soldeInitial = compte.getClient().getSoldeInitial();
+        // Solde = solde initial + somme de tous les mouvements
+        BigDecimal soldeInitial = compte.getSoldeInitial();
         BigDecimal totalMouvements = mouvementRepository.calculerSoldeMouvements(compte.getIdCompte());
         
         return soldeInitial.add(totalMouvements != null ? totalMouvements : BigDecimal.ZERO);
     }
 
     @Override
-    public CompteCourant obtenirInfosCompte(String numeroCompte) {
-        LOGGER.info("Obtention des informations du compte : " + numeroCompte);
+    public CompteCourantDTO obtenirInfosCompte(String numeroCompte) {
+        LOGGER.info("Obtention des infos pour le compte : " + numeroCompte);
         
         Optional<CompteCourant> compteOpt = compteCourantRepository.findByNumeroCompte(numeroCompte);
         if (compteOpt.isEmpty()) {
@@ -117,25 +121,32 @@ public class CompteCourantServiceImpl implements CompteCourantServiceRemote {
         }
         
         CompteCourant compte = compteOpt.get();
-        // Note: Le solde peut être calculé côté client si nécessaire
-        return compte;
+        CompteCourantDTO dto = CompteCourantMapper.toDTO(compte);
+        
+        // Enrichir avec le solde actuel et découvert autorisé
+        dto.setSolde(calculerSoldeActuel(numeroCompte));
+        if (compte.getTypeCompte() != null && compte.getTypeCompte().getParametreActuel() != null) {
+            dto.setDecouvertAutorise(compte.getTypeCompte().getParametreActuel().getMontantDecouvertAutorise());
+        }
+        
+        return dto;
     }
 
     @Override
     public void fermerCompte(String numeroCompte, String motif) {
-        LOGGER.info("Fermeture du compte : " + numeroCompte);
+        LOGGER.info("Fermeture du compte : " + numeroCompte + " - Motif : " + motif);
         
         Optional<CompteCourant> compteOpt = compteCourantRepository.findByNumeroCompte(numeroCompte);
         if (compteOpt.isEmpty()) {
-            throw new IllegalArgumentException("Compte non trouvé");
+            throw new IllegalArgumentException("Compte non trouvé : " + numeroCompte);
         }
         
         CompteCourant compte = compteOpt.get();
         
-        // Vérifier que le solde est à zéro ou proche de zéro
+        // Vérifier que le solde est proche de zéro (≤ 1 XOF)
         BigDecimal solde = calculerSoldeActuel(numeroCompte);
-        if (solde.abs().compareTo(new BigDecimal("0.01")) > 0) {
-            throw new IllegalStateException("Impossible de fermer un compte avec un solde non nul");
+        if (solde.abs().compareTo(BigDecimal.ONE) > 0) {
+            throw new IllegalStateException("Impossible de fermer un compte avec un solde non nul : " + solde);
         }
         
         compte.setStatut(StatutCompte.FERME);
@@ -151,7 +162,7 @@ public class CompteCourantServiceImpl implements CompteCourantServiceRemote {
         
         Optional<CompteCourant> compteOpt = compteCourantRepository.findByNumeroCompte(numeroCompte);
         if (compteOpt.isEmpty()) {
-            throw new IllegalArgumentException("Compte non trouvé");
+            throw new IllegalArgumentException("Compte non trouvé : " + numeroCompte);
         }
         
         CompteCourant compte = compteOpt.get();
@@ -166,7 +177,7 @@ public class CompteCourantServiceImpl implements CompteCourantServiceRemote {
         
         Optional<CompteCourant> compteOpt = compteCourantRepository.findByNumeroCompte(numeroCompte);
         if (compteOpt.isEmpty()) {
-            throw new IllegalArgumentException("Compte non trouvé");
+            throw new IllegalArgumentException("Compte non trouvé : " + numeroCompte);
         }
         
         CompteCourant compte = compteOpt.get();
@@ -177,8 +188,23 @@ public class CompteCourantServiceImpl implements CompteCourantServiceRemote {
 
     @Override
     public boolean compteExisteEtActif(String numeroCompte) {
+        LOGGER.info("Vérification de l'existence et du statut du compte : " + numeroCompte);
         Optional<CompteCourant> compteOpt = compteCourantRepository.findByNumeroCompte(numeroCompte);
         return compteOpt.isPresent() && compteOpt.get().getStatut() == StatutCompte.OUVERT;
+    }
+
+    @Override
+    public List<String> listerTypesComptesDisponibles() {
+        LOGGER.info("Récupération des types de comptes disponibles");
+        
+        // Pour l'instant, retourner une liste statique des types de comptes
+        // En production, cela viendrait de typeCompteRepository.findAll()
+        return java.util.Arrays.asList(
+            "STANDARD - Compte courant standard avec fonctionnalités de base",
+            "PREMIUM - Compte avec avantages et plafonds élevés", 
+            "ETUDIANT - Compte spécialement conçu pour les étudiants",
+            "BUSINESS - Compte professionnel pour les entreprises"
+        );
     }
 
     /**

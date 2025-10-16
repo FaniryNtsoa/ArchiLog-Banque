@@ -1,6 +1,8 @@
 package com.banque.centralisateur.service;
 
 import com.banque.centralisateur.client.SituationBancaireClient;
+import com.banque.centralisateur.dto.ClientDTO;
+import com.banque.centralisateur.interfaces.ClientServiceRemote;
 
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -9,10 +11,11 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import javax.naming.NamingException;
 
 /**
  * Service centralisateur pour la gestion complète des clients
- * Utilise les EJB distants du module SituationBancaire
+ * Utilise les EJB distants du module SituationBancaire avec des DTOs
  */
 @Stateless
 public class CentralisateurClientService {

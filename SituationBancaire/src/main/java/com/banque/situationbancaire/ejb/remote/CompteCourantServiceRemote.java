@@ -1,44 +1,42 @@
 package com.banque.situationbancaire.ejb.remote;
 
-import com.banque.situationbancaire.entity.CompteCourant;
-import jakarta.ejb.Remote;
+import com.banque.situationbancaire.dto.CompteCourantDTO;
 import java.math.BigDecimal;
 import java.util.List;
 
 /**
  * Interface Remote pour la gestion des comptes courants
  */
-@Remote
 public interface CompteCourantServiceRemote {
     
     /**
      * Crée un nouveau compte courant
-     * @param compte Informations du compte
+     * @param compteDTO Informations du compte
      * @param idClient ID du client propriétaire
      * @return Le compte créé
      */
-    CompteCourant creerCompte(CompteCourant compte, Long idClient);
+    CompteCourantDTO creerCompte(CompteCourantDTO compteDTO, Long idClient);
     
     /**
      * Récupère un compte par son ID
      * @param idCompte ID du compte
      * @return Le compte trouvé ou null
      */
-    CompteCourant rechercherCompteParId(Long idCompte);
+    CompteCourantDTO rechercherCompteParId(Long idCompte);
     
     /**
      * Récupère un compte par son numéro
      * @param numeroCompte Numéro du compte
      * @return Le compte trouvé ou null
      */
-    CompteCourant rechercherCompteParNumero(String numeroCompte);
+    CompteCourantDTO rechercherCompteParNumero(String numeroCompte);
     
     /**
      * Récupère tous les comptes d'un client
      * @param idClient ID du client
      * @return Liste des comptes du client
      */
-    List<CompteCourant> listerComptesParClient(Long idClient);
+    List<CompteCourantDTO> listerComptesParClient(Long idClient);
     
     /**
      * Calcule le solde actuel d'un compte (solde + tous les mouvements)
@@ -52,7 +50,7 @@ public interface CompteCourantServiceRemote {
      * @param numeroCompte Numéro du compte
      * @return Les informations du compte
      */
-    CompteCourant obtenirInfosCompte(String numeroCompte);
+    CompteCourantDTO obtenirInfosCompte(String numeroCompte);
     
     /**
      * Ferme un compte
@@ -79,4 +77,10 @@ public interface CompteCourantServiceRemote {
      * @return true si le compte existe et est actif
      */
     boolean compteExisteEtActif(String numeroCompte);
+    
+    /**
+     * Liste tous les types de comptes disponibles
+     * @return Liste des types de comptes avec leurs paramètres
+     */
+    List<String> listerTypesComptesDisponibles();
 }

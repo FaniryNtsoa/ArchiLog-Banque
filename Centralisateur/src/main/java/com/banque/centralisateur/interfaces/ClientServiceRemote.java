@@ -1,10 +1,11 @@
-package com.banque.situationbancaire.ejb.remote;
+package com.banque.centralisateur.interfaces;
 
-import com.banque.situationbancaire.dto.ClientDTO;
+import com.banque.centralisateur.dto.ClientDTO;
 import java.util.List;
 
 /**
- * Interface remote pour le service de gestion des clients
+ * Interface pour communiquer avec le service Client distant
+ * Cette interface définit les méthodes disponibles via EJB Remote
  */
 public interface ClientServiceRemote {
     
@@ -68,12 +69,4 @@ public interface ClientServiceRemote {
      * @return true si le CIN existe, false sinon
      */
     boolean existeParNumCin(String numCin);
-    
-    /**
-     * Authentifie un client avec email et mot de passe
-     * @param email L'email du client
-     * @param motDePasse Le mot de passe du client
-     * @return Le client authentifié ou null si échec
-     */
-    ClientDTO authentifierClient(String email, String motDePasse);
 }
