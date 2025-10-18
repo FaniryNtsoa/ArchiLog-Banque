@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::main})}">
+<head>
+    <title th:text="${pageTitle}">Nouveau Compte</title>
+</head>
+<body>
+    <main class="main-content">
+        <div class="container-sm">
+            <div class="page-header">
+                <h1 class="page-title">🏦 Créer un Nouveau Compte</h1>
+                <p class="page-subtitle">Ouvrez un nouveau compte courant</p>
+            </div>
+
+            <div class="card">
+                <div class="card__header">
+                    <h2 class="card__title">Informations du compte</h2>
+                </div>
+                <div class="card__content">
+                    <form method="POST" action="/centralisateur/web/nouveau-compte" class="form">
+                        <div class="form-group">
+                            <label for="libelle" class="form-label">
+                                <i class="icon">📝</i>
+                                Libellé du compte *
+                            </label>
+                            <input type="text" 
+                                   id="libelle" 
+                                   name="libelle" 
+                                   class="form-input" 
+                                   placeholder="Ex: Compte épargne, Compte vacances..."
+                                   required
+                                   maxlength="100">
+                            <small class="form-help">
+                                Donnez un nom à votre nouveau compte pour l'identifier facilement
+                            </small>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-box__icon">ℹ️</div>
+                            <div class="info-box__content">
+                                <h4>Caractéristiques du compte</h4>
+                                <ul>
+                                    <li>Solde initial : 0,00 €</li>
+                                    <li>Découvert autorisé : 300,00 €</li>
+                                    <li>Devise : EUR</li>
+                                    <li>Activation immédiate</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn--primary">
+                                <i class="btn__icon">🏦</i>
+                                Créer le compte
+                            </button>
+                            <a href="/centralisateur/dashboard" class="btn btn--secondary">
+                                <i class="btn__icon">↩️</i>
+                                Retour au tableau de bord
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Avantages -->
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-card__icon">⚡</div>
+                    <h3>Activation instantanée</h3>
+                    <p>Votre compte sera actif immédiatement après création</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card__icon">💳</div>
+                    <h3>Découvert inclus</h3>
+                    <p>300€ de découvert autorisé dès l'ouverture</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card__icon">🔒</div>
+                    <h3>Sécurité maximale</h3>
+                    <p>Protection avancée de vos données et transactions</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,48 @@
+# =========================
+# Module Centralisateur
+# Fichiers spécifiques au module Web
+# =========================
+
+# Build Maven
+target/
+*.war
+
+# Templates compilés
+*.class
+
+# Logs spécifiques
+centralisateur.log
+servlet.log
+
+# Configuration locale
+src/main/resources/application-local.properties
+src/main/resources/jboss-ejb-client-local.properties
+
+# Fichiers temporaires Thymeleaf
+.thymeleaf-cache/
+
+# Fichiers de session
+SESSIONS.ser
+
+# CSS compilés (si utilisation de preprocesseurs)
+src/main/webapp/css/*.map
+src/main/webapp/css/*.min.css
+
+# Tests
+src/test/resources/test-data/
+
+# IDE - IntelliJ
+.idea/
+*.iml
+
+# IDE - Eclipse
+.classpath
+.project
+.settings/
+
+# IDE - VS Code
+.vscode/
+
+# Fichiers de déploiement local
+centralisateur.war.deployed
+centralisateur.war.failed

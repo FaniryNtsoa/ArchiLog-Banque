@@ -1,12 +1,14 @@
 package com.banque.situationbancaire.ejb.remote;
 
 import com.banque.situationbancaire.dto.CompteCourantDTO;
+import jakarta.ejb.Remote;
 import java.math.BigDecimal;
 import java.util.List;
 
 /**
  * Interface Remote pour la gestion des comptes courants
  */
+@Remote
 public interface CompteCourantServiceRemote {
     
     /**

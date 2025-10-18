@@ -1,0 +1,52 @@
+# =========================
+# Module SituationBancaire
+# Fichiers spécifiques au module EJB
+# =========================
+
+# Build Maven
+target/
+*.war
+*.jar
+*-classes.jar
+
+# Logs spécifiques
+situationbancaire.log
+ejb.log
+jpa.log
+
+# Configuration locale de la base de données
+src/main/resources/application-local.properties
+src/main/webapp/WEB-INF/situationbancaire-ds-local.xml
+
+# Fichiers de migration de base de données
+src/main/resources/db/migration/*.sql.bak
+
+# Tests et données de test
+src/test/resources/test-data/
+src/test/resources/application-test.properties
+
+# Fichiers JPA générés
+metamodel/
+*.class
+
+# IDE - IntelliJ
+.idea/
+*.iml
+
+# IDE - Eclipse
+.classpath
+.project
+.settings/
+
+# IDE - VS Code
+.vscode/
+
+# Fichiers de déploiement local
+situation-bancaire.war.deployed
+situation-bancaire.war.failed
+
+# Dossiers de logs d'upgrade Java
+.github/java-upgrade/*/logs/
+
+# Fichiers temporaires de persistence
+derby.log

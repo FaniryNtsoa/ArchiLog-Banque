@@ -8,6 +8,8 @@ import com.banque.situationbancaire.entity.enums.StatutClient;
 import com.banque.situationbancaire.mapper.ClientMapper;
 import com.banque.situationbancaire.mapper.CompteCourantMapper;
 import com.banque.situationbancaire.repository.*;
+import jakarta.ejb.Stateless;
+import jakarta.inject.Inject;
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
@@ -21,10 +23,12 @@ import java.util.logging.Logger;
 /**
  * Implémentation complète du service client avec création automatique de compte
  */
+@Stateless
 public class ClientServiceImpl implements ClientServiceRemote {
 
     private static final Logger LOGGER = Logger.getLogger(ClientServiceImpl.class.getName());
 
+    @Inject
     private ClientRepository clientRepository;
 
     @Override

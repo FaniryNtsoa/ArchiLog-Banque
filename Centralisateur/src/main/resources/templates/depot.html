@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::main})}">
+<head>
+    <title th:text="${pageTitle}">Dépôt</title>
+</head>
+<body>
+    <main class="main-content">
+        <div class="container-sm">
+            <div class="page-header">
+                <h1 class="page-title">💵 Effectuer un Dépôt</h1>
+                <p class="page-subtitle">Alimentez votre compte bancaire</p>
+            </div>
+
+            <div class="card">
+                <div class="card__header">
+                    <h2 class="card__title">Informations du dépôt</h2>
+                </div>
+                <div class="card__content">
+                    <form method="POST" action="/centralisateur/web/depot" class="form">
+                        <div class="form-group">
+                            <label for="numeroCompte" class="form-label">
+                                <i class="icon">🏦</i>
+                                Compte à créditer *
+                            </label>
+                            <select id="numeroCompte" name="numeroCompte" class="form-select" required>
+                                <option value="">Sélectionnez un compte</option>
+                                <option th:each="compte : ${comptes}" 
+                                        th:value="${compte.numeroCompte}"
+                                        th:text="${compte.numeroCompte + ' - ' + compte.libelle + ' (' + #numbers.formatCurrency(compte.solde) + ')'}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="montant" class="form-label">
+                                <i class="icon">💰</i>
+                                Montant à déposer *
+                            </label>
+                            <input type="number" 
+                                   id="montant" 
+                                   name="montant" 
+                                   class="form-input" 
+                                   placeholder="0.00"
+                                   step="0.01"
+                                   min="0.01"
+                                   max="50000"
+                                   required>
+                            <small class="form-help">
+                                Montant minimum : 0,01 € - Maximum : 50 000,00 €
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="libelle" class="form-label">
+                                <i class="icon">📝</i>
+                                Libellé de l'opération
+                            </label>
+                            <input type="text" 
+                                   id="libelle" 
+                                   name="libelle" 
+                                   class="form-input" 
+                                   placeholder="Ex: Dépôt espèces, Versement salaire..."
+                                   maxlength="200"
+                                   value="Dépôt">
+                        </div>
+
+                        <div class="warning-box">
+                            <div class="warning-box__icon">⚠️</div>
+                            <div class="warning-box__content">
+                                <h4>Informations importantes</h4>
+                                <ul>
+                                    <li>Le dépôt sera effectué immédiatement</li>
+                                    <li>Une confirmation vous sera envoyée</li>
+                                    <li>En cas de découvert, les intérêts seront automatiquement calculés</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn--primary">
+                                <i class="btn__icon">💵</i>
+                                Effectuer le dépôt
+                            </button>
+                            <a href="/centralisateur/dashboard" class="btn btn--secondary">
+                                <i class="btn__icon">↩️</i>
+                                Retour au tableau de bord
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

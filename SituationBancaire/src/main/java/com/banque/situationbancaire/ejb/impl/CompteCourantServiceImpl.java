@@ -6,6 +6,8 @@ import com.banque.situationbancaire.entity.*;
 import com.banque.situationbancaire.entity.enums.StatutCompte;
 import com.banque.situationbancaire.mapper.CompteCourantMapper;
 import com.banque.situationbancaire.repository.*;
+import jakarta.ejb.Stateless;
+import jakarta.inject.Inject;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -16,12 +18,18 @@ import java.util.logging.Logger;
 /**
  * Implémentation complète du service de gestion des comptes courants avec DTOs
  */
+@Stateless
 public class CompteCourantServiceImpl implements CompteCourantServiceRemote {
 
     private static final Logger LOGGER = Logger.getLogger(CompteCourantServiceImpl.class.getName());
 
+    @Inject
     private CompteCourantRepository compteCourantRepository;
+    
+    @Inject
     private ClientRepository clientRepository;
+    
+    @Inject
     private MouvementRepository mouvementRepository;
 
     @Override

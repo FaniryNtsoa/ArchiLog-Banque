@@ -1,11 +1,13 @@
 package com.banque.situationbancaire.ejb.remote;
 
 import com.banque.situationbancaire.dto.ClientDTO;
+import jakarta.ejb.Remote;
 import java.util.List;
 
 /**
  * Interface remote pour le service de gestion des clients
  */
+@Remote
 public interface ClientServiceRemote {
     
     /**

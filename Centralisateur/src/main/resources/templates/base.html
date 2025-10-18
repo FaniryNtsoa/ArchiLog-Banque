@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Banque Premium</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" th:fragment="header">
+        <div class="container">
+            <div class="header__content">
+                <a th:href="@{/}" class="header__logo">
+                    Banque Premium
+                </a>
+                
+                <nav class="header__nav">
+                    <!-- Navigation conditionnelle -->
+                    <div th:if="${session.clientNom != null}">
+                        <a th:href="@{/dashboard}" class="nav-link">Tableau de bord</a>
+                        <span class="nav-link text-gold" th:text="'Bonjour ' + ${session.clientPrenom}">Bonjour</span>
+                        <a th:href="@{/logout}" class="nav-link">Déconnexion</a>
+                    </div>
+                    <div th:unless="${session.clientNom != null}">
+                        <a th:href="@{/login}" class="nav-link">Connexion</a>
+                        <a th:href="@{/register}" class="nav-link nav-link--active">Inscription</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main th:fragment="content">
+        <!-- Le contenu sera inséré ici -->
+    </main>
+
+    <!-- Footer -->
+    <footer th:fragment="footer" style="background: #000; color: #fff; text-align: center; padding: 2rem 0; margin-top: auto;">
+        <div class="container">
+            <p>&copy; 2025 Banque Premium. Tous droits réservés.</p>
+            <p class="text-muted" style="color: #999;">Application bancaire sécurisée - Jakarta EE & Thymeleaf</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script th:fragment="scripts">
+        // Script pour les animations fluides
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation d'entrée pour les cartes
+            const cards = document.querySelectorAll('.card, .auth-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = (index * 0.1) + 's';
+                card.classList.add('fade-in');
+            });
+            
+            // Animation pour les boutons
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px) scale(1.02)';
+                });
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+            
+            // Auto-hide des alertes après 5 secondes
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 500);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -8,6 +8,8 @@ import com.banque.situationbancaire.entity.enums.StatutCompte;
 import com.banque.situationbancaire.mapper.MouvementMapper;
 import com.banque.situationbancaire.mapper.VirementMapper;
 import com.banque.situationbancaire.repository.*;
+import jakarta.ejb.Stateless;
+import jakarta.inject.Inject;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -20,13 +22,21 @@ import java.util.logging.Logger;
 /**
  * Implémentation complète du service des opérations bancaires avec règles métier
  */
+@Stateless
 public class OperationServiceImpl implements OperationServiceRemote {
 
     private static final Logger LOGGER = Logger.getLogger(OperationServiceImpl.class.getName());
 
+    @Inject
     private CompteCourantRepository compteCourantRepository;
+    
+    @Inject
     private MouvementRepository mouvementRepository;
+    
+    @Inject
     private TypeOperationRepository typeOperationRepository;
+    
+    @Inject
     private VirementRepository virementRepository;
 
     @Override

@@ -104,7 +104,50 @@ Desktop.ini
 *.keystore
 secrets/
 credentials/
-config/
 
+# =========================
+# WildFly / JBoss
+# =========================
+deployments/
+*.deployed
+*.isdeploying
+*.failed
+*.dodeploy
+*.undeployed
+
+# =========================
+# Base de données
+# =========================
+*.db
+*.sqlite
+*.h2.db
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+log/
+
+# =========================
+# Documentation temporaire
+# =========================
 texte.md
 texte.txt
+*.copilotmd
+*.tmp.md
+
+# =========================
+# Fichiers de correction
+# =========================
+CORRECTION_*.md
+RAPPORT_*.md
+CHECKLIST_*.md
+SYNTHESE_*.md
+RESUME_*.md
+
+# =========================
+# Repository Maven local (si copié)
+# =========================
+.m2/
+repository/

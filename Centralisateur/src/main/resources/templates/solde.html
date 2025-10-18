@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::main})}">
+<head>
+    <title th:text="${pageTitle}">Consulter Solde</title>
+</head>
+<body>
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">📊 Consulter vos Soldes</h1>
+                <p class="page-subtitle">Visualisez l'état de tous vos comptes</p>
+            </div>
+
+            <!-- Vue d'ensemble -->
+            <div class="overview-cards" th:if="${comptes != null and !comptes.isEmpty()}">
+                <div class="overview-card">
+                    <div class="overview-card__icon">💰</div>
+                    <div class="overview-card__content">
+                        <h3>Solde Total</h3>
+                        <div class="amount-large" 
+                             th:text="${#numbers.formatCurrency(#aggregates.sum(comptes.![solde]))}">
+                            2 750,00 €
+                        </div>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="overview-card__icon">📈</div>
+                    <div class="overview-card__content">
+                        <h3>Disponible Total</h3>
+                        <div class="amount-large" 
+                             th:text="${#numbers.formatCurrency(#aggregates.sum(comptes.![soldeDisponible]))}">
+                            3 550,00 €
+                        </div>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="overview-card__icon">🏦</div>
+                    <div class="overview-card__content">
+                        <h3>Nombre de Comptes</h3>
+                        <div class="amount-large" th:text="${#lists.size(comptes)}">2</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Détail des comptes -->
+            <div class="accounts-section">
+                <h2 class="section-title">Détail de vos comptes</h2>
+                
+                <div class="accounts-grid" th:if="${comptes != null and !comptes.isEmpty()}">
+                    <div th:each="compte : ${comptes}" class="account-card">
+                        <div class="account-card__header">
+                            <div class="account-info">
+                                <h3 class="account-number" th:text="${compte.numeroCompte}">123456789</h3>
+                                <p class="account-label" th:text="${compte.libelle}">Compte Courant Principal</p>
+                                <span class="account-type" th:text="${compte.typeCompte ?: 'Courant'}">Courant</span>
+                            </div>
+                            <div class="account-status">
+                                <span class="status-badge" 
+                                      th:classappend="${compte.statut == 'ACTIF'} ? 'status--active' : 'status--inactive'"
+                                      th:text="${compte.statut}">
+                                    ACTIF
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="account-card__body">
+                            <!-- Solde principal -->
+                            <div class="balance-section">
+                                <div class="balance-item balance-item--main">
+                                    <span class="balance-label">Solde actuel</span>
+                                    <span class="balance-amount" 
+                                          th:text="${#numbers.formatCurrency(compte.solde)}"
+                                          th:classappend="${compte.estEnDecouvert()} ? 'amount--negative' : 'amount--positive'">
+                                        1 250,00 €
+                                    </span>
+                                </div>
+
+                                <!-- Découvert autorisé -->
+                                <div class="balance-item">
+                                    <span class="balance-label">Découvert autorisé</span>
+                                    <span class="balance-amount" th:text="${#numbers.formatCurrency(compte.decouvertAutorise)}">
+                                        500,00 €
+                                    </span>
+                                </div>
+
+                                <!-- Solde disponible -->
+                                <div class="balance-item balance-item--highlight">
+                                    <span class="balance-label">💎 Solde disponible</span>
+                                    <span class="balance-amount amount--highlight" 
+                                          th:text="${#numbers.formatCurrency(compte.soldeDisponible)}">
+                                        1 750,00 €
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Indicateur de découvert -->
+                            <div th:if="${compte.estEnDecouvert()}" class="alert alert--warning">
+                                <i class="alert__icon">⚠️</i>
+                                <span>Compte en situation de découvert</span>
+                            </div>
+
+                            <!-- Actions rapides -->
+                            <div class="account-actions">
+                                <a th:href="@{/centralisateur/web/depot(numeroCompte=${compte.numeroCompte})}" 
+                                   class="btn btn--small btn--success">
+                                    <i class="btn__icon">💵</i>
+                                    Dépôt
+                                </a>
+                                <a th:href="@{/centralisateur/web/retrait(numeroCompte=${compte.numeroCompte})}" 
+                                   class="btn btn--small btn--warning">
+                                    <i class="btn__icon">💸</i>
+                                    Retrait
+                                </a>
+                                <a th:href="@{/centralisateur/web/historique(numeroCompte=${compte.numeroCompte})}" 
+                                   class="btn btn--small btn--info">
+                                    <i class="btn__icon">📋</i>
+                                    Historique
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message si pas de comptes -->
+                <div th:if="${comptes == null or comptes.isEmpty()}" class="empty-state">
+                    <div class="empty-state__icon">🏦</div>
+                    <h3 class="empty-state__title">Aucun compte trouvé</h3>
+                    <p class="empty-state__text">
+                        Vous n'avez actuellement aucun compte bancaire.
+                    </p>
+                    <a href="/centralisateur/web/nouveau-compte" class="btn btn--primary">
+                        <i class="btn__icon">🏦</i>
+                        Créer votre premier compte
+                    </a>
+                </div>
+            </div>
+
+            <!-- Actions générales -->
+            <div class="page-actions">
+                <a href="/centralisateur/web/virement" class="btn btn--primary">
+                    <i class="btn__icon">🔄</i>
+                    Effectuer un virement
+                </a>
+                <a href="/centralisateur/web/nouveau-compte" class="btn btn--secondary">
+                    <i class="btn__icon">🏦</i>
+                    Ouvrir un nouveau compte
+                </a>
+                <a href="/centralisateur/dashboard" class="btn btn--outline">
+                    <i class="btn__icon">🏠</i>
+                    Retour au tableau de bord
+                </a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

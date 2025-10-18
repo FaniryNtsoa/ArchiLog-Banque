@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Tableau de bord - Banque Premium</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>">
+</head>
+<body>
+    <!-- Header -->
+    <div th:replace="~{base :: header}"></div>
+
+    <!-- Main Content -->
+    <main class="dashboard">
+        <div class="container">
+            <!-- Messages d'alerte -->
+            <div th:if="${session.successMessage != null}" class="alert alert-success">
+                <span th:text="${session.successMessage}">Message de succès</span>
+            </div>
+            
+            <div th:if="${session.errorMessage != null}" class="alert alert-danger">
+                <span th:text="${session.errorMessage}">Message d'erreur</span>
+            </div>
+
+            <!-- Section d'accueil -->
+            <div class="dashboard__welcome">
+                <h1 class="dashboard__title">
+                    Bonjour <span th:text="${clientPrenom}">John</span> ! 👋
+                </h1>
+                <p class="dashboard__subtitle">
+                    Bienvenue dans votre espace bancaire personnel. Gérez vos comptes et opérations en toute sécurité.
+                </p>
+            </div>
+
+            <!-- Grille des comptes et actions -->
+            <div class="dashboard__grid">
+                <!-- Carte des comptes -->
+                <div class="card compte-info" th:if="${hasComptes == true}">
+                    <div class="card__header">
+                        <h2 class="card__title">💳 Mes Comptes</h2>
+                        <span class="card__icon">💰</span>
+                    </div>
+                    <div class="card__content">
+                        <!-- Liste des comptes -->
+                        <div th:each="compte : ${comptes}" class="compte-item" style="margin-bottom: 1rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong th:text="${compte.numeroCompte}">N° 123456789</strong>
+                                    <br>
+                                    <small th:text="${compte.typeCompte != null ? compte.typeCompte.nom : 'Compte Standard'}">Compte Standard</small>
+                                </div>
+                                <div class="text-right">
+                                    <div class="solde-amount" th:text="${compte.solde != null ? #numbers.formatCurrency(compte.solde) : '0,00 €'}">1 250,00 €</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message si pas de comptes -->
+                <div class="card" th:unless="${hasComptes == true}">
+                    <div class="card__header">
+                        <h2 class="card__title">💳 Mes Comptes</h2>
+                        <span class="card__icon">📋</span>
+                    </div>
+                    <div class="card__content">
+                        <p>Vous n'avez pas encore de compte bancaire.</p>
+                        <p class="text-muted">Créez votre premier compte pour commencer à utiliser nos services.</p>
+                        <div class="mt-3">
+                            <a href="#" class="btn btn-gold" onclick="openCreateAccountModal()">
+                                ✨ Créer un compte
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions rapides -->
+                <div class="card">
+                    <div class="card__header">
+                        <h2 class="card__title">⚡ Actions Rapides</h2>
+                        <span class="card__icon">🚀</span>
+                    </div>
+                    <div class="card__content">
+                        <div class="actions-grid">
+                            <a href="#" class="action-btn" th:class="${hasComptes} ? 'action-btn' : 'action-btn' + ' disabled'" onclick="openDepotModal()">
+                                <span class="action-btn__icon">💰</span>
+                                Dépôt
+                            </a>
+                            <a href="#" class="action-btn" th:class="${hasComptes} ? 'action-btn' : 'action-btn' + ' disabled'" onclick="openRetraitModal()">
+                                <span class="action-btn__icon">💸</span>
+                                Retrait
+                            </a>
+                            <a href="#" class="action-btn" th:class="${hasComptes} ? 'action-btn' : 'action-btn' + ' disabled'" onclick="openVirementModal()">
+                                <span class="action-btn__icon">🔄</span>
+                                Virement
+                            </a>
+                            <a href="#" class="action-btn" onclick="openCreateAccountModal()">
+                                <span class="action-btn__icon">➕</span>
+                                Nouveau compte
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historique récent -->
+                <div class="card" th:if="${hasComptes}">
+                    <div class="card__header">
+                        <h2 class="card__title">📊 Opérations Récentes</h2>
+                        <span class="card__icon">📈</span>
+                    </div>
+                    <div class="card__content">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Opération</th>
+                                        <th>Montant</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>16/10/2025</td>
+                                        <td>Dépôt initial</td>
+                                        <td class="text-gold">+1 000,00 €</td>
+                                    </tr>
+                                    <tr>
+                                        <td>15/10/2025</td>
+                                        <td>Ouverture compte</td>
+                                        <td class="text-muted">0,00 €</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="#" class="btn btn-outline">Voir tout l'historique</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informations personnelles -->
+                <div class="card">
+                    <div class="card__header">
+                        <h2 class="card__title">👤 Mon Profil</h2>
+                        <span class="card__icon">⚙️</span>
+                    </div>
+                    <div class="card__content">
+                        <p><strong>Nom complet :</strong> <span th:text="${clientPrenom} + ' ' + ${clientNom}">John Doe</span></p>
+                        <p><strong>Statut :</strong> <span class="text-gold">Client Premium</span></p>
+                        <p><strong>Membre depuis :</strong> Octobre 2025</p>
+                        
+                        <div class="mt-3">
+                            <a href="#" class="btn btn-outline" style="width: 100%;">
+                                Modifier mes informations
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modales -->
+    
+    <!-- Modal Création de compte -->
+    <div id="createAccountModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;">
+            <div class="modal-header" style="margin-bottom: 1.5rem;">
+                <h3>✨ Créer un nouveau compte</h3>
+                <button onclick="closeModal('createAccountModal')" style="float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form action="/compte/creer" method="post">
+                <div class="form-group">
+                    <label class="form-label">Type de compte</label>
+                    <select name="typeCompte" class="form-control form-select" required>
+                        <option value="">Choisir un type</option>
+                        <option value="STANDARD">Standard - Compte de base</option>
+                        <option value="PREMIUM">Premium - Avantages exclusifs</option>
+                        <option value="ETUDIANT">Étudiant - Tarifs préférentiels</option>
+                        <option value="BUSINESS">Business - Compte professionnel</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-gold btn-block">Créer le compte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Dépôt -->
+    <div id="depotModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;">
+            <div class="modal-header" style="margin-bottom: 1.5rem;">
+                <h3>💰 Effectuer un dépôt</h3>
+                <button onclick="closeModal('depotModal')" style="float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form action="/operation/depot" method="post">
+                <div class="form-group">
+                    <label class="form-label">Compte de destination</label>
+                    <select name="numeroCompte" class="form-control form-select" required>
+                        <option value="">Choisir un compte</option>
+                        <!-- Sera rempli dynamiquement -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Montant (€)</label>
+                    <input type="number" name="montant" class="form-control" placeholder="100.00" min="1" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block">Effectuer le dépôt</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Retrait -->
+    <div id="retraitModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;">
+            <div class="modal-header" style="margin-bottom: 1.5rem;">
+                <h3>💸 Effectuer un retrait</h3>
+                <button onclick="closeModal('retraitModal')" style="float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form action="/operation/retrait" method="post">
+                <div class="form-group">
+                    <label class="form-label">Compte source</label>
+                    <select name="numeroCompte" class="form-control form-select" required>
+                        <option value="">Choisir un compte</option>
+                        <!-- Sera rempli dynamiquement -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Montant (€)</label>
+                    <input type="number" name="montant" class="form-control" placeholder="50.00" min="1" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block">Effectuer le retrait</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Virement -->
+    <div id="virementModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;">
+            <div class="modal-header" style="margin-bottom: 1.5rem;">
+                <h3>🔄 Effectuer un virement</h3>
+                <button onclick="closeModal('virementModal')" style="float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form action="/operation/virement" method="post">
+                <div class="form-group">
+                    <label class="form-label">Compte source</label>
+                    <select name="numeroCompteSource" class="form-control form-select" required>
+                        <option value="">Choisir le compte source</option>
+                        <!-- Sera rempli dynamiquement -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Compte destination</label>
+                    <input type="text" name="numeroCompteDestination" class="form-control" placeholder="Numéro de compte destination" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Montant (€)</label>
+                    <input type="number" name="montant" class="form-control" placeholder="200.00" min="1" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Motif (optionnel)</label>
+                    <input type="text" name="motif" class="form-control" placeholder="Ex: Remboursement, Cadeau, etc.">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block">Effectuer le virement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div th:replace="~{base :: footer}"></div>
+
+    <!-- Scripts -->
+    <script th:replace="~{base :: scripts}"></script>
+    
+    <!-- Script spécifique au dashboard -->
+    <script>
+        // Gestion des modales
+        function openCreateAccountModal() {
+            document.getElementById('createAccountModal').style.display = 'block';
+        }
+        
+        function openDepotModal() {
+            if (!hasAccounts()) {
+                alert('Vous devez d\'abord créer un compte bancaire.');
+                return;
+            }
+            document.getElementById('depotModal').style.display = 'block';
+        }
+        
+        function openRetraitModal() {
+            if (!hasAccounts()) {
+                alert('Vous devez d\'abord créer un compte bancaire.');
+                return;
+            }
+            document.getElementById('retraitModal').style.display = 'block';
+        }
+        
+        function openVirementModal() {
+            if (!hasAccounts()) {
+                alert('Vous devez d\'abord créer un compte bancaire.');
+                return;
+            }
+            document.getElementById('virementModal').style.display = 'block';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function hasAccounts() {
+            // Vérifier côté client si l'utilisateur a des comptes
+            return /*[[${hasComptes}]]*/ false;
+        }
+        
+        // Fermer les modales en cliquant à l'extérieur
+        window.addEventListener('click', function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+        
+        // Animations des cartes au scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.transform = 'translateY(0)';
+                        entry.target.style.opacity = '1';
+                    }
+                });
+            }, observerOptions);
+            
+            cards.forEach(card => {
+                card.style.transform = 'translateY(20px)';
+                card.style.opacity = '0';
+                card.style.transition = 'all 0.6s ease';
+                observer.observe(card);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::main})}">
+<head>
+    <title th:text="${pageTitle}">Historique des opérations</title>
+</head>
+<body>
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">📋 Historique des Opérations</h1>
+                <p class="page-subtitle">Consultez toutes vos transactions bancaires</p>
+            </div>
+
+            <!-- Sélecteur de compte -->
+            <div class="card">
+                <div class="card__header">
+                    <h2 class="card__title">Sélectionner un compte</h2>
+                </div>
+                <div class="card__content">
+                    <form method="GET" action="/centralisateur/web/historique" class="form form--inline">
+                        <div class="form-group">
+                            <label for="numeroCompte" class="form-label">
+                                <i class="icon">🏦</i>
+                                Compte à consulter
+                            </label>
+                            <select id="numeroCompte" name="numeroCompte" class="form-select" onchange="this.form.submit()">
+                                <option value="">Sélectionnez un compte</option>
+                                <option th:each="compte : ${comptes}" 
+                                        th:value="${compte.numeroCompte}"
+                                        th:selected="${compte.numeroCompte == numeroCompteSelectionne}"
+                                        th:text="${compte.numeroCompte + ' - ' + compte.libelle}">
+                                </option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Historique des mouvements -->
+            <div th:if="${numeroCompteSelectionne != null and mouvements != null}" class="movements-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        Mouvements du compte <span th:text="${numeroCompteSelectionne}">123456789</span>
+                    </h2>
+                    <div class="section-actions">
+                        <span class="movements-count" th:text="${#lists.size(mouvements)} + ' transaction(s)'">
+                            15 transaction(s)
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Liste des mouvements -->
+                <div th:if="${!mouvements.isEmpty()}" class="movements-list">
+                    <div th:each="mouvement : ${mouvements}" class="movement-item">
+                        <div class="movement-header">
+                            <div class="movement-info">
+                                <h4 class="movement-libelle" th:text="${mouvement.libelle}">Dépôt espèces</h4>
+                                <div class="movement-meta">
+                                    <span class="movement-date" th:text="${#temporals.format(mouvement.dateOperation, 'dd/MM/yyyy HH:mm')}">
+                                        16/10/2024 14:30
+                                    </span>
+                                    <span class="movement-reference" th:text="'Réf: ' + ${mouvement.reference}">
+                                        Réf: OP20241016001
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="movement-amount">
+                                <span class="amount" 
+                                      th:text="${mouvement.typeOperation == 'CREDIT' ? '+' : '-'} + ${#numbers.formatCurrency(mouvement.montant)}"
+                                      th:classappend="${mouvement.typeOperation == 'CREDIT'} ? 'amount--positive' : 'amount--negative'">
+                                    +250,00 €
+                                </span>
+                                <span class="movement-type" 
+                                      th:text="${mouvement.typeOperation}"
+                                      th:classappend="${mouvement.typeOperation == 'CREDIT'} ? 'type--credit' : 'type--debit'">
+                                    CREDIT
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Détails supplémentaires -->
+                        <div class="movement-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Type d'opération:</span>
+                                <span class="detail-value" th:text="${mouvement.libelleTypeOperation ?: mouvement.typeOperation}">
+                                    Dépôt
+                                </span>
+                            </div>
+                            <div class="detail-item" th:if="${mouvement.commentaire != null}">
+                                <span class="detail-label">Commentaire:</span>
+                                <span class="detail-value" th:text="${mouvement.commentaire}">
+                                    Commentaire additionnel
+                                </span>
+                            </div>
+                            <div class="detail-item" th:if="${mouvement.soldeApres != null}">
+                                <span class="detail-label">Solde après opération:</span>
+                                <span class="detail-value" th:text="${#numbers.formatCurrency(mouvement.soldeApres)}">
+                                    1 250,00 €
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message si pas de mouvements -->
+                <div th:if="${mouvements.isEmpty()}" class="empty-state">
+                    <div class="empty-state__icon">📭</div>
+                    <h3 class="empty-state__title">Aucune transaction</h3>
+                    <p class="empty-state__text">
+                        Ce compte n'a encore aucune transaction enregistrée.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Message si aucun compte sélectionné -->
+            <div th:if="${numeroCompteSelectionne == null}" class="info-message">
+                <div class="info-message__icon">ℹ️</div>
+                <div class="info-message__content">
+                    <h3>Sélectionnez un compte</h3>
+                    <p>Choisissez un compte dans la liste ci-dessus pour consulter son historique de transactions.</p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="page-actions">
+                <a href="/centralisateur/web/depot" class="btn btn--primary">
+                    <i class="btn__icon">💵</i>
+                    Effectuer un dépôt
+                </a>
+                <a href="/centralisateur/web/retrait" class="btn btn--secondary">
+                    <i class="btn__icon">💸</i>
+                    Effectuer un retrait
+                </a>
+                <a href="/centralisateur/web/virement" class="btn btn--secondary">
+                    <i class="btn__icon">🔄</i>
+                    Effectuer un virement
+                </a>
+                <a href="/centralisateur/dashboard" class="btn btn--outline">
+                    <i class="btn__icon">🏠</i>
+                    Retour au tableau de bord
+                </a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
