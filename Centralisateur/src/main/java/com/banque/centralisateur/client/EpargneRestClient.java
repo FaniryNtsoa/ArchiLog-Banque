@@ -302,6 +302,7 @@ public class EpargneRestClient {
     
     /**
      * Lit la réponse JSON depuis un flux
+     * Gère à la fois les objets JSON et les tableaux JSON
      */
     private JsonObject readJsonResponse(InputStream inputStream) {
         if (inputStream == null) {
@@ -312,7 +313,24 @@ public class EpargneRestClient {
         }
         
         try (JsonReader jsonReader = Json.createReader(inputStream)) {
-            return jsonReader.readObject();
+            // Détecter si la réponse est un objet ou un tableau
+            JsonStructure structure = jsonReader.read();
+            
+            if (structure instanceof JsonObject) {
+                // Réponse est un objet JSON
+                return (JsonObject) structure;
+            } else if (structure instanceof JsonArray) {
+                // Réponse est un tableau JSON - l'envelopper dans un objet standard
+                return Json.createObjectBuilder()
+                    .add("success", true)
+                    .add("data", (JsonArray) structure)
+                    .build();
+            } else {
+                return Json.createObjectBuilder()
+                    .add("success", false)
+                    .add("message", "Format de réponse inattendu")
+                    .build();
+            }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Erreur lors de la lecture de la réponse JSON", e);
             return Json.createObjectBuilder()

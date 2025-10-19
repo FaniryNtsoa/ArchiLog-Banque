@@ -2,6 +2,7 @@ package com.banque.centralisateur.servlet.epargne;
 
 import com.banque.centralisateur.client.EpargneRestClient;
 import com.banque.centralisateur.config.ThymeleafConfig;
+import com.banque.centralisateur.util.JsonHelper;
 import jakarta.json.JsonObject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -64,15 +65,15 @@ public class NouveauCompteEpargneServlet extends HttpServlet {
             List<TypeCompteView> typesView = new ArrayList<>();
             for (JsonObject type : typesComptes) {
                 TypeCompteView view = new TypeCompteView();
-                view.setIdTypeCompte(type.getJsonNumber("idTypeCompte").longValue());
-                view.setLibelle(type.getString("libelle"));
-                view.setCodeType(type.getString("codeType"));
-                view.setDescription(type.getString("description", ""));
-                view.setTauxInteretAnnuel(type.getJsonNumber("tauxInteretAnnuel").bigDecimalValue());
-                view.setDepotInitialMin(type.getJsonNumber("depotInitialMin").bigDecimalValue());
-                view.setSoldeMinObligatoire(type.getJsonNumber("soldeMinObligatoire").bigDecimalValue());
-                view.setPlafondDepot(type.getJsonNumber("plafondDepot").bigDecimalValue());
-                view.setPeriodiciteCalculInteret(type.getString("periodiciteCalculInteret"));
+                view.setIdTypeCompte(JsonHelper.getSafeLong(type, "idTypeCompte"));
+                view.setLibelle(JsonHelper.getSafeString(type, "libelle", ""));
+                view.setCodeType(JsonHelper.getSafeString(type, "codeType", ""));
+                view.setDescription(JsonHelper.getSafeString(type, "description", ""));
+                view.setTauxInteretAnnuel(JsonHelper.getSafeBigDecimal(type, "tauxInteretAnnuel", BigDecimal.ZERO));
+                view.setDepotInitialMin(JsonHelper.getSafeBigDecimal(type, "depotInitialMin", BigDecimal.ZERO));
+                view.setSoldeMinObligatoire(JsonHelper.getSafeBigDecimal(type, "soldeMinObligatoire", BigDecimal.ZERO));
+                view.setPlafondDepot(JsonHelper.getSafeBigDecimal(type, "plafondDepot", BigDecimal.ZERO));
+                view.setPeriodiciteCalculInteret(JsonHelper.getSafeString(type, "periodiciteCalculInteret", ""));
                 typesView.add(view);
             }
             
@@ -140,7 +141,7 @@ public class NouveauCompteEpargneServlet extends HttpServlet {
             
             if (responseJson != null && responseJson.getBoolean("success", false)) {
                 JsonObject compte = responseJson.getJsonObject("data");
-                String numeroCompte = compte.getString("numeroCompte");
+                String numeroCompte = JsonHelper.getSafeString(compte, "numeroCompte", "");
                 
                 session.setAttribute("successMessage", 
                     "Compte épargne créé avec succès ! Numéro de compte : " + numeroCompte);
@@ -148,7 +149,7 @@ public class NouveauCompteEpargneServlet extends HttpServlet {
                 
             } else {
                 String errorMsg = responseJson != null ? 
-                    responseJson.getString("message", "Erreur lors de la création du compte") : 
+                    JsonHelper.getSafeString(responseJson, "message", "Erreur lors de la création du compte") : 
                     "Erreur lors de la création du compte";
                     
                 session.setAttribute("errorMessage", errorMsg);

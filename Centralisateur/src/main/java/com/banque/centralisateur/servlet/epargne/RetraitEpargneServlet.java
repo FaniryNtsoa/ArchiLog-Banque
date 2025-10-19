@@ -2,6 +2,7 @@ package com.banque.centralisateur.servlet.epargne;
 
 import com.banque.centralisateur.client.EpargneRestClient;
 import com.banque.centralisateur.config.ThymeleafConfig;
+import com.banque.centralisateur.util.JsonHelper;
 import jakarta.json.JsonObject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -64,16 +65,18 @@ public class RetraitEpargneServlet extends HttpServlet {
             // Filtrer uniquement les comptes actifs
             List<CompteSimpleView> comptesActifs = new ArrayList<>();
             for (JsonObject compte : comptes) {
-                String statut = compte.getString("statut");
+                String statut = JsonHelper.getSafeString(compte, "statut", "");
                 if ("ACTIF".equals(statut)) {
                     CompteSimpleView view = new CompteSimpleView();
-                    view.setIdCompte(compte.getJsonNumber("idCompte").longValue());
-                    view.setNumeroCompte(compte.getString("numeroCompte"));
-                    view.setSolde(compte.getJsonNumber("solde").bigDecimalValue());
+                    view.setIdCompte(JsonHelper.getSafeLong(compte, "idCompte"));
+                    view.setNumeroCompte(JsonHelper.getSafeString(compte, "numeroCompte", ""));
+                    view.setSolde(JsonHelper.getSafeBigDecimal(compte, "solde", BigDecimal.ZERO));
                     
-                    if (compte.containsKey("typeCompte")) {
-                        JsonObject typeCompte = compte.getJsonObject("typeCompte");
-                        view.setTypeLibelle(typeCompte.getString("libelle"));
+                    if (compte.containsKey("typeCompte") || compte.containsKey("TypeCompte")) {
+                        JsonObject typeCompte = compte.containsKey("typeCompte") ? 
+                            compte.getJsonObject("typeCompte") : 
+                            compte.getJsonObject("TypeCompte");
+                        view.setTypeLibelle(JsonHelper.getSafeString(typeCompte, "libelle", ""));
                     }
                     
                     comptesActifs.add(view);
@@ -143,9 +146,9 @@ public class RetraitEpargneServlet extends HttpServlet {
             // Effectuer le retrait via l'API
             JsonObject responseJson = epargneClient.effectuerRetrait(compteId, montant, description);
             
-            if (responseJson != null && responseJson.getBoolean("success", false)) {
+            if (responseJson != null && JsonHelper.getSafeBoolean(responseJson, "success", false)) {
                 JsonObject operation = responseJson.getJsonObject("data");
-                BigDecimal nouveauSolde = operation.getJsonNumber("soldeApres").bigDecimalValue();
+                BigDecimal nouveauSolde = JsonHelper.getSafeBigDecimal(operation, "soldeApres", BigDecimal.ZERO);
                 
                 session.setAttribute("successMessage", 
                     String.format("Retrait de %s effectué avec succès ! Nouveau solde : %s", 
@@ -154,7 +157,7 @@ public class RetraitEpargneServlet extends HttpServlet {
                 
             } else {
                 String errorMsg = responseJson != null ? 
-                    responseJson.getString("message", "Erreur lors du retrait") : 
+                    JsonHelper.getSafeString(responseJson, "message", "Erreur lors du retrait") : 
                     "Erreur lors du retrait";
                     
                 session.setAttribute("errorMessage", errorMsg);

@@ -19,6 +19,7 @@ com\banque\centralisateur\servlet\epargne\RetraitEpargneServlet.class
 com\banque\centralisateur\servlet\epargne\HistoriqueEpargneServlet$OperationView.class
 com\banque\centralisateur\servlet\epargne\NouveauCompteEpargneServlet$TypeCompteView.class
 com\banque\centralisateur\ejb\PretEJBClientFactory.class
+com\banque\centralisateur\util\JsonHelper.class
 com\banque\centralisateur\servlet\epargne\DepotEpargneServlet.class
 com\banque\centralisateur\servlet\DashboardServlet.class
 com\banque\centralisateur\servlet\epargne\NouveauCompteEpargneServlet.class

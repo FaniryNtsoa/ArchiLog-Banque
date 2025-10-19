@@ -2,6 +2,7 @@ package com.banque.centralisateur.servlet.epargne;
 
 import com.banque.centralisateur.client.EpargneRestClient;
 import com.banque.centralisateur.config.ThymeleafConfig;
+import com.banque.centralisateur.util.JsonHelper;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.servlet.ServletException;
@@ -66,17 +67,19 @@ public class ComptesEpargneServlet extends HttpServlet {
             List<CompteEpargneView> comptesView = new ArrayList<>();
             for (JsonObject compte : comptes) {
                 CompteEpargneView view = new CompteEpargneView();
-                view.setIdCompte(compte.getJsonNumber("idCompte").longValue());
-                view.setNumeroCompte(compte.getString("numeroCompte"));
-                view.setSolde(compte.getJsonNumber("solde").bigDecimalValue());
-                view.setDateOuverture(compte.getString("dateOuverture"));
-                view.setStatut(compte.getString("statut"));
+                view.setIdCompte(JsonHelper.getSafeLong(compte, "idCompte"));
+                view.setNumeroCompte(JsonHelper.getSafeString(compte, "numeroCompte", ""));
+                view.setSolde(JsonHelper.getSafeBigDecimal(compte, "solde", java.math.BigDecimal.ZERO));
+                view.setDateOuverture(JsonHelper.getSafeString(compte, "dateOuverture", ""));
+                view.setStatut(JsonHelper.getSafeString(compte, "statut", ""));
                 
                 // Type de compte
-                if (compte.containsKey("typeCompte")) {
-                    JsonObject typeCompte = compte.getJsonObject("typeCompte");
-                    view.setTypeLibelle(typeCompte.getString("libelle"));
-                    view.setTauxInteret(typeCompte.getJsonNumber("tauxInteretAnnuel").bigDecimalValue());
+                if (compte.containsKey("typeCompte") || compte.containsKey("TypeCompte")) {
+                    JsonObject typeCompte = compte.containsKey("typeCompte") ? 
+                        compte.getJsonObject("typeCompte") : 
+                        compte.getJsonObject("TypeCompte");
+                    view.setTypeLibelle(JsonHelper.getSafeString(typeCompte, "libelle", ""));
+                    view.setTauxInteret(JsonHelper.getSafeBigDecimal(typeCompte, "tauxInteretAnnuel", java.math.BigDecimal.ZERO));
                 }
                 
                 comptesView.add(view);

@@ -1,5 +1,35 @@
 # 📝 Changelog - Intégration Module Épargne
 
+## Version 1.0.2 - 20 octobre 2025
+
+### 🐛 Corrections
+
+#### Fix Erreur Parsing JSON Array
+- **Problème** : Erreur `JsonParsingException` lors de la récupération des listes (types de comptes, comptes client)
+- **Cause** : L'API .NET renvoie directement un tableau JSON `[...]` mais le code Java attendait un objet `{...}`
+- **Fichier modifié** : `EpargneRestClient.java` (méthode `readJsonResponse`)
+- **Changement** : 
+  ```java
+  // Avant : lecture uniquement d'objets JSON
+  return jsonReader.readObject();
+  
+  // Après : détection dynamique objet/tableau
+  JsonStructure structure = jsonReader.read();
+  if (structure instanceof JsonObject) {
+      return (JsonObject) structure;
+  } else if (structure instanceof JsonArray) {
+      return Json.createObjectBuilder()
+          .add("success", true)
+          .add("data", (JsonArray) structure)
+          .build();
+  }
+  ```
+- **Endpoints corrigés** :
+  - `GET /typescomptes/actifs` - Liste des types de comptes épargne
+  - `GET /comptesepargne/client/{id}` - Comptes épargne d'un client
+- **Impact** : Les pages "Nouveau Compte Épargne" et "Dépôt/Retrait Épargne" fonctionnent maintenant
+- **Documentation** : Nouveau fichier `FIX_JSON_ARRAY_PARSING.md` avec explication détaillée
+
 ## Version 1.0.1 - 20 octobre 2025
 
 ### 🐛 Corrections

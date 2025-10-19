@@ -2,6 +2,7 @@ package com.banque.centralisateur.servlet.epargne;
 
 import com.banque.centralisateur.client.EpargneRestClient;
 import com.banque.centralisateur.config.ThymeleafConfig;
+import com.banque.centralisateur.util.JsonHelper;
 import jakarta.json.JsonObject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -69,13 +70,15 @@ public class HistoriqueEpargneServlet extends HttpServlet {
             // Convertir en vue simple
             for (JsonObject compte : comptesJson) {
                 CompteSimpleView view = new CompteSimpleView();
-                view.setIdCompte(compte.getJsonNumber("idCompte").longValue());
-                view.setNumeroCompte(compte.getString("numeroCompte"));
-                view.setSolde(compte.getJsonNumber("solde").bigDecimalValue());
+                view.setIdCompte(JsonHelper.getSafeLong(compte, "idCompte"));
+                view.setNumeroCompte(JsonHelper.getSafeString(compte, "numeroCompte", ""));
+                view.setSolde(JsonHelper.getSafeBigDecimal(compte, "solde", BigDecimal.ZERO));
                 
-                if (compte.containsKey("typeCompte")) {
-                    JsonObject typeCompte = compte.getJsonObject("typeCompte");
-                    view.setTypeLibelle(typeCompte.getString("libelle"));
+                if (compte.containsKey("typeCompte") || compte.containsKey("TypeCompte")) {
+                    JsonObject typeCompte = compte.containsKey("typeCompte") ? 
+                        compte.getJsonObject("typeCompte") : 
+                        compte.getJsonObject("TypeCompte");
+                    view.setTypeLibelle(JsonHelper.getSafeString(typeCompte, "libelle", ""));
                 }
                 
                 comptes.add(view);
@@ -101,13 +104,13 @@ public class HistoriqueEpargneServlet extends HttpServlet {
                 
                 for (JsonObject op : operationsJson) {
                     OperationView opView = new OperationView();
-                    opView.setIdOperation(op.getJsonNumber("idOperation").longValue());
-                    opView.setTypeOperation(op.getString("typeOperation"));
-                    opView.setMontant(op.getJsonNumber("montant").bigDecimalValue());
-                    opView.setSoldeAvant(op.getJsonNumber("soldeAvant").bigDecimalValue());
-                    opView.setSoldeApres(op.getJsonNumber("soldeApres").bigDecimalValue());
-                    opView.setDescription(op.getString("description", ""));
-                    opView.setDateOperation(op.getString("dateOperation"));
+                    opView.setIdOperation(JsonHelper.getSafeLong(op, "idOperation"));
+                    opView.setTypeOperation(JsonHelper.getSafeString(op, "typeOperation", ""));
+                    opView.setMontant(JsonHelper.getSafeBigDecimal(op, "montant", BigDecimal.ZERO));
+                    opView.setSoldeAvant(JsonHelper.getSafeBigDecimal(op, "soldeAvant", BigDecimal.ZERO));
+                    opView.setSoldeApres(JsonHelper.getSafeBigDecimal(op, "soldeApres", BigDecimal.ZERO));
+                    opView.setDescription(JsonHelper.getSafeString(op, "description", ""));
+                    opView.setDateOperation(JsonHelper.getSafeString(op, "dateOperation", ""));
                     operations.add(opView);
                 }
             }
