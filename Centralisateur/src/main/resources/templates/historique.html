@@ -35,7 +35,7 @@
                                 <option th:each="compte : ${comptes}" 
                                         th:value="${compte.numeroCompte}"
                                         th:selected="${compte.numeroCompte == numeroCompteSelectionne}"
-                                        th:text="${compte.numeroCompte + ' - ' + compte.libelle}">
+                                        th:text="${compte.numeroCompte + ' - ' + (compte.libelleCompte != null ? compte.libelleCompte : 'Compte')}">
                                 </option>
                             </select>
                         </div>

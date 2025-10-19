@@ -43,7 +43,6 @@ public class Mouvement implements Serializable {
 
     @Column(name = "montant", nullable = false, precision = 15, scale = 2)
     @NotNull(message = "Le montant est obligatoire")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Le montant doit être positif")
     private BigDecimal montant;
 
     @Column(name = "solde_avant_operation", nullable = false, precision = 15, scale = 2)

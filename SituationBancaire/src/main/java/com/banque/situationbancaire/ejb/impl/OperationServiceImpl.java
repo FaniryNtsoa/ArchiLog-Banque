@@ -155,15 +155,115 @@ public class OperationServiceImpl implements OperationServiceRemote {
     public VirementDTO effectuerVirement(String numeroCompteDebiteur, String numeroCompteCrediteur, BigDecimal montant, String libelle) {
         LOGGER.info("Virement de " + montant + " de " + numeroCompteDebiteur + " vers " + numeroCompteCrediteur);
         
-        // TODO: Implémentation complète
-        VirementDTO virement = new VirementDTO();
-        virement.setNumeroCompteDebiteur(numeroCompteDebiteur);
-        virement.setNumeroCompteCrediteur(numeroCompteCrediteur);
-        virement.setMontant(montant);
-        virement.setLibelle(libelle);
-        virement.setStatut("EXECUTE");
+        if (montant.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Le montant doit être positif");
+        }
         
-        return virement;
+        if (numeroCompteDebiteur.equals(numeroCompteCrediteur)) {
+            throw new IllegalArgumentException("Les comptes débiteur et créditeur doivent être différents");
+        }
+        
+        // Vérifier l'existence des deux comptes
+        Optional<CompteCourant> compteDebiteurOpt = compteCourantRepository.findByNumeroCompte(numeroCompteDebiteur);
+        if (compteDebiteurOpt.isEmpty()) {
+            throw new IllegalArgumentException("Compte débiteur non trouvé : " + numeroCompteDebiteur);
+        }
+        
+        Optional<CompteCourant> compteCrediteurOpt = compteCourantRepository.findByNumeroCompte(numeroCompteCrediteur);
+        if (compteCrediteurOpt.isEmpty()) {
+            throw new IllegalArgumentException("Compte créditeur non trouvé : " + numeroCompteCrediteur);
+        }
+        
+        CompteCourant compteDebiteur = compteDebiteurOpt.get();
+        CompteCourant compteCrediteur = compteCrediteurOpt.get();
+        
+        // Vérifier le statut des comptes
+        if (compteDebiteur.getStatut() != StatutCompte.OUVERT) {
+            throw new IllegalStateException("Le compte débiteur n'est pas actif");
+        }
+        
+        if (compteCrediteur.getStatut() != StatutCompte.OUVERT) {
+            throw new IllegalStateException("Le compte créditeur n'est pas actif");
+        }
+        
+        // Vérifier les plafonds de virement journalier
+        if (!verifierPlafonds(numeroCompteDebiteur, montant, "VIREMENT")) {
+            throw new IllegalStateException("Plafond de virement journalier dépassé");
+        }
+        
+        // Calculer le solde du compte débiteur
+        BigDecimal soldeAvantDebiteur = calculerSoldeCompte(compteDebiteur);
+        BigDecimal nouveauSoldeDebiteur = soldeAvantDebiteur.subtract(montant);
+        
+        // Vérifier le découvert autorisé du compte débiteur
+        BigDecimal decouvertAutorise = BigDecimal.ZERO;
+        if (compteDebiteur.getTypeCompte() != null && compteDebiteur.getTypeCompte().getParametreActuel() != null) {
+            decouvertAutorise = compteDebiteur.getTypeCompte().getParametreActuel().getMontantDecouvertAutorise();
+        }
+        
+        if (nouveauSoldeDebiteur.compareTo(decouvertAutorise.negate()) < 0) {
+            throw new IllegalStateException("Solde insuffisant. Découvert autorisé : " + decouvertAutorise + " XOF");
+        }
+        
+        // Récupérer le type d'opération VIREMENT
+        Optional<TypeOperation> typeVirementOpt = typeOperationRepository.findByCode("VIREMENT");
+        if (typeVirementOpt.isEmpty()) {
+            throw new IllegalStateException("Type d'opération VIREMENT non configuré");
+        }
+        
+        // Calculer le solde du compte créditeur
+        BigDecimal soldeAvantCrediteur = calculerSoldeCompte(compteCrediteur);
+        
+        // Créer le mouvement de débit
+        Mouvement mouvementDebit = Mouvement.builder()
+            .compte(compteDebiteur)
+            .typeOperation(typeVirementOpt.get())
+            .montant(montant.negate()) // Négatif pour le débit
+            .soldeAvantOperation(soldeAvantDebiteur)
+            .soldeApresOperation(nouveauSoldeDebiteur)
+            .dateOperation(LocalDateTime.now())
+            .libelleOperation(libelle != null ? libelle : "Virement émis vers " + numeroCompteCrediteur)
+            .reference(genererReference("VIR"))
+            .build();
+        
+        Mouvement mouvementDebitCree = mouvementRepository.save(mouvementDebit);
+        
+        // Créer le mouvement de crédit
+        Mouvement mouvementCredit = Mouvement.builder()
+            .compte(compteCrediteur)
+            .typeOperation(typeVirementOpt.get())
+            .montant(montant) // Positif pour le crédit
+            .soldeAvantOperation(soldeAvantCrediteur)
+            .soldeApresOperation(soldeAvantCrediteur.add(montant))
+            .dateOperation(LocalDateTime.now())
+            .libelleOperation(libelle != null ? libelle : "Virement reçu de " + numeroCompteDebiteur)
+            .reference(genererReference("VIR"))
+            .build();
+        
+        Mouvement mouvementCreditCree = mouvementRepository.save(mouvementCredit);
+        
+        // Créer l'entité Virement qui lie les deux mouvements
+        Virement virement = Virement.builder()
+            .montant(montant)
+            .mouvementDebit(mouvementDebitCree)
+            .mouvementCredit(mouvementCreditCree)
+            .dateVirement(LocalDateTime.now())
+            .build();
+        
+        Virement virementCree = virementRepository.save(virement);
+        
+        // Appliquer les intérêts de découvert si nécessaire après le virement
+        gererInteretsDecouvertAutomatique(compteDebiteur);
+        gererInteretsDecouvertAutomatique(compteCrediteur);
+        
+        // Créer le DTO de retour
+        VirementDTO virementDTO = VirementMapper.toDTO(virementCree);
+        virementDTO.setNumeroCompteDebiteur(numeroCompteDebiteur);
+        virementDTO.setNumeroCompteCrediteur(numeroCompteCrediteur);
+        virementDTO.setLibelle(libelle != null ? libelle : "Virement");
+        virementDTO.setStatut("EXECUTE");
+        
+        return virementDTO;
     }
 
     @Override
@@ -398,23 +498,5 @@ public class OperationServiceImpl implements OperationServiceRemote {
                 LOGGER.info("Intérêts de découvert appliqués : " + interets + " XOF sur le compte " + compte.getNumeroCompte());
             }
         }
-    }
-
-    /**
-     * Créer un nouveau mouvement de base
-     */
-    private Mouvement creerMouvement(CompteCourant compte, BigDecimal montant, String libelle, TypeOperation typeOperation) {
-        BigDecimal soldeAvant = calculerSoldeCompte(compte);
-        
-        return Mouvement.builder()
-            .compte(compte)
-            .typeOperation(typeOperation)
-            .montant(montant)
-            .soldeAvantOperation(soldeAvant)
-            .soldeApresOperation(soldeAvant.add(montant))
-            .dateOperation(LocalDateTime.now())
-            .libelleOperation(libelle)
-            .reference(genererReference(typeOperation.getCodeOperation()))
-            .build();
     }
 }

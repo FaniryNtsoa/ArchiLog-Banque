@@ -27,17 +27,17 @@
                         <div class="form-group">
                             <label for="numeroCompte" class="form-label">
                                 <i class="icon">🏦</i>
-                                Compte à débiter *
+                                Votre compte
                             </label>
                             <select id="numeroCompte" name="numeroCompte" class="form-select" required>
                                 <option value="">Sélectionnez un compte</option>
                                 <option th:each="compte : ${comptes}" 
                                         th:value="${compte.numeroCompte}"
-                                        th:text="${compte.numeroCompte + ' - ' + compte.libelle + ' (' + #numbers.formatCurrency(compte.solde) + ')'}">
+                                        th:text="${compte.numeroCompte + ' - ' + (compte.libelleCompte != null ? compte.libelleCompte : 'Compte') + ' (' + #numbers.formatCurrency(compte.solde) + ')'}">
                                 </option>
                             </select>
                             <small class="form-help">
-                                Seuls les comptes actifs avec solde suffisant sont affichés
+                                Sélectionnez le compte à débiter
                             </small>
                         </div>
 
@@ -83,8 +83,10 @@
                                     <div th:each="compte : ${comptes}" class="solde-item">
                                         <span class="compte-numero" th:text="${compte.numeroCompte}">123456</span>
                                         <span class="solde-amount" th:text="${#numbers.formatCurrency(compte.solde)}">1 250,00 €</span>
-                                        <span class="solde-dispo" th:text="'(Dispo: ' + #numbers.formatCurrency(compte.soldeDisponible) + ')'">
-                                            (Dispo: 1 750,00 €)
+                                        <span class="solde-dispo" th:if="${compte.decouvertAutorise != null}">
+                                            <span th:text="'(Découvert: ' + ${#numbers.formatCurrency(compte.decouvertAutorise)} + ')'">
+                                                (Découvert: 500,00 €)
+                                            </span>
                                         </span>
                                     </div>
                                 </div>

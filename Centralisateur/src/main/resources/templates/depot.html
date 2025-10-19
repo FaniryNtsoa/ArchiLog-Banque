@@ -27,15 +27,18 @@
                         <div class="form-group">
                             <label for="numeroCompte" class="form-label">
                                 <i class="icon">🏦</i>
-                                Compte à créditer *
+                                Votre compte
                             </label>
                             <select id="numeroCompte" name="numeroCompte" class="form-select" required>
                                 <option value="">Sélectionnez un compte</option>
                                 <option th:each="compte : ${comptes}" 
                                         th:value="${compte.numeroCompte}"
-                                        th:text="${compte.numeroCompte + ' - ' + compte.libelle + ' (' + #numbers.formatCurrency(compte.solde) + ')'}">
+                                        th:text="${compte.numeroCompte + ' - ' + (compte.libelleCompte != null ? compte.libelleCompte : 'Compte') + ' (' + #numbers.formatCurrency(compte.solde) + ')'}">
                                 </option>
                             </select>
+                            <small class="form-help">
+                                Sélectionnez le compte à créditer
+                            </small>
                         </div>
 
                         <div class="form-group">

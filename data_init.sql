@@ -24,3 +24,18 @@ INSERT INTO type_compte (id_type_compte, id_parametre_actuel, code_type, libelle
 (4, 4, 'BUSINESS', 'Compte Business', 'Compte professionnel pour les entreprises et independants'),
 (5, 5, 'ECO', 'Compte Economique', 'Compte economique avec frais reduits'),
 (6, 6, 'SILVER', 'Compte Silver', 'Ancienne offre silver remplacee par le compte premium');
+
+INSERT INTO type_operation (code_operation, libelle_operation, categorie, nature) VALUES
+('DEP', 'Dépôt espèces', 'CREDIT', 'DEPOT'),
+('RET', 'Retrait espèces', 'DEBIT', 'RETRAIT'),
+('VIR_IN', 'Virement reçu', 'CREDIT', 'VIREMENT'),
+('VIR_OUT', 'Virement émis', 'DEBIT', 'VIREMENT'),
+('PRELEV', 'Prélèvement', 'DEBIT', 'PRELEVEMENT'),
+('FRAIS', 'Frais bancaires', 'DEBIT', 'FRAIS'),
+('INT_DB', 'Intérêts débiteurs', 'DEBIT', 'INTERET'),
+('INT_CR', 'Intérêts créditeurs', 'CREDIT', 'INTERET');
+
+INSERT INTO type_operation (code_operation, libelle_operation, categorie, nature) VALUES
+('DEPOT', 'Dépôt espèces', 'CREDIT', 'DEPOT'),
+('RETRAIT', 'Retrait espèces', 'DEBIT', 'RETRAIT'),
+('VIREMENT', 'Virement reçu', 'CREDIT', 'VIREMENT');
