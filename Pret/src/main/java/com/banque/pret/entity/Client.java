@@ -74,6 +74,10 @@ public class Client implements Serializable {
     @Column(name = "revenu_mensuel", precision = 15, scale = 2)
     private BigDecimal revenuMensuel;
 
+    @Column(name = "charges_mensuelles", precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal chargesMensuelles = BigDecimal.ZERO;
+
     @Column(name = "solde_initial", nullable = false, precision = 15, scale = 2)
     @Builder.Default
     private BigDecimal soldeInitial = BigDecimal.ZERO;

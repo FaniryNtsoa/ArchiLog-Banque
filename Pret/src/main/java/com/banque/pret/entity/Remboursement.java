@@ -49,6 +49,9 @@ public class Remboursement implements Serializable {
     @Builder.Default
     private BigDecimal montantPenalite = BigDecimal.ZERO;
 
+    @Column(name = "numero_transaction", length = 100)
+    private String numeroTransaction;
+
     @Column(name = "date_paiement")
     @Builder.Default
     private LocalDateTime datePaiement = LocalDateTime.now();

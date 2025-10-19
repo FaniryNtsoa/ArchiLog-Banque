@@ -19,6 +19,7 @@ CREATE TABLE client (
     ville VARCHAR(100),
     profession VARCHAR(100),
     revenu_mensuel DECIMAL(15,2),
+    charges_mensuelles DECIMAL(15,2) DEFAULT 0, -- AJOUTÉ : Pour calcul du taux d'endettement
     solde_initial DECIMAL(15,2) DEFAULT 0 NOT NULL,
     situation_familiale ENUM('CELIBATAIRE', 'MARIE', 'DIVORCE', 'VEUF'),
     mot_de_passe VARCHAR(255) NOT NULL,

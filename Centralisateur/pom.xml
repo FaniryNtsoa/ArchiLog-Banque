@@ -137,7 +137,8 @@
             <version>1.0.0</version>
             <type>jar</type>
             <classifier>classes</classifier>
-            <scope>compile</scope>
+            <!-- Important: ne pas empaqueter toutes les classes serveur dans le WAR du centralisateur -->
+            <scope>provided</scope>
         </dependency>
 
         <!-- Thymeleaf pour les templates HTML -->
@@ -176,6 +177,38 @@
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
+            </plugin>
+            <!-- Unpack ciblé: inclure UNIQUEMENT les DTOs et interfaces @Remote de SituationBancaire
+                 dans WEB-INF/classes du centralisateur pour éviter l'injection JPA locale -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>unpack-situationbancaire-client-classes</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.banque</groupId>
+                                    <artifactId>situation-bancaire</artifactId>
+                                    <version>1.0.0</version>
+                                    <type>jar</type>
+                                    <classifier>classes</classifier>
+                                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                                    <!-- Inclure uniquement les API côté client -->
+                                    <includes>com/banque/situationbancaire/dto/**,com/banque/situationbancaire/ejb/remote/**</includes>
+                                    <!-- Exclure toutes les implémentations serveur -->
+                                    <excludes>**/impl/**,**/entity/**,**/repository/**,**/service/**,**/config/**,**/util/**</excludes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

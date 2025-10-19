@@ -20,10 +20,14 @@ public class RemboursementDTO implements Serializable {
 
     private Long idRemboursement;
     private Long idEcheance;
+    private Long idPret; // AJOUTÉ pour PHASE 5
     private Long idCompte;
     private BigDecimal montant;
+    private BigDecimal montantPaye; // AJOUTÉ pour PHASE 5
     private BigDecimal montantEcheance;
     private BigDecimal montantPenalite;
+    private BigDecimal penalites; // Alias pour montantPenalite
     private LocalDateTime datePaiement;
     private TypePaiement typePaiement;
+    private String numeroTransaction; // AJOUTÉ pour PHASE 5
 }

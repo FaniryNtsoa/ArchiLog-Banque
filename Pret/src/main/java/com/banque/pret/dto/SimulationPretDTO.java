@@ -18,10 +18,12 @@ public class SimulationPretDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // Paramètres de la simulation
+    private Long idTypePret; // Ajouté pour récupérer les plafonds
     private BigDecimal montantDemande;
     private Integer dureeMois;
     private BigDecimal tauxInteretAnnuel;
     private BigDecimal fraisDossier;
+    private BigDecimal revenuMensuel; // Pour vérifier les 33%
     
     // Résultats de la simulation
     private BigDecimal mensualite;
