@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+             http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
+             version="2.2">
+
+    <persistence-unit name="PretPU" transaction-type="JTA">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <jta-data-source>java:jboss/datasources/PretDS</jta-data-source>
+        
+        <!-- Entités -->
+        <class>com.banque.pret.entity.Client</class>
+        <class>com.banque.pret.entity.TypePret</class>
+        <class>com.banque.pret.entity.Pret</class>
+        <class>com.banque.pret.entity.Echeance</class>
+        <class>com.banque.pret.entity.Remboursement</class>
+        <class>com.banque.pret.entity.ParametresPenalites</class>
+
+        <properties>
+            <!-- Configuration Hibernate -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+            
+            <!-- Stratégie de génération du schéma (à ajuster selon l'environnement) -->
+            <!-- Pour le développement: validate | update -->
+            <!-- Pour la production: validate -->
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            
+            <!-- Cache de second niveau (optionnel) -->
+            <property name="hibernate.cache.use_second_level_cache" value="false"/>
+            <property name="hibernate.cache.use_query_cache" value="false"/>
+            
+            <!-- Performance -->
+            <property name="hibernate.jdbc.batch_size" value="20"/>
+            <property name="hibernate.order_inserts" value="true"/>
+            <property name="hibernate.order_updates" value="true"/>
+        </properties>
+    </persistence-unit>
+</persistence>
