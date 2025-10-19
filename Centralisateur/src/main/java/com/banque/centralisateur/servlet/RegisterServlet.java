@@ -232,6 +232,34 @@ public class RegisterServlet extends HttpServlet {
                 // Ne pas bloquer l'inscription si la création dans Prêt échoue
             }
             
+            // Appeler le service REST Épargne pour créer le client (même données)
+            try {
+                com.banque.centralisateur.client.EpargneRestClient epargneClient = 
+                    new com.banque.centralisateur.client.EpargneRestClient();
+                
+                jakarta.json.JsonObject responseEpargne = epargneClient.inscrireClient(
+                    nom, prenom, email, telephone,
+                    dateNaissanceStr, numCin, adresse,
+                    codePostal, ville, profession,
+                    clientDTO.getRevenuMensuel(),
+                    java.math.BigDecimal.ZERO, // soldeInitial
+                    situationFamiliale,
+                    motDePasse
+                );
+                
+                if (responseEpargne != null && responseEpargne.getBoolean("success", false)) {
+                    jakarta.json.JsonObject dataEpargne = responseEpargne.getJsonObject("data");
+                    LOGGER.info("Client créé avec succès dans Épargne: " + dataEpargne.getString("numeroClient", "N/A"));
+                } else {
+                    String errorMsg = responseEpargne != null ? responseEpargne.getString("message", "Erreur inconnue") : "Pas de réponse";
+                    LOGGER.warning("Erreur lors de la création du client dans Épargne: " + errorMsg);
+                }
+                
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Erreur lors de la création du client dans Épargne (non bloquant)", e);
+                // Ne pas bloquer l'inscription si la création dans Épargne échoue
+            }
+            
             // Rediriger vers la page de connexion avec un message de succès
             response.sendRedirect(request.getContextPath() + "/login?success=inscription");
             

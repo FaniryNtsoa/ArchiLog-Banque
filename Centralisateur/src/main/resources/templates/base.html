@@ -146,6 +146,52 @@
                     </li>
                 </ul>
                 
+                <!-- Séparateur avec titre -->
+                <div class="sidebar__nav-divider"></div>
+                <div class="sidebar__section-title">
+                    <span class="sidebar__section-icon">💰</span>
+                    <span class="sidebar__section-text">Épargne</span>
+                </div>
+                
+                <!-- Section Épargne -->
+                <ul class="sidebar__nav-list">
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/epargne/nouveau-compte}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'nouveau-compte-epargne'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">✨</span>
+                            <span class="sidebar__nav-text">Ouvrir un compte</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/epargne/comptes}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'comptes-epargne'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">📂</span>
+                            <span class="sidebar__nav-text">Mes comptes épargne</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/epargne/depot}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'depot-epargne'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">💵</span>
+                            <span class="sidebar__nav-text">Déposer</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/epargne/retrait}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'retrait-epargne'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">💸</span>
+                            <span class="sidebar__nav-text">Retirer</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/epargne/historique}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'historique-epargne'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">📜</span>
+                            <span class="sidebar__nav-text">Historique épargne</span>
+                        </a>
+                    </li>
+                </ul>
+                
                 <div class="sidebar__nav-divider"></div>
                 
                 <!-- Déconnexion -->

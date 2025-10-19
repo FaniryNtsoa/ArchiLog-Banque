@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle}">Historique Épargne</title>
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">📜 Historique des Opérations Épargne</h1>
+                <p class="page-subtitle">Consultez l'historique complet de vos transactions</p>
+            </div>
+
+            <div th:if="${!hasComptes}" class="empty-state">
+                <div class="empty-state__icon">💰</div>
+                <h2 class="empty-state__title">Aucun compte disponible</h2>
+                <p class="empty-state__text">Vous devez d'abord ouvrir un compte épargne.</p>
+                <a th:href="@{/epargne/nouveau-compte}" class="btn btn-gold">✨ Ouvrir un compte épargne</a>
+            </div>
+
+            <div th:if="${hasComptes}">
+                <!-- Sélecteur de compte -->
+                <div class="compte-selector">
+                    <label for="compteSelect" class="selector-label">Sélectionnez un compte :</label>
+                    <select id="compteSelect" class="selector-control" onchange="changeCompte(this.value)">
+                        <option th:each="compte : ${comptes}" 
+                                th:value="${compte.idCompte}"
+                                th:selected="${compte.idCompte == selectedCompteId}"
+                                th:text="${compte.typeLibelle} + ' - ' + ${compte.numeroCompte} + ' (Solde: ' + ${#numbers.formatCurrency(compte.solde)} + ')'">
+                            Livret A - CEP123456 (Solde: 1 250,00 €)
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Liste des opérations -->
+                <div th:if="${hasOperations}" class="operations-list">
+                    <div th:each="operation : ${operations}" class="operation-card">
+                        <div class="operation-icon" 
+                             th:classappend="${operation.typeOperation == 'DEPOT'} ? 'icon-credit' : 
+                                           ${operation.typeOperation == 'RETRAIT'} ? 'icon-debit' : 
+                                           ${operation.typeOperation == 'INTERETS'} ? 'icon-interet' : 'icon-other'">
+                            <span th:if="${operation.typeOperation == 'DEPOT'}">📥</span>
+                            <span th:if="${operation.typeOperation == 'RETRAIT'}">📤</span>
+                            <span th:if="${operation.typeOperation == 'INTERETS'}">💰</span>
+                            <span th:if="${operation.typeOperation == 'OUVERTURE'}">✨</span>
+                            <span th:if="${operation.typeOperation != 'DEPOT' && operation.typeOperation != 'RETRAIT' && 
+                                         operation.typeOperation != 'INTERETS' && operation.typeOperation != 'OUVERTURE'}">📝</span>
+                        </div>
+                        
+                        <div class="operation-details">
+                            <div class="operation-header">
+                                <span class="operation-type" th:text="${operation.typeOperation}">DEPOT</span>
+                                <span class="operation-date" th:text="${#temporals.format(#temporals.createDateTime(operation.dateOperation), 'dd/MM/yyyy HH:mm')}">19/01/2025 14:30</span>
+                            </div>
+                            <p class="operation-description" th:text="${operation.description}">Dépôt mensuel</p>
+                            <div class="operation-montants">
+                                <div class="montant-row">
+                                    <span>Montant :</span>
+                                    <span class="montant-value" 
+                                          th:classappend="${operation.typeOperation == 'DEPOT' || operation.typeOperation == 'INTERETS'} ? 'text-success' : 'text-danger'"
+                                          th:text="${(operation.typeOperation == 'DEPOT' || operation.typeOperation == 'INTERETS') ? '+' : '-'} + ' ' + ${#numbers.formatCurrency(operation.montant)}">
+                                        + 50 000,00 MGA
+                                    </span>
+                                </div>
+                                <div class="montant-row">
+                                    <span>Solde après :</span>
+                                    <span class="montant-value text-bold" th:text="${#numbers.formatCurrency(operation.soldeApres)}">1 250 000,00 MGA</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:unless="${hasOperations}" class="empty-state">
+                    <div class="empty-state__icon">📜</div>
+                    <h2 class="empty-state__title">Aucune opération</h2>
+                    <p class="empty-state__text">Ce compte n'a pas encore d'opérations enregistrées.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        function changeCompte(compteId) {
+            window.location.href = /*[[@{/epargne/historique}]]*/ '/epargne/historique' + '?compteId=' + compteId;
+        }
+    </script>
+    
+    <style>
+        .compte-selector {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .selector-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            color: var(--color-gold);
+            font-weight: 600;
+        }
+        
+        .selector-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+        }
+        
+        .operations-list {
+            margin-top: 2rem;
+        }
+        
+        .operation-card {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .operation-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--color-gold);
+            transform: translateX(5px);
+        }
+        
+        .operation-icon {
+            flex-shrink: 0;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1.75rem;
+        }
+        
+        .icon-credit {
+            background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .icon-debit {
+            background: rgba(239, 68, 68, 0.2);
+        }
+        
+        .icon-interet {
+            background: rgba(217, 177, 91, 0.2);
+        }
+        
+        .icon-other {
+            background: rgba(107, 114, 128, 0.2);
+        }
+        
+        .operation-details {
+            flex: 1;
+        }
+        
+        .operation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .operation-type {
+            font-weight: 700;
+            color: var(--color-gold);
+            text-transform: uppercase;
+            font-size: 0.875rem;
+        }
+        
+        .operation-date {
+            color: #999;
+            font-size: 0.875rem;
+        }
+        
+        .operation-description {
+            color: #ccc;
+            margin: 0.5rem 0;
+        }
+        
+        .operation-montants {
+            margin-top: 1rem;
+        }
+        
+        .montant-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .montant-value {
+            font-weight: 600;
+        }
+        
+        .text-success {
+            color: #10b981;
+        }
+        
+        .text-danger {
+            color: #ef4444;
+        }
+        
+        .text-bold {
+            font-weight: 700;
+            color: var(--color-gold);
+        }
+        
+        @media (max-width: 768px) {
+            .operation-card {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .operation-icon {
+                margin: 0 auto;
+            }
+        }
+    </style>
+</section>
+</body>
+</html>

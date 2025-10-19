@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Mes Comptes Épargne - Banque Premium</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+            <!-- Messages d'alerte -->
+            <div th:if="${successMessage != null}" class="alert alert-success">
+                <span th:text="${successMessage}">Message de succès</span>
+            </div>
+            
+            <div th:if="${errorMessage != null}" class="alert alert-danger">
+                <span th:text="${errorMessage}">Message d'erreur</span>
+            </div>
+
+            <!-- En-tête -->
+            <div class="page-header">
+                <h1 class="page-title">💰 Mes Comptes Épargne</h1>
+                <p class="page-subtitle">Consultez et gérez vos comptes d'épargne</p>
+            </div>
+
+            <!-- Liste des comptes -->
+            <div th:if="${hasComptes}" class="comptes-grid">
+                <div th:each="compte : ${comptes}" class="card compte-card">
+                    <div class="compte-card__header">
+                        <div class="compte-card__icon">💵</div>
+                        <div class="compte-card__title">
+                            <h3 th:text="${compte.typeLibelle}">Livret A</h3>
+                            <p class="compte-numero" th:text="${compte.numeroCompte}">CEP123456789</p>
+                        </div>
+                    </div>
+                    
+                    <div class="compte-card__body">
+                        <div class="solde-display">
+                            <span class="solde-label">Solde disponible</span>
+                            <span class="solde-montant" th:text="${#numbers.formatCurrency(compte.solde)}">1 250,00 €</span>
+                        </div>
+                        
+                        <div class="compte-info-row">
+                            <span class="info-label">Taux d'intérêt :</span>
+                            <span class="info-value" th:text="${compte.tauxInteret} + ' %'">3.0 %</span>
+                        </div>
+                        
+                        <div class="compte-info-row">
+                            <span class="info-label">Statut :</span>
+                            <span class="info-value" th:classappend="${compte.statut == 'ACTIF'} ? 'text-success' : 'text-muted'" 
+                                  th:text="${compte.statut}">ACTIF</span>
+                        </div>
+                        
+                        <div class="compte-info-row">
+                            <span class="info-label">Ouvert le :</span>
+                            <span class="info-value" th:text="${#temporals.format(#temporals.createDate(compte.dateOuverture.substring(0,10)), 'dd/MM/yyyy')}">01/01/2025</span>
+                        </div>
+                    </div>
+                    
+                    <div class="compte-card__footer">
+                        <a th:href="@{/epargne/historique(compteId=${compte.idCompte})}" class="btn btn-outline btn-small">
+                            📜 Voir l'historique
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message si pas de comptes -->
+            <div th:unless="${hasComptes}" class="empty-state">
+                <div class="empty-state__icon">💰</div>
+                <h2 class="empty-state__title">Aucun compte épargne</h2>
+                <p class="empty-state__text">Vous n'avez pas encore de compte d'épargne. Ouvrez-en un pour commencer à épargner et faire fructifier votre argent.</p>
+                <a th:href="@{/epargne/nouveau-compte}" class="btn btn-gold">
+                    ✨ Ouvrir un compte épargne
+                </a>
+            </div>
+
+            <!-- Actions rapides -->
+            <div th:if="${hasComptes}" class="actions-panel">
+                <h2 class="section-title">⚡ Actions rapides</h2>
+                <div class="actions-grid">
+                    <a th:href="@{/epargne/nouveau-compte}" class="action-card">
+                        <span class="action-card__icon">➕</span>
+                        <span class="action-card__text">Ouvrir un nouveau compte</span>
+                    </a>
+                    <a th:href="@{/epargne/depot}" class="action-card">
+                        <span class="action-card__icon">💵</span>
+                        <span class="action-card__text">Effectuer un dépôt</span>
+                    </a>
+                    <a th:href="@{/epargne/retrait}" class="action-card">
+                        <span class="action-card__icon">💸</span>
+                        <span class="action-card__text">Effectuer un retrait</span>
+                    </a>
+                    <a th:href="@{/epargne/historique}" class="action-card">
+                        <span class="action-card__icon">📜</span>
+                        <span class="action-card__text">Consulter l'historique</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .comptes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .compte-card {
+            border: 2px solid rgba(217, 177, 91, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .compte-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--color-gold);
+            box-shadow: 0 10px 30px rgba(217, 177, 91, 0.3);
+        }
+        
+        .compte-card__header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(217, 177, 91, 0.1), rgba(217, 177, 91, 0.05));
+            border-bottom: 1px solid rgba(217, 177, 91, 0.2);
+        }
+        
+        .compte-card__icon {
+            font-size: 2.5rem;
+        }
+        
+        .compte-card__title h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--color-gold);
+        }
+        
+        .compte-numero {
+            margin: 0.25rem 0 0 0;
+            font-size: 0.875rem;
+            color: #999;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .compte-card__body {
+            padding: 1.5rem;
+        }
+        
+        .solde-display {
+            text-align: center;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(217, 177, 91, 0.15), rgba(217, 177, 91, 0.05));
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .solde-label {
+            display: block;
+            font-size: 0.875rem;
+            color: #999;
+            margin-bottom: 0.5rem;
+        }
+        
+        .solde-montant {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-gold);
+        }
+        
+        .compte-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .compte-info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: #999;
+            font-size: 0.875rem;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .text-success {
+            color: #10b981 !important;
+        }
+        
+        .compte-card__footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            width: 100%;
+        }
+        
+        .actions-panel {
+            margin-top: 3rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--color-gold);
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .action-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .action-card:hover {
+            background: rgba(217, 177, 91, 0.1);
+            border-color: var(--color-gold);
+            transform: translateY(-3px);
+        }
+        
+        .action-card__icon {
+            font-size: 2.5rem;
+        }
+        
+        .action-card__text {
+            text-align: center;
+            font-size: 0.875rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .empty-state__icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state__title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--color-gold);
+        }
+        
+        .empty-state__text {
+            color: #999;
+            margin-bottom: 2rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .comptes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</section>
+</body>
+</html>
