@@ -197,11 +197,40 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
             
-            // Appeler le service distant pour créer le client
-            ClientServiceRemote clientService = EJBClientFactory.getClientService();
-            ClientDTO clientCree = clientService.creerClient(clientDTO);
+            // Appeler le service distant SituationBancaire pour créer le client
+            ClientServiceRemote clientServiceSituation = EJBClientFactory.getClientService();
+            ClientDTO clientCreeSituation = clientServiceSituation.creerClient(clientDTO);
             
-            LOGGER.info("Client créé avec succès: " + clientCree.getNumeroClient());
+            LOGGER.info("Client créé avec succès dans SituationBancaire: " + clientCreeSituation.getNumeroClient());
+            
+            // Appeler le service distant Prêt pour créer le client (même données)
+            try {
+                com.banque.pret.ejb.remote.ClientServiceRemote clientServicePret = 
+                    com.banque.centralisateur.ejb.PretEJBClientFactory.getClientService();
+                
+                // Créer le DTO Prêt à partir des mêmes données
+                com.banque.pret.dto.ClientDTO clientDTOPret = new com.banque.pret.dto.ClientDTO();
+                clientDTOPret.setPrenom(prenom);
+                clientDTOPret.setNom(nom);
+                clientDTOPret.setEmail(email);
+                clientDTOPret.setTelephone(telephone);
+                clientDTOPret.setNumCin(numCin);
+                clientDTOPret.setAdresse(adresse);
+                clientDTOPret.setCodePostal(codePostal);
+                clientDTOPret.setVille(ville);
+                clientDTOPret.setMotDePasse(motDePasse);
+                clientDTOPret.setProfession(profession);
+                clientDTOPret.setSituationFamiliale(situationFamiliale);  // Maintenant c'est un String
+                clientDTOPret.setRevenuMensuel(clientDTO.getRevenuMensuel());
+                clientDTOPret.setDateNaissance(clientDTO.getDateNaissance());
+                
+                com.banque.pret.dto.ClientDTO clientCreePret = clientServicePret.creerClient(clientDTOPret);
+                LOGGER.info("Client créé avec succès dans Prêt: " + clientCreePret.getNumeroClient());
+                
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Erreur lors de la création du client dans Prêt (non bloquant)", e);
+                // Ne pas bloquer l'inscription si la création dans Prêt échoue
+            }
             
             // Rediriger vers la page de connexion avec un message de succès
             response.sendRedirect(request.getContextPath() + "/login?success=inscription");

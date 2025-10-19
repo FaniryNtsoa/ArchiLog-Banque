@@ -1,6 +1,5 @@
 package com.banque.pret.dto;
 
-import com.banque.pret.entity.enums.StatutEcheance;
 import lombok.*;
 
 import java.io.Serializable;
@@ -27,7 +26,7 @@ public class EcheanceDTO implements Serializable {
     private BigDecimal capitalRestant;
     private LocalDate dateEcheance;
     private LocalDate datePaiement;
-    private StatutEcheance statut;
+    private String statut;  // String au lieu de l'enum
     private BigDecimal penaliteAppliquee;
     private Integer joursRetard;
     private LocalDate dateCalculPenalite;

@@ -2,6 +2,7 @@ package com.banque.pret.mapper;
 
 import com.banque.pret.dto.EcheanceDTO;
 import com.banque.pret.entity.Echeance;
+import com.banque.pret.entity.enums.StatutEcheance;
 
 /**
  * Mapper pour convertir entre Echeance et EcheanceDTO
@@ -26,7 +27,7 @@ public class EcheanceMapper {
                 .capitalRestant(echeance.getCapitalRestant())
                 .dateEcheance(echeance.getDateEcheance())
                 .datePaiement(echeance.getDatePaiement())
-                .statut(echeance.getStatut())
+                .statut(echeance.getStatut() != null ? echeance.getStatut().name() : null)
                 .penaliteAppliquee(echeance.getPenaliteAppliquee())
                 .joursRetard(echeance.getJoursRetard())
                 .dateCalculPenalite(echeance.getDateCalculPenalite())
@@ -50,7 +51,7 @@ public class EcheanceMapper {
                 .capitalRestant(dto.getCapitalRestant())
                 .dateEcheance(dto.getDateEcheance())
                 .datePaiement(dto.getDatePaiement())
-                .statut(dto.getStatut())
+                .statut(dto.getStatut() != null ? StatutEcheance.valueOf(dto.getStatut()) : null)
                 .penaliteAppliquee(dto.getPenaliteAppliquee())
                 .joursRetard(dto.getJoursRetard())
                 .dateCalculPenalite(dto.getDateCalculPenalite())

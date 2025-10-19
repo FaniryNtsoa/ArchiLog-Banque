@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Remboursement - Banque Premium</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="container">
+        <!-- Messages -->
+        <div th:if="${session.successMessage != null}" class="alert alert-success">
+            <span th:text="${session.successMessage}">Message de succès</span>
+        </div>
+        
+        <div th:if="${session.errorMessage != null}" class="alert alert-danger">
+            <span th:text="${session.errorMessage}">Message d'erreur</span>
+        </div>
+
+        <!-- En-tête -->
+        <div class="page-header">
+            <h1 class="page-title">💳 Remboursement</h1>
+            <p class="page-subtitle">
+                Effectuez vos remboursements d'échéances en cours
+            </p>
+        </div>
+
+            <!-- Sélection du prêt -->
+            <div class="card" th:if="${hasPretsActifs == true}">
+                <div class="card__header">
+                    <h2 class="card__title">Sélectionner un prêt</h2>
+                </div>
+                <div class="card__content">
+                    <form th:action="@{/pret/remboursement}" method="get" class="form">
+                        <div class="form-group">
+                            <label for="idPret" class="form-label">Choisissez un prêt actif:</label>
+                            <select id="idPret" name="idPret" class="form-input" onchange="this.form.submit()">
+                                <option value="">-- Sélectionnez un prêt --</option>
+                                <option th:each="pret : ${pretsActifs}" 
+                                        th:value="${pret.idPret}" 
+                                        th:text="${pret.numeroPret} + ' - ' + ${#numbers.formatCurrency(pret.capitalRestant)} + ' restant'"
+                                        th:selected="${pret.idPret == idPretSelectionne}">
+                                    PRE-2025-0001 - 48 500,00 € restant
+                                </option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Liste des échéances impayées -->
+            <div th:if="${hasEcheances == true}" class="card mt-3">
+                <div class="card__header">
+                    <h2 class="card__title">📋 Échéances impayées</h2>
+                </div>
+                <div class="card__content">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Échéance</th>
+                                    <th>Date</th>
+                                    <th>Montant</th>
+                                    <th>Capital</th>
+                                    <th>Intérêts</th>
+                                    <th>Restant dû</th>
+                                    <th>Statut</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="echeance : ${echeancesImpayees}">
+                                    <td th:text="${echeance.numeroEcheance}">#1</td>
+                                    <td th:text="${#temporals.format(echeance.dateEcheance, 'dd/MM/yyyy')}">01/02/2025</td>
+                                    <td th:text="${#numbers.formatCurrency(echeance.montantEcheance)}">542,50 €</td>
+                                    <td th:text="${#numbers.formatCurrency(echeance.montantCapital)}">400,00 €</td>
+                                    <td th:text="${#numbers.formatCurrency(echeance.montantInteret)}">142,50 €</td>
+                                    <td th:text="${#numbers.formatCurrency(echeance.montantRestantDu)}">542,50 €</td>
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${echeance.statut == 'EN_RETARD'} ? 'badge-danger' : 'badge-warning'"
+                                              th:text="${echeance.statut == 'EN_RETARD'} ? 'En retard' : 'À venir'">
+                                            À venir
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-gold" 
+                                                th:onclick="'openRemboursementModal(' + ${echeance.idEcheance} + ', ' + ${echeance.montantRestantDu} + ')'">
+                                            Payer
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message si aucune échéance -->
+            <div th:if="${idPretSelectionne != null and hasEcheances == false}" class="card mt-3">
+                <div class="card__content text-center" style="padding: 3rem;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+                    <h3>Aucune échéance impayée</h3>
+                    <p class="text-muted">Vous êtes à jour dans vos remboursements !</p>
+                </div>
+            </div>
+
+            <!-- Message si aucun prêt actif -->
+            <div th:unless="${hasPretsActifs == true}" class="card">
+                <div class="card__content text-center" style="padding: 3rem;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">📋</div>
+                    <h3>Aucun prêt actif</h3>
+                    <p class="text-muted">Vous n'avez pas de prêt en cours de remboursement.</p>
+                    <div class="form-actions mt-3">
+                        <a th:href="@{/pret/mes-prets}" class="btn btn-gold">
+                            📊 Voir mes prêts
+                        </a>
+                        <a th:href="@{/pret/demande}" class="btn btn-outline">
+                            📝 Faire une demande
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de remboursement -->
+    <div id="remboursementModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>💳 Effectuer un remboursement</h3>
+                <button type="button" class="modal-close" onclick="closeRemboursementModal()">&times;</button>
+            </div>
+            <form th:action="@{/pret/remboursement}" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="modalIdEcheance" name="idEcheance">
+                    
+                    <div class="form-group">
+                        <label for="modalMontant" class="form-label">Montant à rembourser (€) *</label>
+                        <input type="number" id="modalMontant" name="montant" class="form-input" 
+                               step="0.01" min="0.01" required readonly>
+                        <small class="form-help">Montant de l'échéance</small>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>ℹ️ Information:</strong>
+                        <p>Le paiement sera effectué à la date du jour.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-gold">Confirmer le paiement</button>
+                    <button type="button" class="btn btn-outline" onclick="closeRemboursementModal()">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script pour le modal -->
+    <script>
+        function openRemboursementModal(idEcheance, montant) {
+            document.getElementById('modalIdEcheance').value = idEcheance;
+            document.getElementById('modalMontant').value = montant.toFixed(2);
+            document.getElementById('remboursementModal').style.display = 'flex';
+        }
+
+        function closeRemboursementModal() {
+            document.getElementById('remboursementModal').style.display = 'none';
+        }
+
+        // Fermer le modal en cliquant à l'extérieur
+        window.onclick = function(event) {
+            const modal = document.getElementById('remboursementModal');
+            if (event.target === modal) {
+                closeRemboursementModal();
+            }
+        }
+    </script>
+    </div>
+</section>
+</body>
+</html>

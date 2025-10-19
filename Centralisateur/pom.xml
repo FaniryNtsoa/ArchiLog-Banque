@@ -141,6 +141,25 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Dépendance vers le module Pret pour les interfaces et DTOs -->
+        <dependency>
+            <groupId>com.banque</groupId>
+            <artifactId>pret</artifactId>
+            <version>1.0.0</version>
+            <type>war</type>
+            <scope>provided</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.banque</groupId>
+            <artifactId>pret</artifactId>
+            <version>1.0.0</version>
+            <type>jar</type>
+            <classifier>classes</classifier>
+            <!-- Important: ne pas empaqueter toutes les classes serveur dans le WAR du centralisateur -->
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Thymeleaf pour les templates HTML -->
         <dependency>
             <groupId>org.thymeleaf</groupId>
@@ -204,6 +223,19 @@
                                     <includes>com/banque/situationbancaire/dto/**,com/banque/situationbancaire/ejb/remote/**</includes>
                                     <!-- Exclure toutes les implémentations serveur -->
                                     <excludes>**/impl/**,**/entity/**,**/repository/**,**/service/**,**/config/**,**/util/**</excludes>
+                                </artifactItem>
+                                <!-- Dépaqueter les classes client du module Pret -->
+                                <artifactItem>
+                                    <groupId>com.banque</groupId>
+                                    <artifactId>pret</artifactId>
+                                    <version>1.0.0</version>
+                                    <type>jar</type>
+                                    <classifier>classes</classifier>
+                                    <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                                    <!-- Inclure uniquement les API côté client -->
+                                    <includes>com/banque/pret/dto/**,com/banque/pret/ejb/remote/**,com/banque/pret/entity/enums/**</includes>
+                                    <!-- Exclure toutes les implémentations serveur -->
+                                    <excludes>**/impl/**,**/entity/Client.java,**/entity/Pret.java,**/entity/Echeance.java,**/entity/Remboursement.java,**/entity/TypePret.java,**/entity/ParametresPenalites.java,**/repository/**,**/mapper/**,**/util/**</excludes>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

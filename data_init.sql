@@ -39,3 +39,33 @@ INSERT INTO type_operation (code_operation, libelle_operation, categorie, nature
 ('DEPOT', 'Dépôt espèces', 'CREDIT', 'DEPOT'),
 ('RETRAIT', 'Retrait espèces', 'DEBIT', 'RETRAIT'),
 ('VIREMENT', 'Virement reçu', 'CREDIT', 'VIREMENT');
+
+
+
+
+
+-- pret
+-- type_pret data
+INSERT INTO type_pret (
+    code_type, 
+    libelle, 
+    taux_interet_annuel, 
+    duree_min, 
+    duree_max, 
+    montant_min, 
+    montant_max, 
+    frais_dossier, 
+    penalite_retard_taux, 
+    delai_tolerance_jours, 
+    actif
+) VALUES 
+('PERSONNEL', 'Pret Personnel', 4.5000, 12, 84, 1000.00, 50000.00, 150.00, 0.0200, 7, TRUE),
+('IMMOBILIER', 'Pret Immobilier', 2.8500, 60, 300, 20000.00, 500000.00, 500.00, 0.0150, 10, TRUE),
+('AUTOMOBILE', 'Pret Automobile', 3.2500, 12, 84, 5000.00, 80000.00, 200.00, 0.0180, 5, TRUE),
+('ETUDIANT', 'Pret Etudiant', 1.5000, 6, 120, 500.00, 30000.00, 50.00, 0.0100, 15, TRUE),
+('TRAVAUX', 'Pret Travaux', 3.7500, 12, 120, 2000.00, 75000.00, 180.00, 0.0190, 7, TRUE),
+('PROFESSIONNEL', 'Pret Professionnel', 3.0000, 6, 60, 10000.00, 200000.00, 300.00, 0.0250, 5, TRUE),
+('CONSOMMATION', 'Pret Consommation', 6.2000, 3, 36, 200.00, 5000.00, 75.00, 0.0300, 3, TRUE),
+('ECOLOGIQUE', 'Pret Ecologique', 1.9000, 12, 180, 1000.00, 100000.00, 100.00, 0.0120, 10, TRUE),
+('URGENCE', 'Pret Urgence', 8.5000, 1, 12, 100.00, 3000.00, 50.00, 0.0400, 2, TRUE),
+('ANCIEN_PRET', 'Ancien Pret', 5.8000, 12, 60, 500.00, 25000.00, 200.00, 0.0250, 5, FALSE);

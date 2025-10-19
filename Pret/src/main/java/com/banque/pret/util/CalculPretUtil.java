@@ -88,7 +88,7 @@ public class CalculPretUtil {
                     .interet(interet)
                     .capitalRestant(capitalRestant)
                     .dateEcheance(dateEcheance)
-                    .statut(StatutEcheance.A_VENIR)
+                    .statut(StatutEcheance.A_VENIR.name())
                     .penaliteAppliquee(BigDecimal.ZERO)
                     .joursRetard(0)
                     .build();

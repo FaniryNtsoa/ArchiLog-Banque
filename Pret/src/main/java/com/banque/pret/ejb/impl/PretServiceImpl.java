@@ -19,6 +19,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -219,7 +220,59 @@ public class PretServiceImpl implements PretServiceRemote {
         LOGGER.info("✅ PHASE 2 terminée - Demande créée: " + pretCree.getNumeroPret() + 
                    " - Statut: EN_ATTENTE - Notification à l'agent de crédit");
 
-        return PretMapper.toDTO(pretCree);
+        // 🔍 PHASE 3 : INSTRUCTION & VALIDATION automatique (juste après l'enregistrement)
+        try {
+            LOGGER.info("🔍 PHASE 3 : Démarrage automatique de l'instruction pour: " + pretCree.getIdPret());
+            return approuverOuRefuserAutomatiquement(pretCree);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "⚠️ Instruction automatique échouée, le prêt reste EN_ATTENTE: " + e.getMessage());
+            return PretMapper.toDTO(pretCree);
+        }
+    }
+
+    /**
+     * PHASE 3 : Instruction et validation automatique d'un prêt
+     * Appelée automatiquement après la création de la demande
+     */
+    private PretDTO approuverOuRefuserAutomatiquement(Pret pret) {
+        Client client = pret.getClient();
+
+        // RÈGLE 1 : Client actif et en règle
+        if (client.getStatut() != com.banque.pret.entity.enums.StatutClient.ACTIF) {
+            return refuserPret(pret.getIdPret(), " Le client doit être actif");
+        }
+
+        // RÈGLE 2 : Revenus stables et suffisants
+        if (client.getRevenuMensuel() == null || client.getRevenuMensuel().compareTo(BigDecimal.ZERO) <= 0) {
+            return refuserPret(pret.getIdPret(), "Revenus non déclarés ou insuffisants");
+        }
+
+        // RÈGLE 3 : Taux d'endettement < 33% après le nouveau prêt
+        BigDecimal chargesMensuelles = client.getChargesMensuelles() != null ? 
+            client.getChargesMensuelles() : BigDecimal.ZERO;
+        BigDecimal nouvellesCharges = chargesMensuelles.add(pret.getMensualite());
+        BigDecimal tauxEndettement = nouvellesCharges
+            .divide(client.getRevenuMensuel(), 4, RoundingMode.HALF_UP)
+            .multiply(BigDecimal.valueOf(100));
+
+        if (tauxEndettement.compareTo(BigDecimal.valueOf(33)) > 0) {
+            return refuserPret(pret.getIdPret(), 
+                String.format("Taux d'endettement trop élevé: %.2f%% (max 33%%)", tauxEndettement));
+        }
+
+        // RÈGLE 4 : Calcul de capacité de remboursement: (Revenus - Charges existantes) ≥ Mensualité × 1.3
+        BigDecimal capaciteRemboursement = client.getRevenuMensuel().subtract(chargesMensuelles);
+        BigDecimal seuilCapacite = pret.getMensualite().multiply(BigDecimal.valueOf(1.3));
+
+        if (capaciteRemboursement.compareTo(seuilCapacite) < 0) {
+            return refuserPret(pret.getIdPret(),
+                String.format(" Capacité de remboursement insuffisante. Requis: %s, Disponible: %s", 
+                             seuilCapacite, capaciteRemboursement));
+        }
+
+        // ✅ Si tous les critères sont remplis => Approbation automatique
+        LOGGER.info("✅ Tous les critères validés - Approbation automatique du prêt: " + pret.getNumeroPret());
+        return approuverPret(pret.getIdPret());
     }
 
     @Override

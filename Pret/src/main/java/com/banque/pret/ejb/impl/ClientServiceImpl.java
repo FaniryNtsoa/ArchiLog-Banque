@@ -32,28 +32,43 @@ public class ClientServiceImpl implements ClientServiceRemote {
     public ClientDTO creerClient(ClientDTO clientDTO) {
         LOGGER.info("Création d'un nouveau client : " + clientDTO.getEmail());
         
-        // Vérifications métier
-        if (existeParEmail(clientDTO.getEmail())) {
-            throw new IllegalArgumentException("Un client avec cet email existe déjà");
+        try {
+            // Vérifications métier
+            if (existeParEmail(clientDTO.getEmail())) {
+                throw new IllegalArgumentException("Un client avec cet email existe déjà");
+            }
+            
+            if (existeParNumCin(clientDTO.getNumCin())) {
+                throw new IllegalArgumentException("Un client avec ce numéro CIN existe déjà");
+            }
+            
+            // Conversion DTO vers entité avec chiffrement du mot de passe
+            Client client = ClientMapper.toEntity(clientDTO);
+            client.setMotDePasse(hashPassword(clientDTO.getMotDePasse()));
+            client.setStatut(StatutClient.ACTIF);
+            client.setDateCreation(LocalDateTime.now());
+            
+            // Initialiser soldeInitial si null (comme dans SituationBancaire)
+            if (client.getSoldeInitial() == null) {
+                client.setSoldeInitial(java.math.BigDecimal.ZERO);
+            }
+            
+            // Sauvegarder le client
+            Client clientCree = clientRepository.save(client);
+            
+            LOGGER.info("Client créé avec succès : " + clientCree.getNumeroClient());
+            
+            // Conversion entité vers DTO
+            return ClientMapper.toDTO(clientCree);
+            
+        } catch (IllegalArgumentException e) {
+            // Re-lancer les exceptions métier
+            throw e;
+        } catch (Exception e) {
+            // Attraper toutes les autres exceptions (notamment Hibernate)
+            LOGGER.severe("Erreur lors de la création du client : " + e.getMessage());
+            throw new IllegalStateException("Erreur lors de la création du client: " + e.getMessage());
         }
-        
-        if (existeParNumCin(clientDTO.getNumCin())) {
-            throw new IllegalArgumentException("Un client avec ce numéro CIN existe déjà");
-        }
-        
-        // Conversion DTO vers entité avec chiffrement du mot de passe
-        Client client = ClientMapper.toEntity(clientDTO);
-        client.setMotDePasse(hashPassword(clientDTO.getMotDePasse()));
-        client.setStatut(StatutClient.ACTIF);
-        client.setDateCreation(LocalDateTime.now());
-        
-        // Sauvegarder le client
-        Client clientCree = clientRepository.save(client);
-        
-        LOGGER.info("Client créé avec succès : " + clientCree.getNumeroClient());
-        
-        // Conversion entité vers DTO
-        return ClientMapper.toDTO(clientCree);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.banque.pret.dto;
 
-import com.banque.pret.entity.enums.StatutPret;
 import lombok.*;
 
 import java.io.Serializable;
@@ -34,7 +33,7 @@ public class PretDTO implements Serializable {
     private LocalDate dateApprobation;
     private LocalDate datePremiereEcheance;
     private LocalDate dateDerniereEcheance;
-    private StatutPret statut;
+    private String statut;  // String au lieu de l'enum
     private String motifRefus;
     private LocalDateTime dateCreation;
     

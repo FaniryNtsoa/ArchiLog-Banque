@@ -2,6 +2,8 @@ package com.banque.pret.mapper;
 
 import com.banque.pret.dto.ClientDTO;
 import com.banque.pret.entity.Client;
+import com.banque.pret.entity.enums.SituationFamiliale;
+import com.banque.pret.entity.enums.StatutClient;
 
 /**
  * Mapper pour convertir entre Client et ClientDTO
@@ -31,8 +33,8 @@ public class ClientMapper {
                 .profession(client.getProfession())
                 .revenuMensuel(client.getRevenuMensuel())
                 .soldeInitial(client.getSoldeInitial())
-                .situationFamiliale(client.getSituationFamiliale())
-                .statut(client.getStatut())
+                .situationFamiliale(client.getSituationFamiliale() != null ? client.getSituationFamiliale().name() : null)
+                .statut(client.getStatut() != null ? client.getStatut().name() : null)
                 .dateCreation(client.getDateCreation())
                 .dateModification(client.getDateModification())
                 .build();
@@ -61,9 +63,9 @@ public class ClientMapper {
                 .profession(dto.getProfession())
                 .revenuMensuel(dto.getRevenuMensuel())
                 .soldeInitial(dto.getSoldeInitial())
-                .situationFamiliale(dto.getSituationFamiliale())
+                .situationFamiliale(dto.getSituationFamiliale() != null ? SituationFamiliale.valueOf(dto.getSituationFamiliale()) : null)
                 .motDePasse(dto.getMotDePasse())
-                .statut(dto.getStatut())
+                .statut(dto.getStatut() != null ? StatutClient.valueOf(dto.getStatut()) : null)
                 .dateCreation(dto.getDateCreation())
                 .dateModification(dto.getDateModification())
                 .build();
@@ -88,7 +90,7 @@ public class ClientMapper {
         client.setVille(dto.getVille());
         client.setProfession(dto.getProfession());
         client.setRevenuMensuel(dto.getRevenuMensuel());
-        client.setSituationFamiliale(dto.getSituationFamiliale());
-        client.setStatut(dto.getStatut());
+        client.setSituationFamiliale(dto.getSituationFamiliale() != null ? SituationFamiliale.valueOf(dto.getSituationFamiliale()) : null);
+        client.setStatut(dto.getStatut() != null ? StatutClient.valueOf(dto.getStatut()) : null);
     }
 }

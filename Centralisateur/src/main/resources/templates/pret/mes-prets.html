@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Mes Prêts - Banque Premium</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="container">
+        <!-- Messages -->
+        <div th:if="${session.successMessage != null}" class="alert alert-success">
+            <span th:text="${session.successMessage}">Message de succès</span>
+        </div>
+        
+        <div th:if="${errorMessage != null}" class="alert alert-danger">
+            <span th:text="${errorMessage}">Message d'erreur</span>
+        </div>
+
+        <!-- En-tête -->
+        <div class="page-header">
+            <h1 class="page-title">📊 Mes Prêts</h1>
+            <p class="page-subtitle">
+                Consultez l'état de vos demandes de prêts et gérez vos remboursements
+            </p>
+        </div>
+
+            <!-- Liste des prêts -->
+            <div th:if="${hasPrets == true}">
+                <div th:each="pret : ${prets}" class="card mb-3">
+                    <div class="card__header">
+                        <h2 class="card__title">
+                            <span th:text="${pret.numeroPret}">N° PRE-2025-0001</span>
+                            <span class="badge" 
+                                  th:classappend="${pret.statut == 'EN_ATTENTE'} ? 'badge-warning' : (${pret.statut == 'APPROUVE' or pret.statut == 'EN_COURS'} ? 'badge-success' : (${pret.statut == 'REFUSE'} ? 'badge-danger' : 'badge-secondary'))"
+                                  th:text="${pret.statut == 'EN_ATTENTE'} ? 'En attente' : (${pret.statut == 'APPROUVE'} ? 'Approuvé' : (${pret.statut == 'EN_COURS'} ? 'En cours' : (${pret.statut == 'REFUSE'} ? 'Refusé' : (${pret.statut == 'CLOTURE'} ? 'Clôturé' : pret.statut))))">
+                                En attente
+                            </span>
+                        </h2>
+                    </div>
+                    <div class="card__content">
+                        <div class="pret-details">
+                            <!-- Informations principales -->
+                            <div class="details-grid">
+                                <div class="detail-item">
+                                    <span class="detail-label">Type de prêt:</span>
+                                    <span class="detail-value" th:text="${pret.libelleTypePret}">Prêt Personnel</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Montant:</span>
+                                    <span class="detail-value" th:text="${#numbers.formatCurrency(pret.montantAccorde != null ? pret.montantAccorde : pret.montantDemande)}">50 000,00 €</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Durée:</span>
+                                    <span class="detail-value" th:text="${pret.dureeMois} + ' mois'">120 mois</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Taux annuel:</span>
+                                    <span class="detail-value" th:text="${pret.tauxInteretAnnuel} + ' %'">5.5 %</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Mensualité:</span>
+                                    <span class="detail-value text-gold" th:text="${pret.mensualite != null ? #numbers.formatCurrency(pret.mensualite) : 'N/A'}">542,50 €</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Date de demande:</span>
+                                    <span class="detail-value" th:text="${#temporals.format(pret.dateDemande, 'dd/MM/yyyy')}">15/01/2025</span>
+                                </div>
+                            </div>
+
+                            <!-- Informations supplémentaires pour prêt approuvé -->
+                            <div th:if="${pret.statut == 'APPROUVE'}" class="mt-3">
+                                <div class="details-grid">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Date début remboursement:</span>
+                                        <span class="detail-value" th:text="${#temporals.format(pret.dateDebutRemboursement, 'dd/MM/yyyy')}">01/02/2025</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Capital restant:</span>
+                                        <span class="detail-value" th:text="${pret.capitalRestant != null ? #numbers.formatCurrency(pret.capitalRestant) : 'N/A'}">48 500,00 €</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Montant total remboursé:</span>
+                                        <span class="detail-value" th:text="${pret.montantTotalRembourse != null ? #numbers.formatCurrency(pret.montantTotalRembourse) : '0,00 €'}">1 500,00 €</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Motif (si présent) -->
+                            <!-- <div th:if="${pret.motif != null}" class="mt-3">
+                                <div class="detail-item">
+                                    <span class="detail-label">Motif:</span>
+                                    <span class="detail-value" th:text="${pret.motif}">Achat immobilier</span>
+                                </div>
+                            </div> -->
+
+                            <!-- Motif de refus (si refusé) -->
+                            <div th:if="${pret.statut == 'REFUSE' and pret.motifRefus != null}" class="mt-3">
+                                <div class="alert alert-danger">
+                                    <strong>Motif du refus:</strong>
+                                    <span th:text="${pret.motifRefus}">Capacité d'endettement insuffisante</span>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="form-actions mt-3">
+                                <a th:if="${pret.statut == 'APPROUVE'}" 
+                                   th:href="@{/pret/remboursement(idPret=${pret.idPret})}" 
+                                   class="btn btn-gold">
+                                    💳 Effectuer un remboursement
+                                </a>
+                                <a th:if="${pret.statut == 'EN_ATTENTE'}" 
+                                   href="#" 
+                                   class="btn btn-outline disabled" style="cursor: not-allowed;">
+                                    ⏳ En attente d'approbation
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message si aucun prêt -->
+            <div th:unless="${hasPrets == true}" class="card">
+                <div class="card__content text-center" style="padding: 3rem;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">📋</div>
+                    <h3>Aucun prêt trouvé</h3>
+                    <p class="text-muted">Vous n'avez pas encore de demande de prêt.</p>
+                    <div class="form-actions mt-3">
+                        <a th:href="@{/pret/simulation}" class="btn btn-gold">
+                            🧮 Faire une simulation
+                        </a>
+                        <a th:href="@{/pret/demande}" class="btn btn-outline">
+                            📝 Faire une demande
+                        </a>
+                    </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

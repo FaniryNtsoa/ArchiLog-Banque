@@ -43,6 +43,7 @@
             </div>
             
             <nav class="sidebar__nav">
+                <!-- Section Tableau de bord -->
                 <ul class="sidebar__nav-list">
                     <li class="sidebar__nav-item">
                         <a th:href="@{/dashboard}" class="sidebar__nav-link" 
@@ -51,6 +52,17 @@
                             <span class="sidebar__nav-text">Tableau de bord</span>
                         </a>
                     </li>
+                </ul>
+                
+                <!-- Séparateur avec titre -->
+                <div class="sidebar__nav-divider"></div>
+                <div class="sidebar__section-title">
+                    <span class="sidebar__section-icon">💳</span>
+                    <span class="sidebar__section-text">Situation Bancaire</span>
+                </div>
+                
+                <!-- Section Situation Bancaire -->
+                <ul class="sidebar__nav-list">
                     <li class="sidebar__nav-item">
                         <a th:href="@{/nouveau-compte}" class="sidebar__nav-link"
                            th:classappend="${currentPage == 'nouveau-compte'} ? 'active' : ''">
@@ -95,8 +107,48 @@
                     </li>
                 </ul>
                 
+                <!-- Séparateur avec titre -->
+                <div class="sidebar__nav-divider"></div>
+                <div class="sidebar__section-title">
+                    <span class="sidebar__section-icon">🏦</span>
+                    <span class="sidebar__section-text">Prêts</span>
+                </div>
+                
+                <!-- Section Prêts -->
+                <ul class="sidebar__nav-list">
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/pret/simulation}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'simulation-pret'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">🧮</span>
+                            <span class="sidebar__nav-text">Simuler un prêt</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/pret/demande}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'demande-pret'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">📝</span>
+                            <span class="sidebar__nav-text">Demande de prêt</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/pret/mes-prets}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'mes-prets'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">📊</span>
+                            <span class="sidebar__nav-text">Mes prêts</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/pret/remboursement}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'remboursement'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">💳</span>
+                            <span class="sidebar__nav-text">Remboursement</span>
+                        </a>
+                    </li>
+                </ul>
+                
                 <div class="sidebar__nav-divider"></div>
                 
+                <!-- Déconnexion -->
                 <ul class="sidebar__nav-list">
                     <li class="sidebar__nav-item">
                         <a th:href="@{/logout}" class="sidebar__nav-link sidebar__nav-link--logout">

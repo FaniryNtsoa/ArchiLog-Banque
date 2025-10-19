@@ -1,7 +1,5 @@
 package com.banque.pret.dto;
 
-import com.banque.pret.entity.enums.SituationFamiliale;
-import com.banque.pret.entity.enums.StatutClient;
 import lombok.*;
 
 import java.io.Serializable;
@@ -34,9 +32,9 @@ public class ClientDTO implements Serializable {
     private String profession;
     private BigDecimal revenuMensuel;
     private BigDecimal soldeInitial;
-    private SituationFamiliale situationFamiliale;
+    private String situationFamiliale;  // String au lieu de l'enum
     private String motDePasse;
-    private StatutClient statut;
+    private String statut;  // String au lieu de l'enum
     private LocalDateTime dateCreation;
     private LocalDateTime dateModification;
 }

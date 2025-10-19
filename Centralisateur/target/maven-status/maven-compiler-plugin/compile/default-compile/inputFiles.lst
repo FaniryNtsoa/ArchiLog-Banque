@@ -1,10 +1,14 @@
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\HistoriqueServlet.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\pret\SimulationPretServlet.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\VirementServlet.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\config\RestConfiguration.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\pret\RemboursementServlet.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\pret\DemandePretServlet.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\LoginServlet.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\DepotServlet.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\SoldeServlet.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\RegisterServlet.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\ejb\PretEJBClientFactory.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\config\ThymeleafConfig.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\LogoutServlet.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\DashboardServlet.java
@@ -13,3 +17,4 @@ C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateu
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\ejb\EJBClientFactory.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\NouveauCompteServlet.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\StaticResourceServlet.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\Centralisateur\src\main\java\com\banque\centralisateur\servlet\pret\MesPretsServlet.java

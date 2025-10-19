@@ -2,6 +2,7 @@ package com.banque.pret.mapper;
 
 import com.banque.pret.dto.PretDTO;
 import com.banque.pret.entity.Pret;
+import com.banque.pret.entity.enums.StatutPret;
 
 /**
  * Mapper pour convertir entre Pret et PretDTO
@@ -32,7 +33,7 @@ public class PretMapper {
                 .dateApprobation(pret.getDateApprobation())
                 .datePremiereEcheance(pret.getDatePremiereEcheance())
                 .dateDerniereEcheance(pret.getDateDerniereEcheance())
-                .statut(pret.getStatut())
+                .statut(pret.getStatut() != null ? pret.getStatut().name() : null)
                 .motifRefus(pret.getMotifRefus())
                 .dateCreation(pret.getDateCreation());
 
@@ -73,7 +74,7 @@ public class PretMapper {
                 .dateApprobation(dto.getDateApprobation())
                 .datePremiereEcheance(dto.getDatePremiereEcheance())
                 .dateDerniereEcheance(dto.getDateDerniereEcheance())
-                .statut(dto.getStatut())
+                .statut(dto.getStatut() != null ? StatutPret.valueOf(dto.getStatut()) : null)
                 .motifRefus(dto.getMotifRefus())
                 .dateCreation(dto.getDateCreation())
                 .build();
