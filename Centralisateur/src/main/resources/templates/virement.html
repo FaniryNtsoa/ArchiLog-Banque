@@ -1,14 +1,32 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::main})}">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="${pageTitle}">Virement</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Virement - Banque Premium</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
-<body>
-    <main class="main-content">
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
         <div class="container-sm">
             <div class="page-header">
-                <h1 class="page-title">🔄 Effectuer un Virement</h1>
-                <p class="page-subtitle">Transférez des fonds entre comptes</p>
+                <h1 class="page-title">🔁 Effectuer un Virement</h1>
+                <p class="page-subtitle">Transférez de l'argent entre vos comptes ou vers d'autres comptes</p>
+            </div>
+
+            <!-- Messages d'alerte -->
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <i class="alert__icon">⚠️</i>
+                <span th:text="${errorMessage}">Message d'erreur</span>
+            </div>
+
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="alert__icon">✅</i>
+                <span th:text="${successMessage}">Message de succès</span>
             </div>
 
             <div class="card">
@@ -16,122 +34,113 @@
                     <h2 class="card__title">Informations du virement</h2>
                 </div>
                 <div class="card__content">
-                    <form method="POST" action="/centralisateur/web/virement" class="form">
+                    <form method="POST" th:action="@{/virement}" class="form">
                         <div class="form-group">
                             <label for="numeroCompteDebiteur" class="form-label">
-                                <i class="icon">📤</i>
-                                Compte à débiter (expéditeur) *
+                                <i class="icon">🏦</i>
+                                Compte à débiter *
                             </label>
-                            <select id="numeroCompteDebiteur" name="numeroCompteDebiteur" class="form-select" required>
+                            <select id="numeroCompteDebiteur" 
+                                    name="numeroCompteDebiteur" 
+                                    class="form-input" 
+                                    required
+                                    onchange="updateSoldeDebiteur(this.value)">
                                 <option value="">Sélectionnez le compte à débiter</option>
                                 <option th:each="compte : ${comptes}" 
                                         th:value="${compte.numeroCompte}"
-                                        th:text="${compte.numeroCompte + ' - ' + compte.libelle + ' (' + #numbers.formatCurrency(compte.solde) + ')'}">
+                                        th:selected="${numeroCompteDebiteur == compte.numeroCompte}"
+                                        th:text="|${compte.libelleCompte} - ${compte.numeroCompte} (${#numbers.formatDecimal(compte.solde, 1, 'POINT', 0, 'COMMA')} Ar)|"
+                                        th:data-solde="${compte.solde}"
+                                        th:data-libelle="${compte.libelleCompte}">
+                                    Compte
                                 </option>
                             </select>
+                            <small class="form-help">
+                                Votre compte qui sera débité du montant du virement
+                            </small>
+                            <div id="soldeDebiteurInfo" class="info-mini" style="display: none;">
+                                <span id="soldeDebiteurText">Solde disponible : 0 Ar</span>
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label for="numeroCompteCrediteur" class="form-label">
-                                <i class="icon">📥</i>
-                                Compte à créditer (destinataire) *
+                                <i class="icon">🏦</i>
+                                Compte à créditer *
                             </label>
                             <input type="text" 
                                    id="numeroCompteCrediteur" 
                                    name="numeroCompteCrediteur" 
                                    class="form-input" 
-                                   placeholder="Numéro de compte du bénéficiaire"
+                                   placeholder="Numéro du compte bénéficiaire"
+                                   th:value="${numeroCompteCrediteur}"
                                    required
-                                   pattern="[0-9]+"
-                                   title="Numéro de compte (chiffres uniquement)">
+                                   maxlength="30">
                             <small class="form-help">
-                                Saisissez le numéro de compte du bénéficiaire (peut être un compte externe)
+                                Le compte qui recevra le montant du virement
                             </small>
                         </div>
 
                         <div class="form-group">
                             <label for="montant" class="form-label">
                                 <i class="icon">💰</i>
-                                Montant du virement *
+                                Montant *
                             </label>
                             <input type="number" 
                                    id="montant" 
                                    name="montant" 
                                    class="form-input" 
                                    placeholder="0.00"
-                                   step="0.01"
+                                   th:value="${montant}"
+                                   required
                                    min="0.01"
-                                   max="10000"
-                                   required>
+                                   step="0.01"
+                                   oninput="updateMontantInfo(this.value)">
                             <small class="form-help">
-                                Montant minimum : 0,01 € - Maximum : 10 000,00 €
+                                Montant en Ariary (Ar)
                             </small>
+                            <div id="montantInfo" class="info-mini" style="display: none;">
+                                <span id="montantFormate">0 Ar</span>
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label for="libelle" class="form-label">
                                 <i class="icon">📝</i>
-                                Motif du virement *
+                                Motif du virement
                             </label>
                             <input type="text" 
                                    id="libelle" 
                                    name="libelle" 
                                    class="form-input" 
                                    placeholder="Ex: Remboursement, Cadeau, Facture..."
-                                   maxlength="200"
-                                   required>
+                                   th:value="${libelle}"
+                                   maxlength="255">
+                            <small class="form-help">
+                                Description optionnelle du virement
+                            </small>
                         </div>
 
-                        <!-- Résumé des comptes disponibles -->
-                        <div class="info-box" th:if="${comptes != null and !comptes.isEmpty()}">
-                            <div class="info-box__icon">💳</div>
+                        <!-- Résumé du virement -->
+                        <div class="info-box" id="resumeVirement" style="display: none;">
+                            <div class="info-box__icon">📋</div>
                             <div class="info-box__content">
-                                <h4>Vos comptes disponibles</h4>
-                                <div class="comptes-grid">
-                                    <div th:each="compte : ${comptes}" class="compte-card">
-                                        <div class="compte-header">
-                                            <strong th:text="${compte.numeroCompte}">123456789</strong>
-                                            <span class="compte-type" th:text="${compte.typeCompte}">Courant</span>
-                                        </div>
-                                        <div class="compte-libelle" th:text="${compte.libelle}">Compte Principal</div>
-                                        <div class="compte-solde">
-                                            <span class="solde-label">Solde:</span>
-                                            <span class="solde-amount" 
-                                                  th:text="${#numbers.formatCurrency(compte.solde)}"
-                                                  th:classappend="${compte.estEnDecouvert()} ? 'negatif' : 'positif'">
-                                                1 250,00 €
-                                            </span>
-                                        </div>
-                                        <div class="compte-dispo">
-                                            <span class="dispo-label">Disponible:</span>
-                                            <span class="dispo-amount" th:text="${#numbers.formatCurrency(compte.soldeDisponible)}">
-                                                1 750,00 €
-                                            </span>
-                                        </div>
-                                    </div>
+                                <h4>Résumé du virement</h4>
+                                <div id="resumeDetails">
+                                    <p><strong>De :</strong> <span id="resumeDebiteur">-</span></p>
+                                    <p><strong>Vers :</strong> <span id="resumeCrediteur">-</span></p>
+                                    <p><strong>Montant :</strong> <span id="resumeMontant">0 Ar</span></p>
+                                    <p><strong>Solde après virement :</strong> <span id="resumeSoldeApres">-</span></p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="warning-box">
-                            <div class="warning-box__icon">🔒</div>
-                            <div class="warning-box__content">
-                                <h4>Sécurité du virement</h4>
-                                <ul>
-                                    <li>Vérification automatique de l'existence des comptes</li>
-                                    <li>Contrôle des plafonds et du solde disponible</li>
-                                    <li>Transaction sécurisée et traçable</li>
-                                    <li>Confirmation immédiate après exécution</li>
-                                </ul>
-                            </div>
-                        </div>
-
                         <div class="form-actions">
-                            <button type="submit" class="btn btn--primary">
-                                <i class="btn__icon">🔄</i>
+                            <button type="submit" class="btn btn--primary" id="submitBtn">
+                                <i class="btn__icon">💸</i>
                                 Effectuer le virement
                             </button>
-                            <a href="/centralisateur/dashboard" class="btn btn--secondary">
+                            <a th:href="@{/dashboard}" class="btn btn--secondary">
                                 <i class="btn__icon">↩️</i>
                                 Retour au tableau de bord
                             </a>
@@ -139,7 +148,177 @@
                     </form>
                 </div>
             </div>
+
+            <!-- Conseils sécurité -->
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-card__icon">🔒</div>
+                    <h3>Sécurité</h3>
+                    <p>Vérifiez toujours le numéro de compte du bénéficiaire</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card__icon">⚡</div>
+                    <h3>Instantané</h3>
+                    <p>Les virements sont traités immédiatement</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card__icon">📱</div>
+                    <h3>Suivi</h3>
+                    <p>Consultez l'historique dans votre tableau de bord</p>
+                </div>
+            </div>
         </div>
-    </main>
+    </div>
+
+    <!-- Script JavaScript pour l'interface dynamique -->
+    <script>
+        let soldeCompteDebiteur = 0;
+        
+        function updateSoldeDebiteur(numeroCompte) {
+            const select = document.getElementById('numeroCompteDebiteur');
+            const soldeInfo = document.getElementById('soldeDebiteurInfo');
+            const soldeText = document.getElementById('soldeDebiteurText');
+            
+            if (!numeroCompte) {
+                soldeInfo.style.display = 'none';
+                soldeCompteDebiteur = 0;
+                updateResumeVirement();
+                return;
+            }
+            
+            const selectedOption = select.querySelector(`option[value="${numeroCompte}"]`);
+            if (!selectedOption) {
+                soldeInfo.style.display = 'none';
+                soldeCompteDebiteur = 0;
+                updateResumeVirement();
+                return;
+            }
+            
+            const solde = parseFloat(selectedOption.dataset.solde) || 0;
+            const libelle = selectedOption.dataset.libelle || '';
+            soldeCompteDebiteur = solde;
+            
+            const formatNumber = (num) => {
+                return new Intl.NumberFormat('fr-FR').format(num);
+            };
+            
+            soldeText.textContent = `Solde disponible : ${formatNumber(solde)} Ar`;
+            soldeInfo.style.display = 'block';
+            
+            updateResumeVirement();
+        }
+        
+        function updateMontantInfo(montant) {
+            const montantInfo = document.getElementById('montantInfo');
+            const montantFormate = document.getElementById('montantFormate');
+            
+            if (!montant || montant <= 0) {
+                montantInfo.style.display = 'none';
+                updateResumeVirement();
+                return;
+            }
+            
+            const formatNumber = (num) => {
+                return new Intl.NumberFormat('fr-FR').format(parseFloat(num));
+            };
+            
+            montantFormate.textContent = `${formatNumber(montant)} Ar`;
+            montantInfo.style.display = 'block';
+            
+            updateResumeVirement();
+        }
+        
+        function updateResumeVirement() {
+            const numeroCompteDebiteur = document.getElementById('numeroCompteDebiteur').value;
+            const numeroCompteCrediteur = document.getElementById('numeroCompteCrediteur').value;
+            const montant = parseFloat(document.getElementById('montant').value) || 0;
+            
+            const resumeBox = document.getElementById('resumeVirement');
+            const resumeDebiteur = document.getElementById('resumeDebiteur');
+            const resumeCrediteur = document.getElementById('resumeCrediteur');
+            const resumeMontant = document.getElementById('resumeMontant');
+            const resumeSoldeApres = document.getElementById('resumeSoldeApres');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (!numeroCompteDebiteur || !numeroCompteCrediteur || montant <= 0) {
+                resumeBox.style.display = 'none';
+                return;
+            }
+            
+            const formatNumber = (num) => {
+                return new Intl.NumberFormat('fr-FR').format(num);
+            };
+            
+            const select = document.getElementById('numeroCompteDebiteur');
+            const selectedOption = select.querySelector(`option[value="${numeroCompteDebiteur}"]`);
+            const libelleDebiteur = selectedOption ? selectedOption.dataset.libelle : 'Compte inconnu';
+            
+            const soldeApres = soldeCompteDebiteur - montant;
+            
+            resumeDebiteur.textContent = `${libelleDebiteur} (${numeroCompteDebiteur})`;
+            resumeCrediteur.textContent = numeroCompteCrediteur;
+            resumeMontant.textContent = `${formatNumber(montant)} Ar`;
+            resumeSoldeApres.textContent = `${formatNumber(soldeApres)} Ar`;
+            
+            // Changer la couleur si le solde devient négatif
+            if (soldeApres < 0) {
+                resumeSoldeApres.style.color = '#dc3545';
+                resumeSoldeApres.innerHTML += ' <small>(Découvert)</small>';
+            } else {
+                resumeSoldeApres.style.color = '#28a745';
+            }
+            
+            resumeBox.style.display = 'block';
+        }
+        
+        // Événements pour mettre à jour le résumé
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('numeroCompteCrediteur').addEventListener('input', updateResumeVirement);
+            
+            // Initialiser l'affichage si des valeurs sont déjà présentes
+            const numeroCompteDebiteur = document.getElementById('numeroCompteDebiteur').value;
+            const montant = document.getElementById('montant').value;
+            
+            if (numeroCompteDebiteur) {
+                updateSoldeDebiteur(numeroCompteDebiteur);
+            }
+            if (montant) {
+                updateMontantInfo(montant);
+            }
+            
+            // Validation du formulaire
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                const numeroCompteDebiteur = document.getElementById('numeroCompteDebiteur').value;
+                const numeroCompteCrediteur = document.getElementById('numeroCompteCrediteur').value;
+                const montant = parseFloat(document.getElementById('montant').value) || 0;
+                
+                if (numeroCompteDebiteur === numeroCompteCrediteur) {
+                    e.preventDefault();
+                    alert('Les comptes débiteur et créditeur doivent être différents');
+                    return;
+                }
+                
+                if (montant <= 0) {
+                    e.preventDefault();
+                    alert('Le montant doit être positif');
+                    return;
+                }
+                
+                // Demander confirmation pour les gros montants
+                if (montant > 1000000) { // Plus d'1 million Ar
+                    if (!confirm(`Confirmez-vous ce virement de ${new Intl.NumberFormat('fr-FR').format(montant)} Ar ?`)) {
+                        e.preventDefault();
+                        return;
+                    }
+                }
+                
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.innerHTML = '⏳ Traitement en cours...';
+                submitBtn.disabled = true;
+            });
+        });
+    </script>
+</section>
 </body>
 </html>

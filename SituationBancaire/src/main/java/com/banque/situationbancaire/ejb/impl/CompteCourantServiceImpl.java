@@ -28,13 +28,16 @@ public class CompteCourantServiceImpl implements CompteCourantServiceRemote {
     
     @Inject
     private ClientRepository clientRepository;
+
+    @Inject
+    private TypeCompteRepository typeCompteRepository;
     
     @Inject
     private MouvementRepository mouvementRepository;
 
     @Override
-    public CompteCourantDTO creerCompte(CompteCourantDTO compteDTO, Long idClient) {
-        LOGGER.info("Création d'un nouveau compte pour le client : " + idClient);
+        public CompteCourantDTO creerCompte(CompteCourantDTO compteDTO, Long idClient, Long idTypeCompte) {
+        LOGGER.info("Création d'un nouveau compte pour le client : " + idClient + " avec type de compte : " + idTypeCompte);
         
         // Vérifier que le client existe
         Optional<Client> clientOpt = clientRepository.findById(idClient);
@@ -42,19 +45,19 @@ public class CompteCourantServiceImpl implements CompteCourantServiceRemote {
             throw new IllegalArgumentException("Client non trouvé");
         }
         
-        Client client = clientOpt.get();
+        // Vérifier que le type de compte existe
+        Optional<TypeCompte> typeCompteOpt = typeCompteRepository.findById(idTypeCompte);
+        if (typeCompteOpt.isEmpty()) {
+            throw new IllegalArgumentException("Type de compte non trouvé");
+        }
         
-        // Créer un type de compte par défaut temporaire
-        TypeCompte typeCompteDefaut = TypeCompte.builder()
-            .codeType("STANDARD")
-            .libelle("Compte Standard")
-            .description("Compte courant standard")
-            .build();
+        Client client = clientOpt.get();
+        TypeCompte typeCompte = typeCompteOpt.get();
         
         // Créer l'entité CompteCourant
         CompteCourant compte = CompteCourant.builder()
             .client(client)
-            .typeCompte(typeCompteDefaut)
+            .typeCompte(typeCompte) // Utiliser le type de compte récupéré depuis la base
             .numeroCompte(genererNumeroCompte())
             .libelleCompte(compteDTO.getLibelleCompte() != null ? compteDTO.getLibelleCompte() : "Compte courant")
             .devise("XOF")
@@ -213,6 +216,36 @@ public class CompteCourantServiceImpl implements CompteCourantServiceRemote {
             "ETUDIANT - Compte spécialement conçu pour les étudiants",
             "BUSINESS - Compte professionnel pour les entreprises"
         );
+    }
+    
+    @Override
+    public boolean verifierProprietaireCompte(String numeroCompte, Long idClient) {
+        LOGGER.info("Vérification de la propriété du compte : " + numeroCompte + " pour le client : " + idClient);
+        
+        if (numeroCompte == null || numeroCompte.trim().isEmpty() || idClient == null) {
+            return false;
+        }
+        
+        try {
+            Optional<CompteCourant> compteOpt = compteCourantRepository.findByNumeroCompte(numeroCompte.trim());
+            if (compteOpt.isEmpty()) {
+                LOGGER.warning("Compte non trouvé : " + numeroCompte);
+                return false;
+            }
+            
+            CompteCourant compte = compteOpt.get();
+            boolean appartientAuClient = compte.getClient() != null && 
+                                       compte.getClient().getIdClient().equals(idClient);
+            
+            if (!appartientAuClient) {
+                LOGGER.warning("Le compte " + numeroCompte + " n'appartient pas au client " + idClient);
+            }
+            
+            return appartientAuClient;
+        } catch (Exception e) {
+            LOGGER.severe("Erreur lors de la vérification de propriété du compte : " + e.getMessage());
+            return false;
+        }
     }
 
     /**

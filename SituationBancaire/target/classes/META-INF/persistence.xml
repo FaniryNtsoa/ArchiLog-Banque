@@ -20,6 +20,7 @@
         <class>com.banque.situationbancaire.entity.Virement</class>
         <class>com.banque.situationbancaire.entity.InteretJournalier</class>
         <class>com.banque.situationbancaire.entity.FraisTenueHistorique</class>
+        <class>com.banque.situationbancaire.entity.Decouvert</class>
 
         <properties>
             <!-- Configuration Hibernate -->

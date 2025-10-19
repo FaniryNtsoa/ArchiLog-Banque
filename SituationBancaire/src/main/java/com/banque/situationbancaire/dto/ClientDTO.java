@@ -19,12 +19,14 @@ public class ClientDTO implements Serializable {
     private String email;
     private String telephone;
     private String adresse;
+    private String codePostal;
+    private String ville;
     private LocalDate dateNaissance;
     private String numCin;
     private String motDePasse; // Pour inscription/modification
     private String situationFamiliale; // Enum converti en String
     private String statut; // Enum converti en String
-    private BigDecimal revenus;
+    private BigDecimal revenuMensuel;
     private String profession;
     private String entreprise;
     private LocalDateTime dateCreation;
@@ -34,9 +36,9 @@ public class ClientDTO implements Serializable {
     public ClientDTO() {}
     
     public ClientDTO(Long idClient, String numeroClient, String nom, String prenom, 
-                    String email, String telephone, String adresse, LocalDate dateNaissance,
-                    String numCin, String situationFamiliale, String statut, 
-                    BigDecimal revenus, String profession, String entreprise,
+                    String email, String telephone, String adresse, String codePostal, String ville,
+                    LocalDate dateNaissance, String numCin, String situationFamiliale, String statut, 
+                    BigDecimal revenuMensuel, String profession, String entreprise,
                     LocalDateTime dateCreation, LocalDateTime dateModification) {
         this.idClient = idClient;
         this.numeroClient = numeroClient;
@@ -45,11 +47,13 @@ public class ClientDTO implements Serializable {
         this.email = email;
         this.telephone = telephone;
         this.adresse = adresse;
+        this.codePostal = codePostal;
+        this.ville = ville;
         this.dateNaissance = dateNaissance;
         this.numCin = numCin;
         this.situationFamiliale = situationFamiliale;
         this.statut = statut;
-        this.revenus = revenus;
+        this.revenuMensuel = revenuMensuel;
         this.profession = profession;
         this.entreprise = entreprise;
         this.dateCreation = dateCreation;
@@ -78,6 +82,12 @@ public class ClientDTO implements Serializable {
     public String getAdresse() { return adresse; }
     public void setAdresse(String adresse) { this.adresse = adresse; }
 
+    public String getCodePostal() { return codePostal; }
+    public void setCodePostal(String codePostal) { this.codePostal = codePostal; }
+
+    public String getVille() { return ville; }
+    public void setVille(String ville) { this.ville = ville; }
+
     public LocalDate getDateNaissance() { return dateNaissance; }
     public void setDateNaissance(LocalDate dateNaissance) { this.dateNaissance = dateNaissance; }
 
@@ -93,8 +103,8 @@ public class ClientDTO implements Serializable {
     public String getStatut() { return statut; }
     public void setStatut(String statut) { this.statut = statut; }
 
-    public BigDecimal getRevenus() { return revenus; }
-    public void setRevenus(BigDecimal revenus) { this.revenus = revenus; }
+    public BigDecimal getRevenuMensuel() { return revenuMensuel; }
+    public void setRevenuMensuel(BigDecimal revenuMensuel) { this.revenuMensuel = revenuMensuel; }
 
     public String getProfession() { return profession; }
     public void setProfession(String profession) { this.profession = profession; }

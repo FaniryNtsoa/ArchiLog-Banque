@@ -58,6 +58,7 @@ public class RetraitServlet extends HttpServlet {
         IWebExchange webExchange = this.application.buildExchange(request, response);
         WebContext context = new WebContext(webExchange);
         context.setVariable("pageTitle", "Retrait - Banque Premium");
+            context.setVariable("currentPage", "retrait");
         context.setVariable("client", client);
         
         try {
@@ -98,6 +99,7 @@ public class RetraitServlet extends HttpServlet {
         IWebExchange webExchange = this.application.buildExchange(request, response);
         WebContext context = new WebContext(webExchange);
         context.setVariable("pageTitle", "Retrait - Banque Premium");
+            context.setVariable("currentPage", "retrait");
         context.setVariable("client", client);
         
         try {
@@ -109,6 +111,14 @@ public class RetraitServlet extends HttpServlet {
             // Validation
             if (numeroCompte == null || numeroCompte.trim().isEmpty()) {
                 context.setVariable("errorMessage", "Veuillez sélectionner un compte");
+                response.setContentType("text/html;charset=UTF-8");
+                templateEngine.process("retrait", context, response.getWriter());
+                return;
+            }
+            
+            // Vérifier que le compte appartient bien au client connecté
+            if (!compteService.verifierProprietaireCompte(numeroCompte, client.getIdClient())) {
+                context.setVariable("errorMessage", "Ce compte ne vous appartient pas");
                 response.setContentType("text/html;charset=UTF-8");
                 templateEngine.process("retrait", context, response.getWriter());
                 return;

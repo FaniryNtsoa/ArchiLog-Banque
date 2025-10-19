@@ -50,6 +50,7 @@ public class RegisterServlet extends HttpServlet {
         
         // Ajouter les variables au contexte
         context.setVariable("pageTitle", "Inscription - Banque Premium");
+            context.setVariable("currentPage", "register");
         
         // Rendre le template
         response.setContentType("text/html;charset=UTF-8");
@@ -70,7 +71,10 @@ public class RegisterServlet extends HttpServlet {
         String dateNaissanceStr = request.getParameter("dateNaissance");
         String numCin = request.getParameter("numCin");
         String adresse = request.getParameter("adresse");
+        String codePostal = request.getParameter("codePostal");
+        String ville = request.getParameter("ville");
         String profession = request.getParameter("profession");
+        String revenuMensuelStr = request.getParameter("revenuMensuel");
         String situationFamiliale = request.getParameter("situationFamiliale");
         String motDePasse = request.getParameter("motDePasse");
         String confirmerMotDePasse = request.getParameter("confirmerMotDePasse");
@@ -79,6 +83,7 @@ public class RegisterServlet extends HttpServlet {
         IWebExchange webExchange = this.application.buildExchange(request, response);
         WebContext context = new WebContext(webExchange);
         context.setVariable("pageTitle", "Inscription - Banque Premium");
+            context.setVariable("currentPage", "register");
         
         try {
             // Validation des champs obligatoires
@@ -87,6 +92,9 @@ public class RegisterServlet extends HttpServlet {
                 email == null || email.trim().isEmpty() ||
                 dateNaissanceStr == null || dateNaissanceStr.trim().isEmpty() ||
                 numCin == null || numCin.trim().isEmpty() ||
+                codePostal == null || codePostal.trim().isEmpty() ||
+                ville == null || ville.trim().isEmpty() ||
+                revenuMensuelStr == null || revenuMensuelStr.trim().isEmpty() ||
                 motDePasse == null || motDePasse.trim().isEmpty() ||
                 confirmerMotDePasse == null || confirmerMotDePasse.trim().isEmpty()) {
                 
@@ -98,7 +106,10 @@ public class RegisterServlet extends HttpServlet {
                 context.setVariable("dateNaissance", dateNaissanceStr);
                 context.setVariable("numCin", numCin);
                 context.setVariable("adresse", adresse);
+                context.setVariable("codePostal", codePostal);
+                context.setVariable("ville", ville);
                 context.setVariable("profession", profession);
+                context.setVariable("revenuMensuel", revenuMensuelStr);
                 context.setVariable("situationFamiliale", situationFamiliale);
                 response.setContentType("text/html;charset=UTF-8");
                 templateEngine.process("register", context, response.getWriter());
@@ -115,7 +126,10 @@ public class RegisterServlet extends HttpServlet {
                 context.setVariable("dateNaissance", dateNaissanceStr);
                 context.setVariable("numCin", numCin);
                 context.setVariable("adresse", adresse);
+                context.setVariable("codePostal", codePostal);
+                context.setVariable("ville", ville);
                 context.setVariable("profession", profession);
+                context.setVariable("revenuMensuel", revenuMensuelStr);
                 context.setVariable("situationFamiliale", situationFamiliale);
                 response.setContentType("text/html;charset=UTF-8");
                 templateEngine.process("register", context, response.getWriter());
@@ -130,8 +144,34 @@ public class RegisterServlet extends HttpServlet {
             clientDTO.setTelephone(telephone);
             clientDTO.setNumCin(numCin);
             clientDTO.setAdresse(adresse);
+            clientDTO.setCodePostal(codePostal);
+            clientDTO.setVille(ville);
             clientDTO.setMotDePasse(motDePasse);
             clientDTO.setProfession(profession);
+            clientDTO.setSituationFamiliale(situationFamiliale);
+            
+            // Parser le revenu mensuel
+            try {
+                java.math.BigDecimal revenuMensuel = new java.math.BigDecimal(revenuMensuelStr);
+                clientDTO.setRevenuMensuel(revenuMensuel);
+            } catch (Exception e) {
+                context.setVariable("errorMessage", "Format de revenu mensuel invalide");
+                context.setVariable("prenom", prenom);
+                context.setVariable("nom", nom);
+                context.setVariable("email", email);
+                context.setVariable("telephone", telephone);
+                context.setVariable("dateNaissance", dateNaissanceStr);
+                context.setVariable("numCin", numCin);
+                context.setVariable("adresse", adresse);
+                context.setVariable("codePostal", codePostal);
+                context.setVariable("ville", ville);
+                context.setVariable("profession", profession);
+                context.setVariable("revenuMensuel", revenuMensuelStr);
+                context.setVariable("situationFamiliale", situationFamiliale);
+                response.setContentType("text/html;charset=UTF-8");
+                templateEngine.process("register", context, response.getWriter());
+                return;
+            }
             
             // Parser la date de naissance
             try {
@@ -147,7 +187,10 @@ public class RegisterServlet extends HttpServlet {
                 context.setVariable("dateNaissance", dateNaissanceStr);
                 context.setVariable("numCin", numCin);
                 context.setVariable("adresse", adresse);
+                context.setVariable("codePostal", codePostal);
+                context.setVariable("ville", ville);
                 context.setVariable("profession", profession);
+                context.setVariable("revenuMensuel", revenuMensuelStr);
                 context.setVariable("situationFamiliale", situationFamiliale);
                 response.setContentType("text/html;charset=UTF-8");
                 templateEngine.process("register", context, response.getWriter());

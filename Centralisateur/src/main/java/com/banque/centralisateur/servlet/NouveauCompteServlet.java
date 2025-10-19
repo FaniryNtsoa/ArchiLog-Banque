@@ -4,7 +4,9 @@ import com.banque.centralisateur.config.ThymeleafConfig;
 import com.banque.centralisateur.ejb.EJBClientFactory;
 import com.banque.situationbancaire.dto.ClientDTO;
 import com.banque.situationbancaire.dto.CompteCourantDTO;
+import com.banque.situationbancaire.dto.TypeCompteDTO;
 import com.banque.situationbancaire.ejb.remote.CompteCourantServiceRemote;
+import com.banque.situationbancaire.ejb.remote.TypeCompteServiceRemote;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -51,15 +53,38 @@ public class NouveauCompteServlet extends HttpServlet {
         
         ClientDTO client = (ClientDTO) session.getAttribute("client");
         
-        // Créer le contexte Thymeleaf
-        IWebExchange webExchange = this.application.buildExchange(request, response);
-        WebContext context = new WebContext(webExchange);
-        context.setVariable("pageTitle", "Nouveau Compte - Banque Premium");
-        context.setVariable("client", client);
-        
-        // Rendre le template
-        response.setContentType("text/html;charset=UTF-8");
-        templateEngine.process("nouveau-compte", context, response.getWriter());
+        try {
+            // Récupérer la liste des types de compte disponibles
+            TypeCompteServiceRemote typeCompteService = EJBClientFactory.getTypeCompteService();
+            java.util.List<TypeCompteDTO> typesCompte = typeCompteService.listerTousLesTypesCompte();
+            
+            // Créer le contexte Thymeleaf
+            IWebExchange webExchange = this.application.buildExchange(request, response);
+            WebContext context = new WebContext(webExchange);
+            context.setVariable("pageTitle", "Nouveau Compte - Banque Premium");
+            context.setVariable("currentPage", "nouveau-compte");
+            context.setVariable("client", client);
+            context.setVariable("typesCompte", typesCompte);
+            
+            // Rendre le template
+            response.setContentType("text/html;charset=UTF-8");
+            templateEngine.process("nouveau-compte", context, response.getWriter());
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des types de compte", e);
+            
+            // Créer le contexte avec un message d'erreur
+            IWebExchange webExchange = this.application.buildExchange(request, response);
+            WebContext context = new WebContext(webExchange);
+            context.setVariable("pageTitle", "Nouveau Compte - Banque Premium");
+            context.setVariable("currentPage", "nouveau-compte");
+            context.setVariable("client", client);
+            context.setVariable("errorMessage", "Erreur lors du chargement des types de compte");
+            context.setVariable("typesCompte", new java.util.ArrayList<>());
+            
+            response.setContentType("text/html;charset=UTF-8");
+            templateEngine.process("nouveau-compte", context, response.getWriter());
+        }
     }
 
     @Override
@@ -78,32 +103,66 @@ public class NouveauCompteServlet extends HttpServlet {
         
         // Récupérer les données du formulaire
         String libelle = request.getParameter("libelle");
-        
-        // Créer le contexte Thymeleaf
-        IWebExchange webExchange = this.application.buildExchange(request, response);
-        WebContext context = new WebContext(webExchange);
-        context.setVariable("pageTitle", "Nouveau Compte - Banque Premium");
-        context.setVariable("client", client);
+        String idTypeCompteStr = request.getParameter("idTypeCompte");
         
         try {
+            // Récupérer la liste des types de compte pour l'affichage en cas d'erreur
+            TypeCompteServiceRemote typeCompteService = EJBClientFactory.getTypeCompteService();
+            java.util.List<TypeCompteDTO> typesCompte = typeCompteService.listerTousLesTypesCompte();
+            
+            // Créer le contexte Thymeleaf
+            IWebExchange webExchange = this.application.buildExchange(request, response);
+            WebContext context = new WebContext(webExchange);
+            context.setVariable("pageTitle", "Nouveau Compte - Banque Premium");
+            context.setVariable("currentPage", "nouveau-compte");
+            context.setVariable("client", client);
+            context.setVariable("typesCompte", typesCompte);
+            context.setVariable("libelle", libelle);
+            context.setVariable("selectedTypeCompte", idTypeCompteStr);
+            
             // Validation
             if (libelle == null || libelle.trim().isEmpty()) {
                 context.setVariable("errorMessage", "Le libellé du compte est obligatoire");
-                context.setVariable("libelle", libelle);
                 response.setContentType("text/html;charset=UTF-8");
                 templateEngine.process("nouveau-compte", context, response.getWriter());
                 return;
             }
             
-            // Créer le DTO Compte avec valeurs par défaut
+            if (idTypeCompteStr == null || idTypeCompteStr.trim().isEmpty()) {
+                context.setVariable("errorMessage", "Veuillez sélectionner un type de compte");
+                response.setContentType("text/html;charset=UTF-8");
+                templateEngine.process("nouveau-compte", context, response.getWriter());
+                return;
+            }
+            
+            // Récupérer le type de compte sélectionné
+            Long idTypeCompte;
+            try {
+                idTypeCompte = Long.parseLong(idTypeCompteStr);
+            } catch (NumberFormatException e) {
+                context.setVariable("errorMessage", "Type de compte invalide");
+                response.setContentType("text/html;charset=UTF-8");
+                templateEngine.process("nouveau-compte", context, response.getWriter());
+                return;
+            }
+            
+            TypeCompteDTO typeCompte = typeCompteService.rechercherTypeCompteParId(idTypeCompte);
+            if (typeCompte == null) {
+                context.setVariable("errorMessage", "Type de compte non trouvé");
+                response.setContentType("text/html;charset=UTF-8");
+                templateEngine.process("nouveau-compte", context, response.getWriter());
+                return;
+            }
+            
+            // Créer le DTO Compte avec les paramètres du type sélectionné
             CompteCourantDTO compteDTO = new CompteCourantDTO();
             compteDTO.setLibelleCompte(libelle);
             compteDTO.setSoldeInitial(BigDecimal.ZERO); // Solde initial à 0
-            compteDTO.setDecouvertAutorise(new BigDecimal("300.00")); // 300€ de découvert par défaut
+            compteDTO.setDecouvertAutorise(typeCompte.getMontantDecouvertAutorise());
             
-            // Appeler le service distant pour créer le compte
+            // Appeler le service distant pour créer le compte avec l'ID du type de compte
             CompteCourantServiceRemote compteService = EJBClientFactory.getCompteCourantService();
-            CompteCourantDTO compteCree = compteService.creerCompte(compteDTO, client.getIdClient());
+            CompteCourantDTO compteCree = compteService.creerCompte(compteDTO, client.getIdClient(), idTypeCompte);
             
             LOGGER.info("Compte créé avec succès: " + compteCree.getNumeroCompte());
             
@@ -112,9 +171,28 @@ public class NouveauCompteServlet extends HttpServlet {
             
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la création du compte", e);
-            context.setVariable("errorMessage", "Erreur lors de la création du compte: " + e.getMessage());
-            response.setContentType("text/html;charset=UTF-8");
-            templateEngine.process("nouveau-compte", context, response.getWriter());
+            
+            try {
+                // Récupérer à nouveau les types de compte pour l'affichage
+                TypeCompteServiceRemote typeCompteService = EJBClientFactory.getTypeCompteService();
+                java.util.List<TypeCompteDTO> typesCompte = typeCompteService.listerTousLesTypesCompte();
+                
+                IWebExchange webExchange = this.application.buildExchange(request, response);
+                WebContext context = new WebContext(webExchange);
+                context.setVariable("pageTitle", "Nouveau Compte - Banque Premium");
+                context.setVariable("currentPage", "nouveau-compte");
+                context.setVariable("client", client);
+                context.setVariable("typesCompte", typesCompte);
+                context.setVariable("libelle", libelle);
+                context.setVariable("selectedTypeCompte", idTypeCompteStr);
+                context.setVariable("errorMessage", "Erreur lors de la création du compte: " + e.getMessage());
+                
+                response.setContentType("text/html;charset=UTF-8");
+                templateEngine.process("nouveau-compte", context, response.getWriter());
+            } catch (Exception ex) {
+                LOGGER.log(Level.SEVERE, "Erreur fatale", ex);
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Une erreur inattendue s'est produite");
+            }
         }
     }
 }

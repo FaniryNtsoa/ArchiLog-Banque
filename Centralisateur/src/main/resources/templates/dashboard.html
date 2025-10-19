@@ -4,24 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle}">Tableau de bord - Banque Premium</title>
-    
-    <!-- CSS -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>">
 </head>
-<body>
-    <!-- Header -->
-    <div th:replace="~{base :: header}"></div>
-
-    <!-- Main Content -->
-    <main class="dashboard">
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
         <div class="container">
             <!-- Messages d'alerte -->
             <div th:if="${session.successMessage != null}" class="alert alert-success">
@@ -100,8 +90,8 @@
                                 <span class="action-btn__icon">💸</span>
                                 Retrait
                             </a>
-                            <a href="#" class="action-btn" th:class="${hasComptes} ? 'action-btn' : 'action-btn' + ' disabled'" onclick="openVirementModal()">
-                                <span class="action-btn__icon">🔄</span>
+                            <a th:href="@{/virement}" class="action-btn" th:class="${hasComptes} ? 'action-btn' : 'action-btn' + ' disabled'">
+                                <span class="action-btn__icon">�</span>
                                 Virement
                             </a>
                             <a href="#" class="action-btn" onclick="openCreateAccountModal()">
@@ -168,7 +158,7 @@
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
     <!-- Modales -->
     
@@ -249,45 +239,9 @@
         </div>
     </div>
 
-    <!-- Modal Virement -->
-    <div id="virementModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-        <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;">
-            <div class="modal-header" style="margin-bottom: 1.5rem;">
-                <h3>🔄 Effectuer un virement</h3>
-                <button onclick="closeModal('virementModal')" style="float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
-            </div>
-            <form action="/operation/virement" method="post">
-                <div class="form-group">
-                    <label class="form-label">Compte source</label>
-                    <select name="numeroCompteSource" class="form-control form-select" required>
-                        <option value="">Choisir le compte source</option>
-                        <!-- Sera rempli dynamiquement -->
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Compte destination</label>
-                    <input type="text" name="numeroCompteDestination" class="form-control" placeholder="Numéro de compte destination" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Montant (€)</label>
-                    <input type="number" name="montant" class="form-control" placeholder="200.00" min="1" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Motif (optionnel)</label>
-                    <input type="text" name="motif" class="form-control" placeholder="Ex: Remboursement, Cadeau, etc.">
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary btn-block">Effectuer le virement</button>
-                </div>
-            </form>
+
+
         </div>
-    </div>
-
-    <!-- Footer -->
-    <div th:replace="~{base :: footer}"></div>
-
-    <!-- Scripts -->
-    <script th:replace="~{base :: scripts}"></script>
     
     <!-- Script spécifique au dashboard -->
     <script>
@@ -312,13 +266,7 @@
             document.getElementById('retraitModal').style.display = 'block';
         }
         
-        function openVirementModal() {
-            if (!hasAccounts()) {
-                alert('Vous devez d\'abord créer un compte bancaire.');
-                return;
-            }
-            document.getElementById('virementModal').style.display = 'block';
-        }
+
         
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
@@ -365,5 +313,6 @@
             });
         });
     </script>
+</section>
 </body>
 </html>

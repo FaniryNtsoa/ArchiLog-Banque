@@ -26,13 +26,15 @@ public class ClientMapper {
         dto.setEmail(client.getEmail());
         dto.setTelephone(client.getTelephone());
         dto.setAdresse(client.getAdresse());
+        dto.setCodePostal(client.getCodePostal());
+        dto.setVille(client.getVille());
         dto.setDateNaissance(client.getDateNaissance());
         dto.setNumCin(client.getNumCin());
         dto.setSituationFamiliale(client.getSituationFamiliale() != null ? 
             client.getSituationFamiliale().name() : null);
         dto.setStatut(client.getStatut() != null ? 
             client.getStatut().name() : null);
-        dto.setRevenus(client.getRevenuMensuel());
+        dto.setRevenuMensuel(client.getRevenuMensuel());
         dto.setProfession(client.getProfession());
         dto.setEntreprise(null); // Champ non présent dans l'entité
         dto.setDateCreation(client.getDateCreation());
@@ -57,6 +59,8 @@ public class ClientMapper {
         client.setEmail(dto.getEmail());
         client.setTelephone(dto.getTelephone());
         client.setAdresse(dto.getAdresse());
+        client.setCodePostal(dto.getCodePostal());
+        client.setVille(dto.getVille());
         client.setDateNaissance(dto.getDateNaissance());
         client.setNumCin(dto.getNumCin());
         
@@ -78,7 +82,7 @@ public class ClientMapper {
             }
         }
         
-        client.setRevenuMensuel(dto.getRevenus());
+        client.setRevenuMensuel(dto.getRevenuMensuel());
         client.setProfession(dto.getProfession());
         // Pas de champ entreprise dans l'entité
         client.setDateCreation(dto.getDateCreation());
@@ -100,6 +104,8 @@ public class ClientMapper {
         client.setEmail(dto.getEmail());
         client.setTelephone(dto.getTelephone());
         client.setAdresse(dto.getAdresse());
+        client.setCodePostal(dto.getCodePostal());
+        client.setVille(dto.getVille());
         client.setDateNaissance(dto.getDateNaissance());
         client.setNumCin(dto.getNumCin());
         
@@ -119,7 +125,7 @@ public class ClientMapper {
             }
         }
         
-        client.setRevenuMensuel(dto.getRevenus());
+        client.setRevenuMensuel(dto.getRevenuMensuel());
         client.setProfession(dto.getProfession());
         // Pas de champ entreprise dans l'entité
     }

@@ -3,6 +3,7 @@ package com.banque.centralisateur.ejb;
 import com.banque.situationbancaire.ejb.remote.ClientServiceRemote;
 import com.banque.situationbancaire.ejb.remote.CompteCourantServiceRemote;
 import com.banque.situationbancaire.ejb.remote.OperationServiceRemote;
+import com.banque.situationbancaire.ejb.remote.TypeCompteServiceRemote;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -111,6 +112,21 @@ public class EJBClientFactory {
         } catch (NamingException e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de OperationService", e);
             throw new RuntimeException("Impossible de se connecter au service Operation distant", e);
+        }
+    }
+    
+    /**
+     * Récupère le service TypeCompte distant
+     */
+    public static TypeCompteServiceRemote getTypeCompteService() {
+        try {
+            String jndiName = buildJNDIName("TypeCompteServiceImpl", TypeCompteServiceRemote.class);
+            TypeCompteServiceRemote service = (TypeCompteServiceRemote) getContext().lookup(jndiName);
+            LOGGER.info("TypeCompteService EJB récupéré avec succès");
+            return service;
+        } catch (NamingException e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de TypeCompteService", e);
+            throw new RuntimeException("Impossible de se connecter au service TypeCompte distant", e);
         }
     }
     

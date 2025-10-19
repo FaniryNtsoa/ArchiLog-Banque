@@ -11,6 +11,9 @@
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
 
+    <!-- Pas de mapping spécifique pour les ressources statiques -->
+    <!-- WildFly/Undertow les servira automatiquement depuis webapp/ -->
+
     <!-- Configuration CORS si nécessaire -->
     <!-- <filter>
         <filter-name>CorsFilter</filter-name>

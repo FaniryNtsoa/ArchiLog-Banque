@@ -17,7 +17,7 @@ public interface CompteCourantServiceRemote {
      * @param idClient ID du client propriétaire
      * @return Le compte créé
      */
-    CompteCourantDTO creerCompte(CompteCourantDTO compteDTO, Long idClient);
+    CompteCourantDTO creerCompte(CompteCourantDTO compteDTO, Long idClient, Long idTypeCompte);
     
     /**
      * Récupère un compte par son ID
@@ -85,4 +85,12 @@ public interface CompteCourantServiceRemote {
      * @return Liste des types de comptes avec leurs paramètres
      */
     List<String> listerTypesComptesDisponibles();
+    
+    /**
+     * Vérifie que le compte appartient au client spécifié
+     * @param numeroCompte Numéro du compte
+     * @param idClient ID du client
+     * @return true si le compte appartient au client, false sinon
+     */
+    boolean verifierProprietaireCompte(String numeroCompte, Long idClient);
 }

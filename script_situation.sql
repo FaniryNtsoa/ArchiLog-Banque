@@ -115,15 +115,32 @@ CREATE TABLE virement (
 );
 
 
+-- Table des découverts avec gestion des intérêts
+CREATE TABLE decouvert (
+    id_decouvert INT AUTO_INCREMENT PRIMARY KEY,
+    id_compte INT NOT NULL,
+    montant_decouvert DECIMAL(15,2) NOT NULL,
+    montant_autorise DECIMAL(15,2) NOT NULL,
+    statut ENUM('ACTIF', 'REMBOURSE', 'FERME', 'SUSPENDU') DEFAULT 'ACTIF',
+    date_debut DATE NOT NULL,
+    date_fin DATE NULL,
+    date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_modification DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    motif_fermeture VARCHAR(255),
+    FOREIGN KEY (id_compte) REFERENCES compte_courant(id_compte)
+);
+
 -- conserver le détail du calcul des intérêts
 CREATE TABLE interet_journalier (
     id_interet INT AUTO_INCREMENT PRIMARY KEY,
     id_compte INT NOT NULL,
+    id_decouvert INT NULL,
     date_jour DATE NOT NULL,
     montant_base DECIMAL(15,2) NOT NULL,
     taux_applique DECIMAL(5,4) NOT NULL,
     interet_jour DECIMAL(15,2) NOT NULL,
-    FOREIGN KEY (id_compte) REFERENCES compte_courant(id_compte)
+    FOREIGN KEY (id_compte) REFERENCES compte_courant(id_compte),
+    FOREIGN KEY (id_decouvert) REFERENCES decouvert(id_decouvert)
 );
 
 -- Pour garder une trace des frais de tenue de compte prélevés

@@ -1,10 +1,17 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::main})}">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="${pageTitle}">Dépôt</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Dépôt - Banque Premium</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
-<body>
-    <main class="main-content">
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
         <div class="container-sm">
             <div class="page-header">
                 <h1 class="page-title">💵 Effectuer un Dépôt</h1>
@@ -16,7 +23,7 @@
                     <h2 class="card__title">Informations du dépôt</h2>
                 </div>
                 <div class="card__content">
-                    <form method="POST" action="/centralisateur/web/depot" class="form">
+                    <form method="POST" th:action="@{/depot}" class="form">
                         <div class="form-group">
                             <label for="numeroCompte" class="form-label">
                                 <i class="icon">🏦</i>
@@ -81,7 +88,7 @@
                                 <i class="btn__icon">💵</i>
                                 Effectuer le dépôt
                             </button>
-                            <a href="/centralisateur/dashboard" class="btn btn--secondary">
+                            <a th:href="@{/dashboard}" class="btn btn--secondary">
                                 <i class="btn__icon">↩️</i>
                                 Retour au tableau de bord
                             </a>
@@ -90,6 +97,7 @@
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+</section>
 </body>
 </html>

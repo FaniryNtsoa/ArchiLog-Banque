@@ -1,10 +1,17 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::main})}">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="${pageTitle}">Consulter Solde</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Consulter Solde - Banque Premium</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
-<body>
-    <main class="main-content">
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
         <div class="container">
             <div class="page-header">
                 <h1 class="page-title">📊 Consulter vos Soldes</h1>
@@ -128,7 +135,7 @@
                     <p class="empty-state__text">
                         Vous n'avez actuellement aucun compte bancaire.
                     </p>
-                    <a href="/centralisateur/web/nouveau-compte" class="btn btn--primary">
+                    <a th:href="@{/nouveau-compte}" class="btn btn--primary">
                         <i class="btn__icon">🏦</i>
                         Créer votre premier compte
                     </a>
@@ -137,20 +144,21 @@
 
             <!-- Actions générales -->
             <div class="page-actions">
-                <a href="/centralisateur/web/virement" class="btn btn--primary">
+                <a th:href="@{/virement}" class="btn btn--primary">
                     <i class="btn__icon">🔄</i>
                     Effectuer un virement
                 </a>
-                <a href="/centralisateur/web/nouveau-compte" class="btn btn--secondary">
+                <a th:href="@{/nouveau-compte}" class="btn btn--secondary">
                     <i class="btn__icon">🏦</i>
                     Ouvrir un nouveau compte
                 </a>
-                <a href="/centralisateur/dashboard" class="btn btn--outline">
+                <a th:href="@{/dashboard}" class="btn btn--outline">
                     <i class="btn__icon">🏠</i>
                     Retour au tableau de bord
                 </a>
             </div>
         </div>
-    </main>
+    </div>
+</section>
 </body>
 </html>

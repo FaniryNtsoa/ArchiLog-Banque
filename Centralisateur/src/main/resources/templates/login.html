@@ -4,23 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle}">Connexion - Banque Premium</title>
-    
-    <!-- CSS -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>">
 </head>
-<body>
-    <!-- Header -->
-    <div th:replace="~{base :: header}"></div>
-
-    <!-- Main Content -->
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
     <main class="auth-container">
         <div class="container-sm">
             <div class="auth-card">
@@ -29,7 +20,6 @@
                     <p class="auth-card__subtitle">Accédez à votre espace bancaire sécurisé</p>
                 </div>
 
-                <!-- Messages d'alerte -->
                 <div th:if="${errorMessage}" class="alert alert-danger">
                     <span th:text="${errorMessage}">Message d'erreur</span>
                 </div>
@@ -38,51 +28,27 @@
                     <span th:text="${successMessage}">Message de succès</span>
                 </div>
 
-                <!-- Formulaire de connexion -->
                 <form th:action="@{/login}" method="post" class="login-form">
                     <div class="form-group">
                         <label for="email" class="form-label">Adresse email</label>
-                        <input 
-                            type="email" 
-                            id="email" 
-                            name="email" 
-                            class="form-control" 
-                            placeholder="votre.email@exemple.com"
-                            th:value="${email}"
-                            required 
-                            autocomplete="email"
-                        >
+                        <input type="email" id="email" name="email" class="form-control" placeholder="votre.email@exemple.com" th:value="${email}" required autocomplete="email">
                     </div>
 
                     <div class="form-group">
                         <label for="motDePasse" class="form-label">Mot de passe</label>
-                        <input 
-                            type="password" 
-                            id="motDePasse" 
-                            name="motDePasse" 
-                            class="form-control" 
-                            placeholder="••••••••"
-                            required 
-                            autocomplete="current-password"
-                        >
+                        <input type="password" id="motDePasse" name="motDePasse" class="form-control" placeholder="••••••••" required autocomplete="current-password">
                     </div>
 
                     <div class="form-group">
-                        <button type="submit" class="btn btn-primary btn-block btn-lg">
-                            🔐 Se connecter
-                        </button>
+                        <button type="submit" class="btn btn-primary btn-block btn-lg">🔐 Se connecter</button>
                     </div>
                 </form>
 
-                <!-- Actions supplémentaires -->
                 <div class="text-center mt-4">
                     <p class="text-muted">Pas encore de compte ?</p>
-                    <a th:href="@{/register}" class="btn btn-outline">
-                        ✨ Créer un compte
-                    </a>
+                    <a th:href="@{/register}" class="btn btn-outline">✨ Créer un compte</a>
                 </div>
 
-                <!-- Info de test -->
                 <div class="alert alert-info mt-4">
                     <strong>🧪 Mode Test :</strong><br>
                     Email : <code>test@banque.com</code><br>
@@ -92,41 +58,24 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <div th:replace="~{base :: footer}"></div>
-
-    <!-- Scripts -->
-    <script th:replace="~{base :: scripts}"></script>
-    
-    <!-- Script spécifique à la page de connexion -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Focus automatique sur le champ email
             const emailField = document.getElementById('email');
-            if (emailField && !emailField.value) {
-                emailField.focus();
-            }
-            
-            // Animation du formulaire
+            if (emailField && !emailField.value) { emailField.focus(); }
             const form = document.querySelector('.login-form');
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', function() {
                 const submitBtn = form.querySelector('button[type="submit"]');
                 submitBtn.innerHTML = '⏳ Connexion en cours...';
                 submitBtn.disabled = true;
             });
-            
-            // Validation côté client
             const inputs = form.querySelectorAll('input[required]');
             inputs.forEach(input => {
                 input.addEventListener('blur', function() {
-                    if (!this.value.trim()) {
-                        this.style.borderColor = '#dc3545';
-                    } else {
-                        this.style.borderColor = '#28a745';
-                    }
+                    this.style.borderColor = this.value.trim() ? '#28a745' : '#dc3545';
                 });
             });
         });
     </script>
+</section>
 </body>
 </html>

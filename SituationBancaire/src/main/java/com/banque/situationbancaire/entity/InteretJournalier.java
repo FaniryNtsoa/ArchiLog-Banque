@@ -32,6 +32,11 @@ public class InteretJournalier implements Serializable {
     @ToString.Exclude
     private CompteCourant compte;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_decouvert")
+    @ToString.Exclude
+    private Decouvert decouvert;
+
     @Column(name = "date_jour", nullable = false)
     @NotNull(message = "La date est obligatoire")
     private LocalDate dateJour;

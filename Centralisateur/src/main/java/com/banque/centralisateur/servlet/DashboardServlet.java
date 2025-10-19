@@ -65,6 +65,7 @@ public class DashboardServlet extends HttpServlet {
             
             // Ajouter les variables au contexte
             context.setVariable("pageTitle", "Tableau de bord - Banque Premium");
+            context.setVariable("currentPage", "dashboard");
             context.setVariable("client", client);
             context.setVariable("comptes", comptes);
             context.setVariable("nombreComptes", comptes != null ? comptes.size() : 0);

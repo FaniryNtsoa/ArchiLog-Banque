@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, content)">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle}">Banque Premium</title>
+    <title th:replace="${title}">Banque Premium</title>
     
     <!-- CSS -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
@@ -16,35 +16,138 @@
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>">
 </head>
-<body>
-    <!-- Header -->
-    <header class="header" th:fragment="header">
-        <div class="container">
-            <div class="header__content">
-                <a th:href="@{/}" class="header__logo">
-                    Banque Premium
-                </a>
+<body class="app-layout" th:classappend="${session.clientNom != null} ? 'authenticated' : 'guest'">
+    <div class="app-container">
+        <!-- Sidebar pour utilisateurs authentifiés -->
+        <aside class="sidebar" th:if="${session.clientNom != null}">
+            <div class="sidebar__header">
+                <div class="sidebar__logo">
+                    <span class="sidebar__logo-icon">💳</span>
+                    <span class="sidebar__logo-text">Banque Premium</span>
+                </div>
+                <button class="sidebar__toggle" id="sidebarToggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            
+            <div class="sidebar__user">
+                <div class="sidebar__user-avatar">
+                    <span th:text="${#strings.substring(session.clientPrenom, 0, 1)} + ${#strings.substring(session.clientNom, 0, 1)}">JD</span>
+                </div>
+                <div class="sidebar__user-info">
+                    <span class="sidebar__user-name" th:text="${session.clientPrenom} + ' ' + ${session.clientNom}">John Doe</span>
+                    <span class="sidebar__user-role">Client Premium</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar__nav">
+                <ul class="sidebar__nav-list">
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/dashboard}" class="sidebar__nav-link" 
+                           th:classappend="${currentPage == 'dashboard'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">🏠</span>
+                            <span class="sidebar__nav-text">Tableau de bord</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/nouveau-compte}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'nouveau-compte'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">➕</span>
+                            <span class="sidebar__nav-text">Nouveau compte</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/depot}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'depot'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">📈</span>
+                            <span class="sidebar__nav-text">Dépôt</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/retrait}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'retrait'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">📉</span>
+                            <span class="sidebar__nav-text">Retrait</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/virement}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'virement'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">💸</span>
+                            <span class="sidebar__nav-text">Virement</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/solde}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'solde'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">💰</span>
+                            <span class="sidebar__nav-text">Consulter solde</span>
+                        </a>
+                    </li>
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/historique}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'historique'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">📋</span>
+                            <span class="sidebar__nav-text">Historique</span>
+                        </a>
+                    </li>
+                </ul>
                 
-                <nav class="header__nav">
-                    <!-- Navigation conditionnelle -->
-                    <div th:if="${session.clientNom != null}">
-                        <a th:href="@{/dashboard}" class="nav-link">Tableau de bord</a>
-                        <span class="nav-link text-gold" th:text="'Bonjour ' + ${session.clientPrenom}">Bonjour</span>
-                        <a th:href="@{/logout}" class="nav-link">Déconnexion</a>
-                    </div>
-                    <div th:unless="${session.clientNom != null}">
+                <div class="sidebar__nav-divider"></div>
+                
+                <ul class="sidebar__nav-list">
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/logout}" class="sidebar__nav-link sidebar__nav-link--logout">
+                            <span class="sidebar__nav-icon">🚪</span>
+                            <span class="sidebar__nav-text">Déconnexion</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <!-- Header pour utilisateurs non-authentifiés -->
+        <header class="header" th:unless="${session.clientNom != null}">
+            <div class="container">
+                <div class="header__content">
+                    <a th:href="@{/}" class="header__logo">
+                        Banque Premium
+                    </a>
+                    
+                    <nav class="header__nav">
                         <a th:href="@{/login}" class="nav-link">Connexion</a>
                         <a th:href="@{/register}" class="nav-link nav-link--active">Inscription</a>
-                    </div>
-                </nav>
+                    </nav>
+                </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- Main Content -->
-    <main th:fragment="content">
-        <!-- Le contenu sera inséré ici -->
-    </main>
+        <!-- Main Content Area -->
+        <main class="main-content" th:classappend="${session.clientNom != null} ? 'main-content--sidebar' : ''">
+            <!-- Top Bar pour utilisateurs authentifiés -->
+            <div class="topbar" th:if="${session.clientNom != null}">
+                <button class="topbar__menu-btn" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <h1 class="topbar__title" th:text="${pageTitle != null ? pageTitle : 'Tableau de bord'}">Tableau de bord</h1>
+                <div class="topbar__actions">
+                    <button class="topbar__notification-btn" aria-label="Notifications">
+                        <span class="notification-icon">🔔</span>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Page Content -->
+            <div class="page-content" th:replace="${content}">
+                <!-- Le contenu de la page sera inséré ici -->
+            </div>
+        </main>
+    </div>
 
     <!-- Footer -->
     <footer th:fragment="footer" style="background: #000; color: #fff; text-align: center; padding: 2rem 0; margin-top: auto;">
@@ -86,6 +189,56 @@
                         alert.remove();
                     }, 500);
                 }, 5000);
+            });
+            
+            // Gestion de la sidebar
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const sidebar = document.querySelector('.sidebar');
+            const appContainer = document.querySelector('.app-container');
+            
+            function toggleSidebar() {
+                sidebar?.classList.toggle('sidebar--collapsed');
+                appContainer?.classList.toggle('sidebar-collapsed');
+            }
+            
+            function toggleMobileSidebar() {
+                sidebar?.classList.toggle('sidebar--mobile-open');
+                appContainer?.classList.toggle('mobile-sidebar-open');
+            }
+            
+            // Événements de la sidebar
+            sidebarToggle?.addEventListener('click', toggleSidebar);
+            mobileMenuToggle?.addEventListener('click', toggleMobileSidebar);
+            
+            // Fermer la sidebar mobile en cliquant à l'extérieur
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 768) {
+                    const isClickInsideSidebar = sidebar?.contains(event.target);
+                    const isClickOnToggle = mobileMenuToggle?.contains(event.target);
+                    
+                    if (!isClickInsideSidebar && !isClickOnToggle && sidebar?.classList.contains('sidebar--mobile-open')) {
+                        toggleMobileSidebar();
+                    }
+                }
+            });
+            
+            // Responsive: fermer la sidebar mobile lors du redimensionnement
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768 && sidebar?.classList.contains('sidebar--mobile-open')) {
+                    toggleMobileSidebar();
+                }
+            });
+            
+            // Animation des liens de navigation
+            const navLinks = document.querySelectorAll('.sidebar__nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(5px)';
+                });
+                link.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(0)';
+                });
             });
         });
     </script>

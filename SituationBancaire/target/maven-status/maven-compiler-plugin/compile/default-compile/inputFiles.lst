@@ -1,7 +1,9 @@
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\repository\ClientRepository.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\mapper\ClientMapper.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\ejb\remote\OperationServiceRemote.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\mapper\TypeCompteMapper.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\dto\CompteCourantDTO.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\ejb\remote\TypeCompteServiceRemote.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\entity\InteretJournalier.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\entity\Mouvement.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\mapper\CompteCourantMapper.java
@@ -14,10 +16,13 @@ C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBanc
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\entity\Virement.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\entity\Client.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\ejb\impl\CompteCourantServiceImpl.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\ejb\impl\TypeCompteServiceImpl.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\ejb\remote\ClientServiceRemote.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\dto\MouvementDTO.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\mapper\VirementMapper.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\entity\TypeOperation.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\dto\TypeCompteDTO.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\entity\Decouvert.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\entity\enums\CategorieOperation.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\entity\enums\StatutCompte.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\config\ApplicationConfig.java
@@ -31,8 +36,10 @@ C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBanc
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\repository\TypeCompteRepository.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\dto\VirementDTO.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\repository\CompteCourantRepository.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\repository\DecouvertRepository.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\ejb\impl\OperationServiceImplTemp.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\ejb\impl\OperationServiceImpl.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\mapper\MouvementMapper.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\entity\enums\PeriodiciteFreais.java
 C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\entity\enums\SituationFamiliale.java
+C:\Users\fanir\Documents\ITU\Faniry\S5\ArchitectureLogiciel\banque\SituationBancaire\src\main\java\com\banque\situationbancaire\entity\enums\StatutDecouvert.java
