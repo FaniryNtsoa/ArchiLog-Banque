@@ -1442,3 +1442,164 @@ body {
     0% { left: -100%; }
     100% { left: 100%; }
 }
+
+/* ==========================================================================
+   Styles pour tableau d'amortissement et remboursements (PHASE 5)
+   ========================================================================== */
+
+/* Progress bar */
+.progress-bar {
+    width: 100%;
+    height: 28px;
+    background-color: var(--gray-200);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar__fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success-color), #34d399);
+    border-radius: 14px;
+    transition: width 0.5s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Row styling based on payment status */
+.row-paid {
+    background-color: rgba(16, 185, 129, 0.08) !important; /* Green tint */
+}
+
+.row-paid:hover {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+.row-late {
+    background-color: rgba(239, 68, 68, 0.08) !important; /* Red tint */
+}
+
+.row-late:hover {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Small badge for table cells */
+.badge-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+/* Amortization table specific styling */
+.table-amortissement {
+    font-size: 0.875rem;
+}
+
+.table-amortissement thead th {
+    background-color: var(--gray-50);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    color: var(--gray-700);
+}
+
+.table-amortissement tbody tr {
+    transition: var(--transition-fast);
+}
+
+.table-amortissement tbody tr:hover {
+    transform: translateX(4px);
+}
+
+/* Statistics grid */
+.statistics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    padding: 1rem;
+    background-color: var(--gray-50);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--primary-color);
+}
+
+.stat-item.stat-success {
+    border-left-color: var(--success-color);
+}
+
+.stat-item.stat-danger {
+    border-left-color: var(--danger-color);
+}
+
+.stat-item.stat-warning {
+    border-left-color: var(--warning-color);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+/* Details grid */
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    padding: 0.75rem;
+    background-color: var(--gray-50);
+    border-radius: 8px;
+}
+
+.detail-item strong {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--gray-600);
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.5px;
+}
+
+/* Text utility classes */
+.text-gold {
+    color: var(--gold-dark);
+    font-weight: 600;
+}
+
+.text-danger {
+    color: var(--danger-color);
+}
+
+.text-success {
+    color: var(--success-color);
+}
+
+.text-warning {
+    color: var(--warning-color);
+}
+
+.text-muted {
+    color: var(--gray-500);
+}

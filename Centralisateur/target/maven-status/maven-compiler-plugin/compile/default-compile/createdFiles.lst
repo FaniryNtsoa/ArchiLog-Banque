@@ -1,4 +1,5 @@
 com\banque\centralisateur\ejb\PretEJBClientFactory.class
+com\banque\centralisateur\servlet\pret\DetailPretServlet.class
 com\banque\centralisateur\ejb\EJBClientFactory.class
 com\banque\centralisateur\servlet\LogoutServlet.class
 com\banque\centralisateur\servlet\DashboardServlet.class
@@ -16,4 +17,3 @@ com\banque\centralisateur\servlet\LoginServlet.class
 com\banque\centralisateur\config\ThymeleafConfig.class
 com\banque\centralisateur\servlet\pret\SimulationPretServlet.class
 com\banque\centralisateur\servlet\NouveauCompteServlet.class
-com\banque\centralisateur\servlet\pret\DemandePretServlet.class

@@ -7,7 +7,6 @@ import com.banque.pret.dto.PretDTO;
 import com.banque.pret.dto.RemboursementDTO;
 import com.banque.pret.ejb.remote.EcheanceServiceRemote;
 import com.banque.pret.ejb.remote.PretServiceRemote;
-import com.banque.pret.entity.enums.StatutPret;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -21,7 +20,6 @@ import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -62,9 +60,11 @@ public class RemboursementServlet extends HttpServlet {
         WebContext context = new WebContext(webExchange);
         
         try {
-            // Récupérer les prêts actifs du client
+            // Récupérer les prêts EN_COURS du client (pas APPROUVE, mais EN_COURS)
             PretServiceRemote pretService = PretEJBClientFactory.getPretService();
-            List<PretDTO> pretsActifs = pretService.listerPretsParClientEtStatut(idClient, StatutPret.APPROUVE);
+            List<PretDTO> pretsActifs = pretService.listerPretsParClient(idClient).stream()
+                .filter(p -> "EN_COURS".equals(p.getStatut()) || "EN_RETARD".equals(p.getStatut()))
+                .toList();
             
             context.setVariable("pretsActifs", pretsActifs);
             context.setVariable("hasPretsActifs", pretsActifs != null && !pretsActifs.isEmpty());
@@ -73,12 +73,18 @@ public class RemboursementServlet extends HttpServlet {
             String idPretStr = request.getParameter("idPret");
             if (idPretStr != null && !idPretStr.trim().isEmpty()) {
                 Long idPret = Long.parseLong(idPretStr);
-                EcheanceServiceRemote echeanceService = PretEJBClientFactory.getEcheanceService();
-                List<EcheanceDTO> echeancesImpayees = echeanceService.listerEcheancesImpayees(idPret);
                 
-                context.setVariable("echeancesImpayees", echeancesImpayees);
-                context.setVariable("idPretSelectionne", idPret);
-                context.setVariable("hasEcheances", echeancesImpayees != null && !echeancesImpayees.isEmpty());
+                // Vérifier que le prêt appartient au client
+                PretDTO pretSelectionne = pretService.rechercherPretParId(idPret);
+                if (pretSelectionne != null && pretSelectionne.getIdClient().equals(idClient)) {
+                    EcheanceServiceRemote echeanceService = PretEJBClientFactory.getEcheanceService();
+                    List<EcheanceDTO> echeancesImpayees = echeanceService.listerEcheancesImpayees(idPret);
+                    
+                    context.setVariable("pretSelectionne", pretSelectionne);
+                    context.setVariable("echeancesImpayees", echeancesImpayees);
+                    context.setVariable("idPretSelectionne", idPret);
+                    context.setVariable("hasEcheances", echeancesImpayees != null && !echeancesImpayees.isEmpty());
+                }
             }
             
         } catch (Exception e) {
@@ -113,38 +119,48 @@ public class RemboursementServlet extends HttpServlet {
         LOGGER.info("Traitement d'un remboursement pour le client ID: " + idClient);
         
         // Récupérer les paramètres du formulaire
-        String idEcheanceStr = request.getParameter("idEcheance");
-        String montantStr = request.getParameter("montant");
+        String idPretStr = request.getParameter("idPret");
+        String montantPayeStr = request.getParameter("montantPaye");
         
         try {
             // Validation
-            if (idEcheanceStr == null || idEcheanceStr.trim().isEmpty() ||
-                montantStr == null || montantStr.trim().isEmpty()) {
+            if (idPretStr == null || idPretStr.trim().isEmpty() ||
+                montantPayeStr == null || montantPayeStr.trim().isEmpty()) {
                 
                 session.setAttribute("errorMessage", "Veuillez remplir tous les champs obligatoires");
                 response.sendRedirect(request.getContextPath() + "/pret/remboursement");
                 return;
             }
             
-            Long idEcheance = Long.parseLong(idEcheanceStr);
-            BigDecimal montant = new BigDecimal(montantStr);
+            Long idPret = Long.parseLong(idPretStr);
+            BigDecimal montantPaye = new BigDecimal(montantPayeStr);
             
-            // Créer le DTO de remboursement
-            RemboursementDTO remboursementDTO = new RemboursementDTO();
-            remboursementDTO.setIdEcheance(idEcheance);
-            remboursementDTO.setMontant(montant);
-            remboursementDTO.setDatePaiement(java.time.LocalDateTime.now());
+            // Vérifier que le prêt appartient au client
+            PretServiceRemote pretService = PretEJBClientFactory.getPretService();
+            PretDTO pret = pretService.rechercherPretParId(idPret);
+            
+            if (pret == null || !pret.getIdClient().equals(idClient)) {
+                session.setAttribute("errorMessage", "Prêt non trouvé ou accès non autorisé");
+                response.sendRedirect(request.getContextPath() + "/pret/remboursement");
+                return;
+            }
+            
+            // Créer le DTO de remboursement selon l'API du module Prêt
+            RemboursementDTO remboursementDTO = RemboursementDTO.builder()
+                .idPret(idPret)
+                .montantPaye(montantPaye)
+                .build();
             
             // Appeler le service pour enregistrer le remboursement
             EcheanceServiceRemote echeanceService = PretEJBClientFactory.getEcheanceService();
             RemboursementDTO remboursementCree = echeanceService.enregistrerRemboursement(remboursementDTO);
             
-            LOGGER.info("Remboursement enregistré avec succès. Montant: " + remboursementCree.getMontant());
+            LOGGER.info("✅ Remboursement enregistré avec succès. ID Prêt: " + idPret + ", Montant: " + montantPaye);
             
             // Rediriger avec un message de succès
-            session.setAttribute("successMessage", "Remboursement enregistré avec succès. Montant: " + 
-                montant + " €");
-            response.sendRedirect(request.getContextPath() + "/pret/remboursement");
+            session.setAttribute("successMessage", "💰 Remboursement enregistré avec succès ! Montant: " + 
+                montantPaye + " €");
+            response.sendRedirect(request.getContextPath() + "/pret/remboursement?idPret=" + idPret);
             
         } catch (NumberFormatException e) {
             LOGGER.log(Level.WARNING, "Erreur de format de nombre", e);

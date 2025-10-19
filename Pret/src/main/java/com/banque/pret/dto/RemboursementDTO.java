@@ -28,6 +28,6 @@ public class RemboursementDTO implements Serializable {
     private BigDecimal montantPenalite;
     private BigDecimal penalites; // Alias pour montantPenalite
     private LocalDateTime datePaiement;
-    private TypePaiement typePaiement;
+    private TypePaiement typePaiement=TypePaiement.ESPECES;
     private String numeroTransaction; // AJOUTÉ pour PHASE 5
 }

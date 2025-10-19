@@ -73,16 +73,16 @@
                             <div th:if="${pret.statut == 'APPROUVE'}" class="mt-3">
                                 <div class="details-grid">
                                     <div class="detail-item">
-                                        <span class="detail-label">Date début remboursement:</span>
-                                        <span class="detail-value" th:text="${#temporals.format(pret.dateDebutRemboursement, 'dd/MM/yyyy')}">01/02/2025</span>
+                                        <span class="detail-label">Première échéance:</span>
+                                        <span class="detail-value" th:text="${pret.datePremiereEcheance != null ? #temporals.format(pret.datePremiereEcheance, 'dd/MM/yyyy') : 'N/A'}">01/02/2025</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Capital restant:</span>
-                                        <span class="detail-value" th:text="${pret.capitalRestant != null ? #numbers.formatCurrency(pret.capitalRestant) : 'N/A'}">48 500,00 €</span>
+                                        <span class="detail-label">Montant total dû:</span>
+                                        <span class="detail-value" th:text="${pret.montantTotalDu != null ? #numbers.formatCurrency(pret.montantTotalDu) : 'N/A'}">65 100,00 €</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Montant total remboursé:</span>
-                                        <span class="detail-value" th:text="${pret.montantTotalRembourse != null ? #numbers.formatCurrency(pret.montantTotalRembourse) : '0,00 €'}">1 500,00 €</span>
+                                        <span class="detail-label">Pénalités totales:</span>
+                                        <span class="detail-value" th:text="${pret.totalPenalites != null ? #numbers.formatCurrency(pret.totalPenalites) : '0,00 €'}">0,00 €</span>
                                     </div>
                                 </div>
                             </div>
@@ -105,15 +105,32 @@
 
                             <!-- Actions -->
                             <div class="form-actions mt-3">
-                                <a th:if="${pret.statut == 'APPROUVE'}" 
+                                <!-- Bouton Voir détails pour les prêts EN_COURS, EN_RETARD ou CLOTURE -->
+                                <a th:if="${pret.statut == 'EN_COURS' or pret.statut == 'EN_RETARD' or pret.statut == 'CLOTURE'}" 
+                                   th:href="@{/pret/detail(idPret=${pret.idPret})}" 
+                                   class="btn btn-outline">
+                                    📊 Voir tableau d'amortissement
+                                </a>
+                                
+                                <!-- Bouton Remboursement pour les prêts EN_COURS ou EN_RETARD -->
+                                <a th:if="${pret.statut == 'EN_COURS' or pret.statut == 'EN_RETARD'}" 
                                    th:href="@{/pret/remboursement(idPret=${pret.idPret})}" 
                                    class="btn btn-gold">
                                     💳 Effectuer un remboursement
                                 </a>
+                                
+                                <!-- Message pour prêts EN_ATTENTE -->
                                 <a th:if="${pret.statut == 'EN_ATTENTE'}" 
                                    href="#" 
                                    class="btn btn-outline disabled" style="cursor: not-allowed;">
                                     ⏳ En attente d'approbation
+                                </a>
+                                
+                                <!-- Message pour prêts APPROUVE (juste approuvés mais pas encore EN_COURS) -->
+                                <a th:if="${pret.statut == 'APPROUVE'}" 
+                                   th:href="@{/pret/detail(idPret=${pret.idPret})}" 
+                                   class="btn btn-success">
+                                    ✅ Prêt approuvé - Voir détails
                                 </a>
                             </div>
                         </div>
