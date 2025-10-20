@@ -8,6 +8,11 @@
 <section>
     <div class="page-content">
         <div class="container">
+            <!-- Messages d'alerte -->
+            <div th:if="${successMessage != null}" class="alert alert-success">
+                <span th:text="${successMessage}">Message de succès</span>
+            </div>
+            
             <div th:if="${errorMessage != null}" class="alert alert-danger">
                 <span th:text="${errorMessage}">Message d'erreur</span>
             </div>

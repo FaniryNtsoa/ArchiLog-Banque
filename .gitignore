@@ -150,4 +150,3 @@ RESUME_*.md
 # Repository Maven local (si copié)
 # =========================
 .m2/
-repository/

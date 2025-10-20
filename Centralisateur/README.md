@@ -497,10 +497,40 @@ Projet académique - ITU (Institut des Technologies et de l'Urbanisme)
 
 ---
 
+## 🔧 Corrections Récentes
+
+### Version 1.0.1 - 20 Décembre 2024
+
+#### ✅ **Correction NullPointerException Module Épargne**
+
+**Problème résolu** : Erreur 500 sur toutes les pages du module Épargne causée par une incompatibilité de convention de nommage Java/C#.
+
+**Solution implémentée** :
+- Création de la classe utilitaire `JsonHelper` pour gérer automatiquement les deux conventions (camelCase/PascalCase)
+- Correction de **50 accès JSON** dans **5 servlets épargne**
+- Build et tests réussis ✅
+
+**Fichiers concernés** :
+- `src/main/java/com/banque/centralisateur/util/JsonHelper.java` ✨ NOUVEAU
+- `servlet/epargne/NouveauCompteEpargneServlet.java` ✅ CORRIGÉ
+- `servlet/epargne/ComptesEpargneServlet.java` ✅ CORRIGÉ
+- `servlet/epargne/DepotEpargneServlet.java` ✅ CORRIGÉ
+- `servlet/epargne/RetraitEpargneServlet.java` ✅ CORRIGÉ
+- `servlet/epargne/HistoriqueEpargneServlet.java` ✅ CORRIGÉ
+
+**Documentation** :
+- 📄 **[CORRECTION_COMPLETE_EPARGNE.md](./CORRECTION_COMPLETE_EPARGNE.md)** : Guide technique complet
+- 🧪 **[TESTS_EPARGNE.md](./TESTS_EPARGNE.md)** : Checklist de tests fonctionnels
+- 🚀 **[DEPLOIEMENT_RAPIDE.md](./DEPLOIEMENT_RAPIDE.md)** : Guide de déploiement en 5 minutes
+
+**Impact** : 🎯 **Module Épargne 100% fonctionnel** - Toutes les pages chargent sans erreur
+
+---
+
 ## 🎉 Version
 
-**Version actuelle** : 1.0.0  
-**Date de release** : 19 janvier 2025  
+**Version actuelle** : 1.0.1  
+**Date de release** : 20 Décembre 2024  
 **Statut** : ✅ **Production Ready**
 
 ---

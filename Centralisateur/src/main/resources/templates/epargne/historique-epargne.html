@@ -81,13 +81,17 @@
             </div>
         </div>
     </div>
-    
+</section>
+
+<th:block th:fragment="scripts">
     <script th:inline="javascript">
         function changeCompte(compteId) {
             window.location.href = /*[[@{/epargne/historique}]]*/ '/epargne/historique' + '?compteId=' + compteId;
         }
     </script>
-    
+</th:block>
+
+<th:block th:fragment="styles">
     <style>
         .compte-selector {
             margin: 2rem 0;
@@ -229,6 +233,7 @@
             }
         }
     </style>
-</section>
+</th:block>
+
 </body>
 </html>
