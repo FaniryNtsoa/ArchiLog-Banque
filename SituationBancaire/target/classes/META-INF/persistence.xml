@@ -21,6 +21,11 @@
         <class>com.banque.situationbancaire.entity.InteretJournalier</class>
         <class>com.banque.situationbancaire.entity.FraisTenueHistorique</class>
         <class>com.banque.situationbancaire.entity.Decouvert</class>
+        
+        <!-- Nouvelles entités pour la gestion admin -->
+        <class>com.banque.situationbancaire.entity.Direction</class>
+        <class>com.banque.situationbancaire.entity.Utilisateur</class>
+        <class>com.banque.situationbancaire.entity.ActionRole</class>
 
         <properties>
             <!-- Configuration Hibernate -->

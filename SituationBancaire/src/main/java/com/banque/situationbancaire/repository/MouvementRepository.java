@@ -75,4 +75,20 @@ public class MouvementRepository {
         query.setParameter("compteId", compteId);
         return query.getSingleResult();
     }
+    
+    public List<Mouvement> findAll() {
+        TypedQuery<Mouvement> query = em.createQuery(
+            "SELECT m FROM Mouvement m ORDER BY m.dateOperation DESC", 
+            Mouvement.class);
+        return query.getResultList();
+    }
+    
+    public void deleteById(Long id) {
+        findById(id).ifPresent(mouvement -> {
+            if (!em.contains(mouvement)) {
+                em.merge(mouvement);
+            }
+            em.remove(mouvement);
+        });
+    }
 }

@@ -4,6 +4,9 @@ import com.banque.situationbancaire.ejb.remote.ClientServiceRemote;
 import com.banque.situationbancaire.ejb.remote.CompteCourantServiceRemote;
 import com.banque.situationbancaire.ejb.remote.OperationServiceRemote;
 import com.banque.situationbancaire.ejb.remote.TypeCompteServiceRemote;
+import com.banque.situationbancaire.ejb.remote.AuthenticationServiceRemote;
+import com.banque.situationbancaire.ejb.remote.MouvementAdminServiceRemote;
+import com.banque.situationbancaire.ejb.remote.UserSessionBeanRemote;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -127,6 +130,51 @@ public class EJBClientFactory {
         } catch (NamingException e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de TypeCompteService", e);
             throw new RuntimeException("Impossible de se connecter au service TypeCompte distant", e);
+        }
+    }
+    
+    /**
+     * Récupère le service Authentication distant
+     */
+    public static AuthenticationServiceRemote getAuthenticationService() {
+        try {
+            String jndiName = buildJNDIName("AuthenticationService", AuthenticationServiceRemote.class);
+            AuthenticationServiceRemote service = (AuthenticationServiceRemote) getContext().lookup(jndiName);
+            LOGGER.info("AuthenticationService EJB récupéré avec succès");
+            return service;
+        } catch (NamingException e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de AuthenticationService", e);
+            throw new RuntimeException("Impossible de se connecter au service Authentication distant", e);
+        }
+    }
+    
+    /**
+     * Récupère le service MouvementAdmin distant
+     */
+    public static MouvementAdminServiceRemote getMouvementAdminService() {
+        try {
+            String jndiName = buildJNDIName("MouvementAdminService", MouvementAdminServiceRemote.class);
+            MouvementAdminServiceRemote service = (MouvementAdminServiceRemote) getContext().lookup(jndiName);
+            LOGGER.info("MouvementAdminService EJB récupéré avec succès");
+            return service;
+        } catch (NamingException e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de MouvementAdminService", e);
+            throw new RuntimeException("Impossible de se connecter au service MouvementAdmin distant", e);
+        }
+    }
+    
+    /**
+     * Crée une nouvelle instance de UserSessionBean distant
+     */
+    public static UserSessionBeanRemote createUserSession() {
+        try {
+            String jndiName = buildJNDIName("UserSessionBean", UserSessionBeanRemote.class) + "?stateful";
+            UserSessionBeanRemote session = (UserSessionBeanRemote) getContext().lookup(jndiName);
+            LOGGER.info("UserSessionBean créé avec succès");
+            return session;
+        } catch (NamingException e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la création de UserSessionBean", e);
+            throw new RuntimeException("Impossible de créer la session utilisateur distante", e);
         }
     }
     

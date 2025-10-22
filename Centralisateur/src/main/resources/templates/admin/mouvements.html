@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Mouvements - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .actions {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        
+        .permissions-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💰 Gestion des Mouvements</h1>
+        <a href="/admin/dashboard" class="back-btn">← Retour au Dashboard</a>
+    </div>
+    
+    <div class="container">
+        <!-- Permissions info -->
+        <div class="permissions-info">
+            <strong>Vos permissions :</strong>
+            <span th:if="${canInsert}">✅ INSERT</span>
+            <span th:if="${canUpdate}">✅ UPDATE</span>
+            <span th:if="${canDelete}">✅ DELETE</span>
+            ✅ SELECT
+        </div>
+        
+        <!-- Messages -->
+        <div th:if="${param.success}" class="alert alert-success" th:text="${param.success}"></div>
+        <div th:if="${param.error}" class="alert alert-error" th:text="${param.error}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        
+        <!-- Actions -->
+        <div class="actions">
+            <button th:if="${canInsert}" class="btn btn-primary" onclick="showCreateModal()">
+                ➕ Nouveau Mouvement
+            </button>
+        </div>
+        
+        <!-- Table des mouvements -->
+        <div class="table-container">
+            <h2>Liste des mouvements</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Compte</th>
+                        <th>Type Opération</th>
+                        <th>Montant</th>
+                        <th>Solde Avant</th>
+                        <th>Solde Après</th>
+                        <th>Date</th>
+                        <th>Libellé</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="mouvement : ${mouvements}">
+                        <td th:text="${mouvement.idMouvement}">1</td>
+                        <td th:text="${mouvement.numeroCompte}">ACC001</td>
+                        <td th:text="${mouvement.libelleTypeOperation}">DEPOT</td>
+                        <td th:text="${mouvement.montant}">1000.00</td>
+                        <td th:text="${mouvement.soldeAvantOperation}">5000.00</td>
+                        <td th:text="${mouvement.soldeApresOperation}">6000.00</td>
+                        <td th:text="${#temporals.format(mouvement.dateOperation, 'dd/MM/yyyy HH:mm')}">20/10/2025</td>
+                        <td th:text="${mouvement.libelleOperation}">Dépôt espèces</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button th:if="${canUpdate}" class="btn btn-sm btn-warning" 
+                                        th:onclick="'showUpdateModal(' + ${mouvement.idMouvement} + ')'">
+                                    ✏️
+                                </button>
+                                <form th:if="${canDelete}" method="POST" action="/admin/mouvements" style="display:inline">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="idMouvement" th:value="${mouvement.idMouvement}">
+                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                            onclick="return confirm('Supprimer ce mouvement ?')">
+                                        🗑️
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Modal Create -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h2>Nouveau Mouvement</h2>
+            <form method="POST" action="/admin/mouvements">
+                <input type="hidden" name="action" value="create">
+                
+                <div class="form-group">
+                    <label>ID Compte</label>
+                    <input type="number" name="idCompte" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>ID Type Opération</label>
+                    <input type="number" name="idTypeOperation" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Montant</label>
+                    <input type="number" step="0.01" name="montant" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Solde Avant</label>
+                    <input type="number" step="0.01" name="soldeAvant" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Solde Après</label>
+                    <input type="number" step="0.01" name="soldeApres" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Référence</label>
+                    <input type="text" name="reference">
+                </div>
+                
+                <div class="form-group">
+                    <label>Libellé</label>
+                    <input type="text" name="libelle">
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                    <button type="button" class="btn" onclick="hideCreateModal()">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function showCreateModal() {
+            document.getElementById('createModal').classList.add('active');
+        }
+        
+        function hideCreateModal() {
+            document.getElementById('createModal').classList.remove('active');
+        }
+        
+        function showUpdateModal(id) {
+            alert('Fonctionnalité à implémenter pour le mouvement ' + id);
+        }
+    </script>
+</body>
+</html>
