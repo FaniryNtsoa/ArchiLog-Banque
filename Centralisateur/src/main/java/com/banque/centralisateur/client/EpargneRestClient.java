@@ -61,23 +61,9 @@ public class EpargneRestClient {
     
     /**
      * Authentifie un client dans le module Épargne
+     * Note: Cette méthode a été supprimée car l'authentification se fait maintenant uniquement via le centralisateur
      */
-    public JsonObject authentifierClient(String email, String motDePasse) {
-        try {
-            LOGGER.info("Authentification du client dans le module Épargne: " + email);
-            
-            JsonObject requestBody = Json.createObjectBuilder()
-                .add("email", email)
-                .add("motDePasse", motDePasse)
-                .build();
-            
-            return sendPostRequest("/clients/login", requestBody);
-            
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Erreur lors de l'authentification dans Épargne", e);
-            return null;
-        }
-    }
+    // Méthode supprimée - plus d'authentification côté client épargne
     
     /**
      * Récupère la liste des types de comptes épargne disponibles
@@ -132,17 +118,49 @@ public class EpargneRestClient {
     }
     
     /**
-     * Crée un nouveau compte épargne
+     * Récupère tous les comptes épargne (pour administration)
      */
-    public JsonObject creerCompteEpargne(Long clientId, Long typeCompteId, java.math.BigDecimal depotInitial) {
+    public List<JsonObject> getAllComptes() {
         try {
-            LOGGER.info("Création d'un compte épargne pour le client: " + clientId);
+            LOGGER.info("Récupération de tous les comptes épargne pour administration");
             
-            JsonObject requestBody = Json.createObjectBuilder()
+            JsonObject response = sendGetRequest("/comptesepargne");
+            
+            if (response != null && response.getBoolean("success", false)) {
+                JsonArray data = response.getJsonArray("data");
+                List<JsonObject> comptes = new ArrayList<>();
+                for (int i = 0; i < data.size(); i++) {
+                    comptes.add(data.getJsonObject(i));
+                }
+                return comptes;
+            }
+            
+            return new ArrayList<>();
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de tous les comptes épargne", e);
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
+     * Crée un nouveau compte épargne avec ID administrateur
+     */
+    public JsonObject creerCompteEpargne(Long clientId, Long typeCompteId, java.math.BigDecimal depotInitial,
+                                         Long idAdministrateur) {
+        try {
+            LOGGER.info("Création d'un compte épargne pour le client: " + clientId + " par l'administrateur ID: " + idAdministrateur);
+            
+            JsonObjectBuilder builder = Json.createObjectBuilder()
                 .add("idClient", clientId)
                 .add("idTypeCompte", typeCompteId)
-                .add("depotInitial", depotInitial)
-                .build();
+                .add("depotInitial", depotInitial);
+                
+            if (idAdministrateur != null) {
+                builder.add("idAdministrateur", idAdministrateur);
+            }
+            
+            JsonObject requestBody = builder.build();
             
             return sendPostRequest("/comptesepargne", requestBody);
             
@@ -153,16 +171,51 @@ public class EpargneRestClient {
     }
     
     /**
-     * Effectue un dépôt sur un compte épargne
+     * Crée un nouveau compte épargne avec ID administrateur et date spécifique
      */
-    public JsonObject effectuerDepot(Long compteId, java.math.BigDecimal montant, String description) {
+    public JsonObject creerCompteEpargne(Long clientId, Long typeCompteId, java.math.BigDecimal depotInitial,
+                                         Long idAdministrateur, String dateOperation) {
         try {
-            LOGGER.info("Dépôt de " + montant + " sur le compte épargne: " + compteId);
+            LOGGER.info("Création d'un compte épargne pour le client: " + clientId + " par l'administrateur ID: " + idAdministrateur + " à la date: " + dateOperation);
             
-            JsonObject requestBody = Json.createObjectBuilder()
+            JsonObjectBuilder builder = Json.createObjectBuilder()
+                .add("idClient", clientId)
+                .add("idTypeCompte", typeCompteId)
+                .add("depotInitial", depotInitial);
+                
+            if (idAdministrateur != null) {
+                builder.add("idAdministrateur", idAdministrateur);
+            }
+                
+            if (dateOperation != null && !dateOperation.trim().isEmpty()) {
+                builder.add("dateOperation", dateOperation);
+            }
+            
+            return sendPostRequest("/comptesepargne", builder.build());
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la création du compte épargne", e);
+            throw new RuntimeException("Erreur lors de la création du compte épargne: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Effectue un dépôt sur un compte épargne avec ID administrateur
+     */
+    public JsonObject effectuerDepot(Long compteId, java.math.BigDecimal montant, String description,
+                                     Long idAdministrateur) {
+        try {
+            LOGGER.info("Dépôt de " + montant + " sur le compte épargne: " + compteId + " par l'administrateur ID: " + idAdministrateur);
+            
+            JsonObjectBuilder builder = Json.createObjectBuilder()
                 .add("montant", montant)
-                .add("description", description != null ? description : "Dépôt")
-                .build();
+                .add("description", description != null ? description : "Dépôt");
+                
+            if (idAdministrateur != null) {
+                builder.add("idAdministrateur", idAdministrateur);
+            }
+            
+            JsonObject requestBody = builder.build();
             
             return sendPostRequest("/comptesepargne/" + compteId + "/depot", requestBody);
             
@@ -173,18 +226,78 @@ public class EpargneRestClient {
     }
     
     /**
-     * Effectue un retrait sur un compte épargne
+     * Effectue un dépôt sur un compte épargne avec ID administrateur et date spécifique
      */
-    public JsonObject effectuerRetrait(Long compteId, java.math.BigDecimal montant, String description) {
+    public JsonObject effectuerDepot(Long compteId, java.math.BigDecimal montant, String description,
+                                     Long idAdministrateur, String dateOperation) {
         try {
-            LOGGER.info("Retrait de " + montant + " sur le compte épargne: " + compteId);
+            LOGGER.info("Dépôt de " + montant + " sur le compte épargne: " + compteId + " par l'administrateur ID: " + idAdministrateur + " à la date: " + dateOperation);
             
-            JsonObject requestBody = Json.createObjectBuilder()
+            JsonObjectBuilder builder = Json.createObjectBuilder()
                 .add("montant", montant)
-                .add("description", description != null ? description : "Retrait")
-                .build();
+                .add("description", description != null ? description : "Dépôt");
+                
+            if (idAdministrateur != null) {
+                builder.add("idAdministrateur", idAdministrateur);
+            }
+            if (dateOperation != null && !dateOperation.trim().isEmpty()) {
+                builder.add("dateOperation", dateOperation);
+            }
+            
+            return sendPostRequest("/comptesepargne/" + compteId + "/depot", builder.build());
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors du dépôt sur compte épargne", e);
+            throw new RuntimeException("Erreur lors du dépôt: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Effectue un retrait sur un compte épargne avec ID administrateur
+     */
+    public JsonObject effectuerRetrait(Long compteId, java.math.BigDecimal montant, String description,
+                                       Long idAdministrateur) {
+        try {
+            LOGGER.info("Retrait de " + montant + " du compte épargne: " + compteId + " par l'administrateur ID: " + idAdministrateur);
+            
+            JsonObjectBuilder builder = Json.createObjectBuilder()
+                .add("montant", montant)
+                .add("description", description != null ? description : "Retrait");
+                
+            if (idAdministrateur != null) {
+                builder.add("idAdministrateur", idAdministrateur);
+            }
+            
+            JsonObject requestBody = builder.build();
             
             return sendPostRequest("/comptesepargne/" + compteId + "/retrait", requestBody);
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors du retrait sur compte épargne", e);
+            throw new RuntimeException("Erreur lors du retrait: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Effectue un retrait sur un compte épargne avec ID administrateur et date spécifique
+     */
+    public JsonObject effectuerRetrait(Long compteId, java.math.BigDecimal montant, String description,
+                                       Long idAdministrateur, String dateOperation) {
+        try {
+            LOGGER.info("Retrait de " + montant + " sur le compte épargne: " + compteId + " par l'administrateur ID: " + idAdministrateur + " à la date: " + dateOperation);
+            
+            JsonObjectBuilder builder = Json.createObjectBuilder()
+                .add("montant", montant)
+                .add("description", description != null ? description : "Retrait");
+                
+            if (idAdministrateur != null) {
+                builder.add("idAdministrateur", idAdministrateur);
+            }
+            if (dateOperation != null && !dateOperation.trim().isEmpty()) {
+                builder.add("dateOperation", dateOperation);
+            }
+            
+            return sendPostRequest("/comptesepargne/" + compteId + "/retrait", builder.build());
             
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors du retrait sur compte épargne", e);

@@ -15,6 +15,7 @@ public interface ICompteEpargneService
     Task<CompteEpargneDTO?> GetCompteByIdAsync(int id);
     Task<CompteEpargneDTO?> GetCompteByNumeroAsync(string numeroCompte);
     Task<IEnumerable<CompteEpargneDTO>> GetComptesByClientIdAsync(long clientId);
+    Task<IEnumerable<CompteEpargneDTO>> GetAllComptesAsync();
     Task<CompteEpargneDTO> CreerCompteEpargneAsync(CreationCompteEpargneDTO creation);
     Task<OperationEpargneDTO> EffectuerDepotAsync(DepotDTO depot);
     Task<OperationEpargneDTO> EffectuerRetraitAsync(RetraitDTO retrait);
@@ -59,6 +60,12 @@ public class CompteEpargneService : ICompteEpargneService
     public async Task<IEnumerable<CompteEpargneDTO>> GetComptesByClientIdAsync(long clientId)
     {
         var comptes = await _compteRepository.GetByClientIdAsync(clientId);
+        return comptes.Select(MapToDTO);
+    }
+
+    public async Task<IEnumerable<CompteEpargneDTO>> GetAllComptesAsync()
+    {
+        var comptes = await _compteRepository.GetAllAsync();
         return comptes.Select(MapToDTO);
     }
 
@@ -128,7 +135,8 @@ public class CompteEpargneService : ICompteEpargneService
             SoldeApres = creation.DepotInitial,
             Description = "Dépôt initial lors de l'ouverture du compte",
             ReferenceOperation = NumeroGenerator.GenererReferenceOperation(),
-            DateOperation = DateTime.UtcNow
+            DateOperation = creation.DateOperation ?? DateTime.UtcNow,
+            IdAdministrateur = creation.IdAdministrateur
         };
 
         await _operationRepository.CreateAsync(operation);
@@ -183,7 +191,8 @@ public class CompteEpargneService : ICompteEpargneService
             SoldeApres = compte.Solde,
             Description = depot.Description ?? "Dépôt",
             ReferenceOperation = NumeroGenerator.GenererReferenceOperation(),
-            DateOperation = DateTime.UtcNow
+            DateOperation = depot.DateOperation ?? DateTime.UtcNow,
+            IdAdministrateur = depot.IdAdministrateur
         };
 
         var operationCreated = await _operationRepository.CreateAsync(operation);
@@ -244,7 +253,8 @@ public class CompteEpargneService : ICompteEpargneService
             SoldeApres = compte.Solde,
             Description = retrait.Description ?? "Retrait",
             ReferenceOperation = NumeroGenerator.GenererReferenceOperation(),
-            DateOperation = DateTime.UtcNow
+            DateOperation = retrait.DateOperation ?? DateTime.UtcNow,
+            IdAdministrateur = retrait.IdAdministrateur
         };
 
         var operationCreated = await _operationRepository.CreateAsync(operation);
@@ -336,7 +346,8 @@ public class CompteEpargneService : ICompteEpargneService
             SoldeApres = operation.SoldeApres,
             Description = operation.Description,
             ReferenceOperation = operation.ReferenceOperation,
-            DateOperation = operation.DateOperation
+            DateOperation = operation.DateOperation,
+            IdAdministrateur = operation.IdAdministrateur
         };
     }
 }

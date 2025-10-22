@@ -37,6 +37,12 @@ public class PretDTO implements Serializable {
     private String motifRefus;
     private LocalDateTime dateCreation;
     
+    // ===== TRAÇABILITÉ ADMIN =====
+    private Long idAdministrateur;
+    
+    // Pour tests avec dates personnalisées (nullable)
+    private LocalDate dateOperation;
+    
     // Informations du client (pour affichage)
     private String nomClient;
     private String prenomClient;

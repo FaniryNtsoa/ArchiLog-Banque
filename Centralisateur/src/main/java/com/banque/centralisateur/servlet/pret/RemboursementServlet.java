@@ -12,7 +12,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.web.IWebExchange;
@@ -25,7 +24,7 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
- * Servlet pour gérer les remboursements d'échéances
+ * Servlet pour gérer les remboursements d'échéances - MODE ADMIN
  */
 @WebServlet(name = "RemboursementServlet", urlPatterns = {"/pret/remboursement"})
 public class RemboursementServlet extends HttpServlet {
@@ -45,24 +44,26 @@ public class RemboursementServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("clientNom") == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        // MODE ADMIN : Plus d'authentification client requise
+        // HttpSession session = request.getSession(false);
+        // if (session == null || session.getAttribute("clientNom") == null) {
+        //     response.sendRedirect(request.getContextPath() + "/login");
+        //     return;
+        // }
         
-        Long idClient = (Long) session.getAttribute("clientId");
+        // Long idClient = (Long) session.getAttribute("clientId");
+        Long idAdministrateur = 1L; // ID admin par défaut
         
-        LOGGER.info("Affichage de la page de remboursement pour le client ID: " + idClient);
+        LOGGER.info("Affichage de la page de remboursement - MODE ADMIN par administrateur ID: " + idAdministrateur);
         
         // Créer le contexte Thymeleaf
         IWebExchange webExchange = this.application.buildExchange(request, response);
         WebContext context = new WebContext(webExchange);
         
         try {
-            // Récupérer les prêts EN_COURS du client (pas APPROUVE, mais EN_COURS)
+            // Récupérer TOUS les prêts EN_COURS (mode admin)
             PretServiceRemote pretService = PretEJBClientFactory.getPretService();
-            List<PretDTO> pretsActifs = pretService.listerPretsParClient(idClient).stream()
+            List<PretDTO> pretsActifs = pretService.listerTousLesPrets().stream()
                 .filter(p -> "EN_COURS".equals(p.getStatut()) || "EN_RETARD".equals(p.getStatut()))
                 .toList();
             
@@ -74,9 +75,10 @@ public class RemboursementServlet extends HttpServlet {
             if (idPretStr != null && !idPretStr.trim().isEmpty()) {
                 Long idPret = Long.parseLong(idPretStr);
                 
+                // MODE ADMIN : Pas de vérification de propriété client
                 // Vérifier que le prêt appartient au client
                 PretDTO pretSelectionne = pretService.rechercherPretParId(idPret);
-                if (pretSelectionne != null && pretSelectionne.getIdClient().equals(idClient)) {
+                if (pretSelectionne != null) {
                     EcheanceServiceRemote echeanceService = PretEJBClientFactory.getEcheanceService();
                     List<EcheanceDTO> echeancesImpayees = echeanceService.listerEcheancesImpayees(idPret);
                     
@@ -89,15 +91,15 @@ public class RemboursementServlet extends HttpServlet {
             
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des prêts actifs", e);
-            context.setVariable("errorMessage", "Impossible de charger vos prêts actifs");
+            context.setVariable("errorMessage", "Impossible de charger les prêts actifs");
             context.setVariable("hasPretsActifs", false);
         }
         
         // Ajouter les variables au contexte
-        context.setVariable("pageTitle", "Remboursement - Banque Premium");
+        context.setVariable("pageTitle", "Remboursement Admin - Banque Premium");
         context.setVariable("currentPage", "remboursement");
-        context.setVariable("clientNom", session.getAttribute("clientNom"));
-        context.setVariable("clientPrenom", session.getAttribute("clientPrenom"));
+        context.setVariable("clientNom", "Admin"); // MODE ADMIN
+        context.setVariable("clientPrenom", "Système"); // MODE ADMIN
         
         // Rendre le template
         response.setContentType("text/html;charset=UTF-8");
@@ -108,15 +110,17 @@ public class RemboursementServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("clientNom") == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        // MODE ADMIN : Plus d'authentification client requise
+        // HttpSession session = request.getSession(false);
+        // if (session == null || session.getAttribute("clientNom") == null) {
+        //     response.sendRedirect(request.getContextPath() + "/login");
+        //     return;
+        // }
         
-        Long idClient = (Long) session.getAttribute("clientId");
+        // Long idClient = (Long) session.getAttribute("clientId");
+        Long idAdministrateur = 1L; // ID admin par défaut
         
-        LOGGER.info("Traitement d'un remboursement pour le client ID: " + idClient);
+        LOGGER.info("Traitement d'un remboursement - MODE ADMIN par administrateur ID: " + idAdministrateur);
         
         // Récupérer les paramètres du formulaire
         String idPretStr = request.getParameter("idPret");
@@ -127,7 +131,7 @@ public class RemboursementServlet extends HttpServlet {
             if (idPretStr == null || idPretStr.trim().isEmpty() ||
                 montantPayeStr == null || montantPayeStr.trim().isEmpty()) {
                 
-                session.setAttribute("errorMessage", "Veuillez remplir tous les champs obligatoires");
+                request.getSession().setAttribute("errorMessage", "Veuillez remplir tous les champs obligatoires");
                 response.sendRedirect(request.getContextPath() + "/pret/remboursement");
                 return;
             }
@@ -135,46 +139,48 @@ public class RemboursementServlet extends HttpServlet {
             Long idPret = Long.parseLong(idPretStr);
             BigDecimal montantPaye = new BigDecimal(montantPayeStr);
             
+            // MODE ADMIN : Pas de vérification de propriété client
             // Vérifier que le prêt appartient au client
             PretServiceRemote pretService = PretEJBClientFactory.getPretService();
             PretDTO pret = pretService.rechercherPretParId(idPret);
             
-            if (pret == null || !pret.getIdClient().equals(idClient)) {
-                session.setAttribute("errorMessage", "Prêt non trouvé ou accès non autorisé");
+            if (pret == null) {
+                request.getSession().setAttribute("errorMessage", "Prêt non trouvé");
                 response.sendRedirect(request.getContextPath() + "/pret/remboursement");
                 return;
             }
             
-            // Créer le DTO de remboursement selon l'API du module Prêt
+            // Créer le DTO de remboursement avec traçabilité admin
             RemboursementDTO remboursementDTO = RemboursementDTO.builder()
                 .idPret(idPret)
                 .montantPaye(montantPaye)
+                .idAdministrateur(idAdministrateur) // Traçabilité admin
                 .build();
             
             // Appeler le service pour enregistrer le remboursement
             EcheanceServiceRemote echeanceService = PretEJBClientFactory.getEcheanceService();
-            RemboursementDTO remboursementCree = echeanceService.enregistrerRemboursement(remboursementDTO);
+            echeanceService.enregistrerRemboursement(remboursementDTO);
             
-            LOGGER.info("✅ Remboursement enregistré avec succès. ID Prêt: " + idPret + ", Montant: " + montantPaye);
+            LOGGER.info("✅ Remboursement enregistré avec succès par admin. ID Prêt: " + idPret + ", Montant: " + montantPaye);
             
             // Rediriger avec un message de succès
-            session.setAttribute("successMessage", "💰 Remboursement enregistré avec succès ! Montant: " + 
+            request.getSession().setAttribute("successMessage", "💰 Remboursement enregistré avec succès ! Montant: " + 
                 montantPaye + " €");
             response.sendRedirect(request.getContextPath() + "/pret/remboursement?idPret=" + idPret);
             
         } catch (NumberFormatException e) {
             LOGGER.log(Level.WARNING, "Erreur de format de nombre", e);
-            session.setAttribute("errorMessage", "Format de nombre invalide");
+            request.getSession().setAttribute("errorMessage", "Format de nombre invalide");
             response.sendRedirect(request.getContextPath() + "/pret/remboursement");
             
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.WARNING, "Erreur de validation: " + e.getMessage(), e);
-            session.setAttribute("errorMessage", e.getMessage());
+            request.getSession().setAttribute("errorMessage", e.getMessage());
             response.sendRedirect(request.getContextPath() + "/pret/remboursement");
             
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de l'enregistrement du remboursement", e);
-            session.setAttribute("errorMessage", "Une erreur est survenue lors du remboursement. Veuillez réessayer.");
+            request.getSession().setAttribute("errorMessage", "Une erreur est survenue lors du remboursement. Veuillez réessayer.");
             response.sendRedirect(request.getContextPath() + "/pret/remboursement");
         }
     }

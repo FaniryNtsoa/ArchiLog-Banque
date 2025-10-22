@@ -127,29 +127,6 @@ public class ClientsController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Authentifie un client (connexion)
-    /// </summary>
-    [HttpPost("login")]
-    public async Task<ActionResult<ClientDTO>> Login([FromBody] LoginDTO loginDTO)
-    {
-        try
-        {
-            var client = await _clientService.AuthenticateAsync(loginDTO.Email, loginDTO.MotDePasse);
-            if (client == null)
-            {
-                return Unauthorized(new { message = "Email ou mot de passe incorrect" });
-            }
-            return Ok(client);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erreur lors de l'authentification");
-            return StatusCode(500, new { message = "Erreur serveur", details = ex.Message });
-        }
-    }
+    // Note: L'authentification client a été supprimée - 
+    // Toutes les opérations sont maintenant gérées par l'administrateur via le centralisateur
 }

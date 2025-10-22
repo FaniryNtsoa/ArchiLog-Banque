@@ -102,6 +102,10 @@ public class Pret implements Serializable {
     @Builder.Default
     private LocalDateTime dateCreation = LocalDateTime.now();
 
+    // ===== TRAÇABILITÉ ADMIN =====
+    @Column(name = "id_administrateur")
+    private Long idAdministrateur;
+
     @OneToMany(mappedBy = "pret", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     @OrderBy("numeroEcheance ASC")

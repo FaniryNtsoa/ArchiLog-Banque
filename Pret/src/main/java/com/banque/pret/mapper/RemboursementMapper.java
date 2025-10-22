@@ -25,6 +25,7 @@ public class RemboursementMapper {
                 .montantPenalite(remboursement.getMontantPenalite())
                 .datePaiement(remboursement.getDatePaiement())
                 .typePaiement(remboursement.getTypePaiement())
+                .idAdministrateur(remboursement.getIdAdministrateur()) // TRAÇABILITÉ ADMIN
                 .build();
     }
 
@@ -44,6 +45,7 @@ public class RemboursementMapper {
                 .montantPenalite(dto.getMontantPenalite())
                 .datePaiement(dto.getDatePaiement())
                 .typePaiement(dto.getTypePaiement())
+                .idAdministrateur(dto.getIdAdministrateur()) // TRAÇABILITÉ ADMIN
                 .build();
     }
 }

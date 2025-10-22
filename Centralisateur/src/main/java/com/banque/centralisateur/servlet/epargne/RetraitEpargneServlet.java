@@ -143,8 +143,8 @@ public class RetraitEpargneServlet extends HttpServlet {
                 throw new IllegalArgumentException("Le montant doit être positif");
             }
             
-            // Effectuer le retrait via l'API
-            JsonObject responseJson = epargneClient.effectuerRetrait(compteId, montant, description);
+            // Effectuer le retrait via l'API (avec ID administrateur par défaut)
+            JsonObject responseJson = epargneClient.effectuerRetrait(compteId, montant, description, 1L);
             
             if (responseJson != null && JsonHelper.getSafeBoolean(responseJson, "success", false)) {
                 JsonObject operation = responseJson.getJsonObject("data");

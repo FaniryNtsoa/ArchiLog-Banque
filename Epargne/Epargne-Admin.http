@@ -1,0 +1,183 @@
+### Tests Module Épargne - Version Administrateur
+### Base URL: http://localhost:5000/api
+
+### Variables
+@baseUrl = http://localhost:5000/api
+@adminId = 1
+@clientId = 1
+@compteId = 1
+@typeCompteId = 1
+
+### ==== GESTION DES CLIENTS ====
+
+### Récupérer tous les clients
+GET {{baseUrl}}/clients
+Accept: application/json
+
+### Récupérer un client par ID
+GET {{baseUrl}}/clients/{{clientId}}
+Accept: application/json
+
+### ==== COMPTES ÉPARGNE - ENDPOINTS EXISTANTS ====
+
+### Récupérer tous les comptes épargne (nouveau endpoint pour admin)
+GET {{baseUrl}}/comptesepargne
+Accept: application/json
+
+### Récupérer les comptes d'un client
+GET {{baseUrl}}/comptesepargne/client/{{clientId}}
+Accept: application/json
+
+### Créer un compte épargne (avec ID administrateur et date optionnelle)
+POST {{baseUrl}}/comptesepargne
+Content-Type: application/json
+
+{
+    "idClient": {{clientId}},
+    "idTypeCompte": {{typeCompteId}},
+    "libelleCompte": "Compte Épargne Test",
+    "depotInitial": 1000.00,
+    "idAdministrateur": {{adminId}},
+    "dateOperation": "2024-01-15T10:30:00Z"
+}
+
+### Créer un compte épargne (sans date - utilise maintenant)
+POST {{baseUrl}}/comptesepargne
+Content-Type: application/json
+
+{
+    "idClient": {{clientId}},
+    "idTypeCompte": {{typeCompteId}},
+    "libelleCompte": "Compte Épargne Actuel",
+    "depotInitial": 500.00,
+    "idAdministrateur": {{adminId}}
+}
+
+### Effectuer un dépôt (avec ID administrateur et date optionnelle)
+POST {{baseUrl}}/comptesepargne/{{compteId}}/depot
+Content-Type: application/json
+
+{
+    "montant": 250.00,
+    "description": "Dépôt test avec date spécifique",
+    "idAdministrateur": {{adminId}},
+    "dateOperation": "2024-02-20T14:15:00Z"
+}
+
+### Effectuer un dépôt (sans date - utilise maintenant)
+POST {{baseUrl}}/comptesepargne/{{compteId}}/depot
+Content-Type: application/json
+
+{
+    "montant": 100.00,
+    "description": "Dépôt maintenant",
+    "idAdministrateur": {{adminId}}
+}
+
+### Effectuer un retrait (avec ID administrateur et date optionnelle)
+POST {{baseUrl}}/comptesepargne/{{compteId}}/retrait
+Content-Type: application/json
+
+{
+    "montant": 50.00,
+    "description": "Retrait test avec date spécifique",
+    "idAdministrateur": {{adminId}},
+    "dateOperation": "2024-03-10T09:45:00Z"
+}
+
+### Effectuer un retrait (sans date - utilise maintenant)
+POST {{baseUrl}}/comptesepargne/{{compteId}}/retrait
+Content-Type: application/json
+
+{
+    "montant": 25.00,
+    "description": "Retrait maintenant",
+    "idAdministrateur": {{adminId}}
+}
+
+### Récupérer l'historique des opérations d'un compte
+GET {{baseUrl}}/comptesepargne/{{compteId}}/operations
+Accept: application/json
+
+### ==== ENDPOINTS ADMINISTRATEUR SPÉCIALISÉS ====
+
+### Récupérer tous les clients avec leurs comptes
+GET {{baseUrl}}/admin/epargneadmin/clients-avec-comptes
+Accept: application/json
+
+### Créer un compte via l'endpoint admin
+POST {{baseUrl}}/admin/epargneadmin/creer-compte
+Content-Type: application/json
+
+{
+    "idClient": {{clientId}},
+    "idTypeCompte": {{typeCompteId}},
+    "libelleCompte": "Compte Admin Test",
+    "depotInitial": 750.00,
+    "idAdministrateur": {{adminId}},
+    "dateOperation": "2024-01-20T11:00:00Z"
+}
+
+### Effectuer un dépôt via l'endpoint admin
+POST {{baseUrl}}/admin/epargneadmin/depot
+Content-Type: application/json
+
+{
+    "idCompte": {{compteId}},
+    "montant": 300.00,
+    "description": "Dépôt admin test",
+    "idAdministrateur": {{adminId}},
+    "dateOperation": "2024-02-25T16:30:00Z"
+}
+
+### Effectuer un retrait via l'endpoint admin
+POST {{baseUrl}}/admin/epargneadmin/retrait
+Content-Type: application/json
+
+{
+    "idCompte": {{compteId}},
+    "montant": 75.00,
+    "description": "Retrait admin test",
+    "idAdministrateur": {{adminId}},
+    "dateOperation": "2024-03-15T13:20:00Z"
+}
+
+### Récupérer les détails d'un compte (endpoint admin)
+GET {{baseUrl}}/admin/epargneadmin/compte/{{compteId}}
+Accept: application/json
+
+### Récupérer tous les comptes (endpoint admin)
+GET {{baseUrl}}/admin/epargneadmin/tous-comptes
+Accept: application/json
+
+### Récupérer les statistiques globales
+GET {{baseUrl}}/admin/epargneadmin/statistiques
+Accept: application/json
+
+### ==== TYPES DE COMPTES ====
+
+### Récupérer tous les types de comptes actifs
+GET {{baseUrl}}/typescomptes/actifs
+Accept: application/json
+
+### =====================================
+### NOTES IMPORTANTES:
+### 
+### 1. ID Administrateur:
+###    - Peut être null (nullable)
+###    - Utilisé pour tracer qui a effectué l'opération
+###
+### 2. Date d'opération:
+###    - Optionnelle (si omise, utilise DateTime.UtcNow)
+###    - Format ISO 8601: "2024-01-15T10:30:00Z"
+###    - Permet de simuler des opérations à des dates spécifiques pour les tests
+###
+### 3. Simplification:
+###    - Plus besoin de nom/email administrateur
+###    - Seul l'ID suffit pour la traçabilité
+###    - Les endpoints existants restent compatibles
+###
+### 4. Migration appliquée:
+###    - Colonnes nom_administrateur et email_administrateur supprimées
+###    - Colonne id_administrateur est nullable
+### =====================================

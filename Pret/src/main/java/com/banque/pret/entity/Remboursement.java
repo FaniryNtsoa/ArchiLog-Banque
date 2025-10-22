@@ -61,6 +61,10 @@ public class Remboursement implements Serializable {
     @Builder.Default
     private TypePaiement typePaiement = TypePaiement.VIREMENT;
 
+    // ===== TRAÇABILITÉ ADMIN =====
+    @Column(name = "id_administrateur")
+    private Long idAdministrateur;
+
     @PrePersist
     protected void onCreate() {
         this.datePaiement = LocalDateTime.now();

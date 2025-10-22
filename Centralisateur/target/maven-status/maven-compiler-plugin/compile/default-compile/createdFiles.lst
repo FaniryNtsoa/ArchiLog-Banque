@@ -2,7 +2,6 @@ com\banque\centralisateur\servlet\pret\DetailPretServlet.class
 com\banque\centralisateur\servlet\admin\AdminLogoutServlet.class
 com\banque\centralisateur\ejb\EJBClientFactory.class
 com\banque\centralisateur\servlet\LogoutServlet.class
-com\banque\centralisateur\servlet\admin\AdminDashboardServlet.class
 com\banque\centralisateur\servlet\epargne\ComptesEpargneServlet$CompteEpargneView.class
 com\banque\centralisateur\servlet\admin\AdminLoginServlet.class
 com\banque\centralisateur\servlet\VirementServlet.class

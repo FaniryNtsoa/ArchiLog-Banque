@@ -14,4 +14,9 @@ public class OperationEpargneDTO
     public string? Description { get; set; }
     public string? ReferenceOperation { get; set; }
     public DateTime DateOperation { get; set; }
+    
+    /// <summary>
+    /// ID de l'administrateur qui a effectué l'opération (nullable)
+    /// </summary>
+    public long? IdAdministrateur { get; set; }
 }

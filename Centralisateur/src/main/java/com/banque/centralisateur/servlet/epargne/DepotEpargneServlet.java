@@ -143,8 +143,8 @@ public class DepotEpargneServlet extends HttpServlet {
                 throw new IllegalArgumentException("Le montant doit être positif");
             }
             
-            // Effectuer le dépôt via l'API
-            JsonObject responseJson = epargneClient.effectuerDepot(compteId, montant, description);
+            // Effectuer le dépôt via l'API (avec ID administrateur par défaut)
+            JsonObject responseJson = epargneClient.effectuerDepot(compteId, montant, description, 1L);
             
             if (responseJson != null && JsonHelper.getSafeBoolean(responseJson, "success", false)) {
                 JsonObject operation = responseJson.getJsonObject("data");

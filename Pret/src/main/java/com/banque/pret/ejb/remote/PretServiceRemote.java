@@ -27,11 +27,26 @@ public interface PretServiceRemote {
     PretDTO creerDemandePret(PretDTO pretDTO);
     
     /**
+     * Crée une demande de prêt avec ID administrateur (MODE ADMIN)
+     * @param pretDTO Le prêt à créer (doit contenir idAdministrateur)
+     * @return Le prêt créé avec son ID
+     */
+    PretDTO creerDemandePretAdmin(PretDTO pretDTO);
+    
+    /**
      * Approuve une demande de prêt
      * @param idPret L'ID du prêt à approuver
      * @return Le prêt approuvé
      */
     PretDTO approuverPret(Long idPret);
+    
+    /**
+     * Approuve une demande de prêt avec ID administrateur (MODE ADMIN)
+     * @param idPret L'ID du prêt à approuver
+     * @param idAdministrateur L'ID de l'administrateur qui approuve
+     * @return Le prêt approuvé
+     */
+    PretDTO approuverPretAdmin(Long idPret, Long idAdministrateur);
     
     /**
      * Refuse une demande de prêt
@@ -40,6 +55,15 @@ public interface PretServiceRemote {
      * @return Le prêt refusé
      */
     PretDTO refuserPret(Long idPret, String motifRefus);
+    
+    /**
+     * Refuse une demande de prêt avec ID administrateur (MODE ADMIN)
+     * @param idPret L'ID du prêt à refuser
+     * @param motifRefus Le motif du refus
+     * @param idAdministrateur L'ID de l'administrateur qui refuse
+     * @return Le prêt refusé
+     */
+    PretDTO refuserPretAdmin(Long idPret, String motifRefus, Long idAdministrateur);
     
     /**
      * Recherche un prêt par son ID

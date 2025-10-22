@@ -208,10 +208,11 @@ public class PretServiceImpl implements PretServiceRemote {
                 .mensualite(mensualite)
                 .montantTotalDu(montantTotalDu)
                 .totalPenalites(BigDecimal.ZERO)
-                .dateDemande(LocalDate.now())
+                .dateDemande(pretDTO.getDateOperation() != null ? pretDTO.getDateOperation() : LocalDate.now())
                 .datePremiereEcheance(datePremiereEcheance)
                 .dateDerniereEcheance(dateDerniereEcheance)
                 .statut(StatutPret.EN_ATTENTE)
+                .idAdministrateur(pretDTO.getIdAdministrateur()) // TRAÇABILITÉ ADMIN
                 .build();
 
         // Sauvegarde
@@ -523,5 +524,56 @@ public class PretServiceImpl implements PretServiceRemote {
         }
 
         LOGGER.info("PHASE 4 terminée - " + tableauDTO.size() + " échéances générées automatiquement");
+    }
+    
+    // ===== MÉTHODES ADMIN =====
+    
+    @Override
+    public PretDTO creerDemandePretAdmin(PretDTO pretDTO) {
+        LOGGER.info("ADMIN - Création d'une demande de prêt par l'administrateur ID: " + pretDTO.getIdAdministrateur());
+        return creerDemandePret(pretDTO); // Utilise la méthode existante avec traçabilité admin
+    }
+    
+    @Override
+    public PretDTO approuverPretAdmin(Long idPret, Long idAdministrateur) {
+        LOGGER.info("ADMIN - Approbation du prêt ID: " + idPret + " par l'administrateur ID: " + idAdministrateur);
+        
+        Optional<Pret> pretOpt = pretRepository.findById(idPret);
+        if (pretOpt.isEmpty()) {
+            throw new IllegalArgumentException("Prêt non trouvé");
+        }
+        
+        Pret pret = pretOpt.get();
+        pret.setIdAdministrateur(idAdministrateur); // Traçabilité admin
+        pret.setStatut(StatutPret.APPROUVE);
+        pret.setDateApprobation(LocalDate.now());
+        
+        Pret pretMisAJour = pretRepository.save(pret);
+        
+        // Génération du tableau d'amortissement
+        genererTableauAmortissementDefinitif(pretMisAJour);
+        
+        LOGGER.info("✅ ADMIN - Prêt approuvé avec succès par l'administrateur ID: " + idAdministrateur);
+        return PretMapper.toDTO(pretMisAJour);
+    }
+    
+    @Override
+    public PretDTO refuserPretAdmin(Long idPret, String motifRefus, Long idAdministrateur) {
+        LOGGER.info("ADMIN - Refus du prêt ID: " + idPret + " par l'administrateur ID: " + idAdministrateur);
+        
+        Optional<Pret> pretOpt = pretRepository.findById(idPret);
+        if (pretOpt.isEmpty()) {
+            throw new IllegalArgumentException("Prêt non trouvé");
+        }
+        
+        Pret pret = pretOpt.get();
+        pret.setIdAdministrateur(idAdministrateur); // Traçabilité admin
+        pret.setStatut(StatutPret.REFUSE);
+        pret.setMotifRefus(motifRefus);
+        
+        Pret pretMisAJour = pretRepository.save(pret);
+        
+        LOGGER.info("❌ ADMIN - Prêt refusé par l'administrateur ID: " + idAdministrateur);
+        return PretMapper.toDTO(pretMisAJour);
     }
 }

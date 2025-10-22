@@ -15,7 +15,7 @@ public interface IClientService
     Task<ClientDTO?> GetClientByEmailAsync(string email);
     Task<ClientDTO> CreateClientAsync(ClientDTO clientDTO);
     Task<ClientDTO> UpdateClientAsync(ClientDTO clientDTO);
-    Task<ClientDTO?> AuthenticateAsync(string email, string motDePasse);
+    // Note: L'authentification client a été supprimée - toutes les opérations sont gérées par l'administrateur
     Task<IEnumerable<ClientDTO>> GetAllClientsAsync();
 }
 
@@ -132,39 +132,13 @@ public class ClientService : IClientService
         return MapToDTO(updatedClient);
     }
 
-    public async Task<ClientDTO?> AuthenticateAsync(string email, string motDePasse)
-    {
-        _logger.LogInformation($"Tentative d'authentification pour : {email}");
-
-        var client = await _clientRepository.GetByEmailAsync(email);
-        if (client == null)
-        {
-            _logger.LogWarning($"Client non trouvé : {email}");
-            return null;
-        }
-
-        // Vérifier le mot de passe
-        if (!PasswordHasher.VerifyPassword(motDePasse, client.MotDePasse))
-        {
-            _logger.LogWarning($"Mot de passe incorrect pour : {email}");
-            return null;
-        }
-
-        // Vérifier que le client est actif
-        if (client.Statut != StatutClient.ACTIF)
-        {
-            throw new InvalidOperationException("Compte client non actif");
-        }
-
-        _logger.LogInformation($"Authentification réussie pour : {email}");
-        return MapToDTO(client);
-    }
-
     public async Task<IEnumerable<ClientDTO>> GetAllClientsAsync()
     {
         var clients = await _clientRepository.GetAllAsync();
         return clients.Select(MapToDTO);
     }
+
+    // Note: La méthode AuthenticateAsync a été supprimée car l'authentification se fait maintenant via le centralisateur
 
     private static ClientDTO MapToDTO(Client client)
     {

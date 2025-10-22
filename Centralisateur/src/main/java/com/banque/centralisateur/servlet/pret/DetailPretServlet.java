@@ -11,7 +11,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.web.IWebExchange;
@@ -24,7 +23,7 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
- * Servlet pour afficher le détail d'un prêt avec son tableau d'amortissement final
+ * Servlet pour afficher le détail d'un prêt avec son tableau d'amortissement final - MODE ADMIN
  */
 @WebServlet(name = "DetailPretServlet", urlPatterns = {"/pret/detail"})
 public class DetailPretServlet extends HttpServlet {
@@ -44,24 +43,26 @@ public class DetailPretServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("clientNom") == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        // MODE ADMIN : Plus d'authentification client requise
+        // HttpSession session = request.getSession(false);
+        // if (session == null || session.getAttribute("clientNom") == null) {
+        //     response.sendRedirect(request.getContextPath() + "/login");
+        //     return;
+        // }
         
-        Long idClient = (Long) session.getAttribute("clientId");
+        // Long idClient = (Long) session.getAttribute("clientId");
+        Long idAdministrateur = 1L; // ID admin par défaut
         String idPretStr = request.getParameter("idPret");
         
-        LOGGER.info("Affichage du détail du prêt ID: " + idPretStr + " pour le client ID: " + idClient);
+        LOGGER.info("Affichage du détail du prêt ID: " + idPretStr + " - MODE ADMIN par administrateur ID: " + idAdministrateur);
         
         // Créer le contexte Thymeleaf
         IWebExchange webExchange = this.application.buildExchange(request, response);
         WebContext context = new WebContext(webExchange);
         context.setVariable("pageTitle", "Détail du Prêt - Banque Premium");
         context.setVariable("currentPage", "mes-prets");
-        context.setVariable("clientNom", session.getAttribute("clientNom"));
-        context.setVariable("clientPrenom", session.getAttribute("clientPrenom"));
+        context.setVariable("clientNom", "Admin"); // MODE ADMIN
+        context.setVariable("clientPrenom", "Système"); // MODE ADMIN
         
         try {
             // Validation
@@ -83,12 +84,13 @@ public class DetailPretServlet extends HttpServlet {
                 return;
             }
             
+            // MODE ADMIN : Pas de vérification de propriété client
             // Vérifier que le prêt appartient bien au client connecté
-            if (!pret.getIdClient().equals(idClient)) {
-                context.setVariable("errorMessage", "Accès non autorisé");
-                response.sendRedirect(request.getContextPath() + "/pret/mes-prets");
-                return;
-            }
+            // if (!pret.getIdClient().equals(idClient)) {
+            //     context.setVariable("errorMessage", "Accès non autorisé");
+            //     response.sendRedirect(request.getContextPath() + "/pret/mes-prets");
+            //     return;
+            // }
             
             // Récupération du tableau d'amortissement
             EcheanceServiceRemote echeanceService = PretEJBClientFactory.getEcheanceService();

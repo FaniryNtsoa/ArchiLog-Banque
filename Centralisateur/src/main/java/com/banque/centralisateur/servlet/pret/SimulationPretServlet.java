@@ -11,7 +11,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.web.IWebExchange;
@@ -44,13 +43,14 @@ public class SimulationPretServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("clientNom") == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        // MODE ADMIN : Plus d'authentification client requise
+        // HttpSession session = request.getSession(false);
+        // if (session == null || session.getAttribute("clientNom") == null) {
+        //     response.sendRedirect(request.getContextPath() + "/login");
+        //     return;
+        // }
         
-        LOGGER.info("Affichage de la page de simulation de prêt");
+        LOGGER.info("Affichage de la page de simulation de prêt - MODE ADMIN");
         
         // Créer le contexte Thymeleaf
         IWebExchange webExchange = this.application.buildExchange(request, response);
@@ -69,8 +69,8 @@ public class SimulationPretServlet extends HttpServlet {
         // Ajouter les variables au contexte
         context.setVariable("pageTitle", "Simulation de Prêt - Banque Premium");
         context.setVariable("currentPage", "simulation-pret");
-        context.setVariable("clientNom", session.getAttribute("clientNom"));
-        context.setVariable("clientPrenom", session.getAttribute("clientPrenom"));
+        context.setVariable("clientNom", "Admin"); // MODE ADMIN
+        context.setVariable("clientPrenom", "Système"); // MODE ADMIN
         
         // Rendre le template
         response.setContentType("text/html;charset=UTF-8");
@@ -81,15 +81,17 @@ public class SimulationPretServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("clientNom") == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        // MODE ADMIN : Plus d'authentification client requise
+        // HttpSession session = request.getSession(false);
+        // if (session == null || session.getAttribute("clientNom") == null) {
+        //     response.sendRedirect(request.getContextPath() + "/login");
+        //     return;
+        // }
         
-        Long idClient = (Long) session.getAttribute("clientId");
+        // Long idClient = (Long) session.getAttribute("clientId");
+        Long idAdministrateur = 1L; // ID admin par défaut
         
-        LOGGER.info("Traitement d'une simulation de prêt pour le client ID: " + idClient);
+        LOGGER.info("Traitement d'une simulation de prêt - MODE ADMIN par administrateur ID: " + idAdministrateur);
         
         // Récupérer les paramètres du formulaire
         String idTypePretStr = request.getParameter("idTypePret");
@@ -102,8 +104,8 @@ public class SimulationPretServlet extends HttpServlet {
         WebContext context = new WebContext(webExchange);
         context.setVariable("pageTitle", "Simulation de Prêt - Banque Premium");
         context.setVariable("currentPage", "simulation-pret");
-        context.setVariable("clientNom", session.getAttribute("clientNom"));
-        context.setVariable("clientPrenom", session.getAttribute("clientPrenom"));
+        context.setVariable("clientNom", "Admin"); // MODE ADMIN
+        context.setVariable("clientPrenom", "Système"); // MODE ADMIN
         
         // Charger les types de prêts disponibles
         try {
@@ -129,17 +131,19 @@ public class SimulationPretServlet extends HttpServlet {
                 return;
             }
             
+            // MODE ADMIN : Simulation administrative sans revenu client spécifique
             // Récupérer le revenu mensuel du client pour la vérification des 33%
             BigDecimal revenuMensuel = null;
-            try {
-                com.banque.pret.ejb.remote.ClientServiceRemote clientService = PretEJBClientFactory.getClientService();
-                com.banque.pret.dto.ClientDTO clientDTO = clientService.rechercherClientParId(idClient);
-                if (clientDTO != null) {
-                    revenuMensuel = clientDTO.getRevenuMensuel();
-                }
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Impossible de récupérer le revenu mensuel du client", e);
-            }
+            // En mode admin, le revenu peut être défini selon les besoins
+            // try {
+            //     com.banque.pret.ejb.remote.ClientServiceRemote clientService = PretEJBClientFactory.getClientService();
+            //     com.banque.pret.dto.ClientDTO clientDTO = clientService.rechercherClientParId(idClient);
+            //     if (clientDTO != null) {
+            //         revenuMensuel = clientDTO.getRevenuMensuel();
+            //     }
+            // } catch (Exception e) {
+            //     LOGGER.log(Level.WARNING, "Impossible de récupérer le revenu mensuel du client", e);
+            // }
             
             // Créer le DTO de simulation
             SimulationPretDTO simulationDTO = new SimulationPretDTO();
@@ -158,6 +162,9 @@ public class SimulationPretServlet extends HttpServlet {
                 BigDecimal tauxInteretAnnuel = new BigDecimal(tauxInteretAnnuelStr);
                 simulationDTO.setTauxInteretAnnuel(tauxInteretAnnuel);
             }
+            
+            // Ajouter l'ID administrateur pour la traçabilité
+            simulationDTO.setIdAdministrateur(idAdministrateur);
             
             // Appeler le service de simulation
             PretServiceRemote pretService = PretEJBClientFactory.getPretService();

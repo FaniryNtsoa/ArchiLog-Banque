@@ -26,6 +26,24 @@ public class ComptesEpargneController : ControllerBase
     }
 
     /// <summary>
+    /// Récupère tous les comptes épargne (pour administration)
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<CompteEpargneDTO>>> GetAllComptes()
+    {
+        try
+        {
+            var comptes = await _compteService.GetAllComptesAsync();
+            return Ok(comptes);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération de tous les comptes");
+            return StatusCode(500, new { message = "Erreur serveur", details = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Récupère un compte épargne par son ID
     /// </summary>
     [HttpGet("{id}")]

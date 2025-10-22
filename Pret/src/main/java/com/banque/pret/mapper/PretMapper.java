@@ -35,7 +35,8 @@ public class PretMapper {
                 .dateDerniereEcheance(pret.getDateDerniereEcheance())
                 .statut(pret.getStatut() != null ? pret.getStatut().name() : null)
                 .motifRefus(pret.getMotifRefus())
-                .dateCreation(pret.getDateCreation());
+                .dateCreation(pret.getDateCreation())
+                .idAdministrateur(pret.getIdAdministrateur()); // TRAÇABILITÉ ADMIN
 
         // Ajouter les informations du client si disponibles
         if (pret.getClient() != null) {
@@ -77,6 +78,7 @@ public class PretMapper {
                 .statut(dto.getStatut() != null ? StatutPret.valueOf(dto.getStatut()) : null)
                 .motifRefus(dto.getMotifRefus())
                 .dateCreation(dto.getDateCreation())
+                .idAdministrateur(dto.getIdAdministrateur()) // TRAÇABILITÉ ADMIN
                 .build();
     }
 }

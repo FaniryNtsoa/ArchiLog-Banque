@@ -136,8 +136,8 @@ public class NouveauCompteEpargneServlet extends HttpServlet {
                 throw new IllegalArgumentException("Le dépôt initial doit être positif");
             }
             
-            // Appeler l'API Épargne
-            JsonObject responseJson = epargneClient.creerCompteEpargne(clientId, typeCompteId, depotInitial);
+            // Appeler l'API Épargne (avec ID administrateur par défaut)
+            JsonObject responseJson = epargneClient.creerCompteEpargne(clientId, typeCompteId, depotInitial, 1L);
             
             if (responseJson != null && responseJson.getBoolean("success", false)) {
                 JsonObject compte = responseJson.getJsonObject("data");

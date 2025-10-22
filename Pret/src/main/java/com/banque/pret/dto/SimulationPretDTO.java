@@ -25,6 +25,9 @@ public class SimulationPretDTO implements Serializable {
     private BigDecimal fraisDossier;
     private BigDecimal revenuMensuel; // Pour vérifier les 33%
     
+    // ===== TRAÇABILITÉ ADMIN =====
+    private Long idAdministrateur;
+    
     // Résultats de la simulation
     private BigDecimal mensualite;
     private BigDecimal montantTotalDu;

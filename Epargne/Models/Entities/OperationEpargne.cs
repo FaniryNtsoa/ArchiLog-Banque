@@ -46,6 +46,12 @@ public class OperationEpargne
     [Column("date_operation")]
     public DateTime DateOperation { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// ID de l'administrateur qui a effectué l'opération (nullable)
+    /// </summary>
+    [Column("id_administrateur")]
+    public long? IdAdministrateur { get; set; }
+
     // Relations
     [ForeignKey("IdCompte")]
     public virtual CompteEpargne Compte { get; set; } = null!;
