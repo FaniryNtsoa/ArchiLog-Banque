@@ -168,7 +168,7 @@ public class EJBClientFactory {
      */
     public static UserSessionBeanRemote createUserSession() {
         try {
-            String jndiName = buildJNDIName("UserSessionBean", UserSessionBeanRemote.class) + "?stateful";
+            String jndiName = buildJNDIName("UserSessionBean", UserSessionBeanRemote.class) ;
             UserSessionBeanRemote session = (UserSessionBeanRemote) getContext().lookup(jndiName);
             LOGGER.info("UserSessionBean créé avec succès");
             return session;

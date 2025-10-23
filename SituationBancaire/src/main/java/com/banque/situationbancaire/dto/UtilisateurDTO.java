@@ -18,5 +18,5 @@ public class UtilisateurDTO implements Serializable {
     private String motDePasse; // Ne pas renvoyer en production
     private Integer idDirection;
     private Integer niveauDirection;
-    private Integer roleUtilisateur;
+    private Integer roleUtilisateur;   
 }

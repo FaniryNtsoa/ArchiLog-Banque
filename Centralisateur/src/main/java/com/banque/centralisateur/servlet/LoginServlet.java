@@ -2,8 +2,11 @@ package com.banque.centralisateur.servlet;
 
 import com.banque.centralisateur.config.ThymeleafConfig;
 import com.banque.centralisateur.ejb.EJBClientFactory;
-import com.banque.situationbancaire.dto.ClientDTO;
-import com.banque.situationbancaire.ejb.remote.ClientServiceRemote;
+// import com.banque.situationbancaire.dto.ClientDTO;
+import com.banque.situationbancaire.dto.UtilisateurDTO;
+// import com.banque.situationbancaire.ejb.remote.ClientServiceRemote;
+import com.banque.situationbancaire.ejb.remote.UserSessionBeanRemote;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -89,9 +92,11 @@ public class LoginServlet extends HttpServlet {
             }
             
             // Appeler le service distant pour authentifier le client
-            ClientServiceRemote clientService = EJBClientFactory.getClientService();
-            ClientDTO client = clientService.authentifierClient(email, motDePasse);
-            
+            // ClientServiceRemote clientService = EJBClientFactory.getClientService();
+            // ClientDTO client = clientService.authentifierClient(email, motDePasse);
+            UserSessionBeanRemote userSessionBean = EJBClientFactory.createUserSession();
+            UtilisateurDTO client = userSessionBean.authentifierUtilisateur(email, motDePasse);
+
             if (client == null) {
                 LOGGER.warning("Échec de l'authentification pour: " + email);
                 context.setVariable("errorMessage", "Email ou mot de passe incorrect");
@@ -104,13 +109,13 @@ public class LoginServlet extends HttpServlet {
             // Authentification réussie - créer une session
             HttpSession session = request.getSession(true);
             session.setAttribute("client", client);
-            session.setAttribute("clientId", client.getIdClient());
-            session.setAttribute("clientEmail", client.getEmail());
-            session.setAttribute("clientNom", client.getNom());
-            session.setAttribute("clientPrenom", client.getPrenom());
-            
-            LOGGER.info("Client connecté avec succès: " + client.getEmail());
-            
+            session.setAttribute("clientId", client.getIdUtilisateur());
+            session.setAttribute("clientEmail", client.getLoginUtilisateur());
+            session.setAttribute("clientNom", client.getLoginUtilisateur());
+            session.setAttribute("clientPrenom", client.getRoleUtilisateur());
+
+            LOGGER.info("Client connecté avec succès: " + client.getLoginUtilisateur());
+
             // Rediriger vers le dashboard
             response.sendRedirect(request.getContextPath() + "/dashboard");
             
