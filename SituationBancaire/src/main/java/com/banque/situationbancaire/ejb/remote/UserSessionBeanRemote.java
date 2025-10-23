@@ -1,9 +1,9 @@
 package com.banque.situationbancaire.ejb.remote;
 
 import com.banque.situationbancaire.dto.UtilisateurDTO;
-// import com.banque.situationbancaire.entity.ActionRole;
-// import com.banque.situationbancaire.entity.Direction;
-// import com.banque.situationbancaire.entity.Utilisateur;
+import com.banque.situationbancaire.entity.ActionRole;
+import com.banque.situationbancaire.entity.Direction;
+import com.banque.situationbancaire.entity.Utilisateur;
 
 import jakarta.ejb.Remote;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
 @Remote
 public interface UserSessionBeanRemote {
     
-    // void initSession(Utilisateur user, List<Direction> dirs, List<ActionRole> actions);
+    void initSession(Utilisateur user, List<Direction> dirs, List<ActionRole> actions);
     
     boolean hasPermission(String nomTable, String action);
     
@@ -30,7 +30,7 @@ public interface UserSessionBeanRemote {
     
     String getSessionId();
     
-    // Utilisateur getUtilisateur();
+    Utilisateur getUtilisateur();
     
     UtilisateurDTO authentifierUtilisateur(String email, String motDePasse);
 }
