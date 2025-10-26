@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Gestion des Prêts - Administration</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+
+<section>
+    <div class="page-content">
+        <div class="container">
+            <!-- Messages de session -->
+            <div th:if="${successMessage != null}" class="alert alert-success">
+                <span class="alert__icon">✅</span>
+                <span th:text="${successMessage}">Message de succès</span>
+            </div>
+            
+            <div th:if="${errorMessage != null}" class="alert alert-danger">
+                <span class="alert__icon">❌</span>
+                <span th:text="${errorMessage}">Message d'erreur</span>
+            </div>
+
+            <div class="page-header">
+                <h1 class="page-title">🏠 Gestion des Prêts</h1>
+                <p class="page-subtitle">Administration des demandes et suivi des prêts</p>
+            </div>
+
+        <!-- Messages d'alerte -->
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span th:text="${errorMessage}">Message d'erreur</span>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}">Message de succès</span>
+        </div>
+
+        <!-- Actions principales -->
+        <div class="main-actions">
+            <div class="action-buttons">
+                <a th:href="@{/admin/pret/nouveau}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouvelle demande
+                </a>
+                <a th:href="@{/admin/pret/simulation}" class="btn btn-secondary">
+                    <i class="fas fa-calculator"></i> Simuler un prêt
+                </a>
+                <button onclick="refreshData()" class="btn btn-outline">
+                    <i class="fas fa-sync-alt"></i> Actualiser
+                </button>
+                <button onclick="exportPrets()" class="btn btn-outline">
+                    <i class="fas fa-download"></i> Exporter
+                </button>
+            </div>
+        </div>
+
+        <!-- Filtres et recherche -->
+        <div class="filter-container">
+            <form method="get" class="filter-form">
+                <div class="filter-section">
+                    <h3><i class="fas fa-filter"></i> Filtres de recherche</h3>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="search">Recherche</label>
+                            <input type="text" 
+                                   id="search" 
+                                   name="search" 
+                                   th:value="${searchTerm}"
+                                   placeholder="Numéro de prêt, nom du client...">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="statut">Statut</label>
+                            <select id="statut" name="statut">
+                                <option value="">-- Tous les statuts --</option>
+                                <option value="EN_ATTENTE" th:selected="${statutSelectionne == 'EN_ATTENTE'}">En attente</option>
+                                <option value="APPROUVE" th:selected="${statutSelectionne == 'APPROUVE'}">Approuvé</option>
+                                <option value="REFUSE" th:selected="${statutSelectionne == 'REFUSE'}">Refusé</option>
+                                <option value="EN_COURS" th:selected="${statutSelectionne == 'EN_COURS'}">En cours</option>
+                                <option value="SOLDE" th:selected="${statutSelectionne == 'SOLDE'}">Soldé</option>
+                                <option value="EN_RETARD" th:selected="${statutSelectionne == 'EN_RETARD'}">En retard</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="montantMin">Montant minimum</label>
+                            <input type="number" 
+                                   id="montantMin" 
+                                   name="montantMin" 
+                                   th:value="${montantMin}"
+                                   placeholder="0"
+                                   step="10000">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="montantMax">Montant maximum</label>
+                            <input type="number" 
+                                   id="montantMax" 
+                                   name="montantMax" 
+                                   th:value="${montantMax}"
+                                   placeholder="50000000"
+                                   step="10000">
+                        </div>
+
+                        <div class="filter-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Filtrer
+                            </button>
+                            <a th:href="@{/admin/pret/gestion}" class="btn btn-secondary">
+                                <i class="fas fa-eraser"></i> Réinitialiser
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Statistiques rapides -->
+        <div class="stats-container" th:if="${hasPrets}">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" th:text="${totalPrets}">15</div>
+                        <div class="stat-label">Total prêts</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" th:text="${pretsEnCours}">8</div>
+                        <div class="stat-label">En cours</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" th:text="${pretsEnAttente}">3</div>
+                        <div class="stat-label">En attente</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card danger">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" th:text="${pretsEnRetard}">2</div>
+                        <div class="stat-label">En retard</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des prêts -->
+        <div class="results-container">
+            <div class="results-header">
+                <h3>
+                    <i class="fas fa-list"></i> 
+                    <span th:if="${hasPrets}">
+                        <span th:text="${#lists.size(prets)}">0</span> prêt(s) trouvé(s)
+                    </span>
+                    <span th:unless="${hasPrets}">Aucun prêt trouvé</span>
+                </h3>
+                
+                <div class="view-options">
+                    <button onclick="toggleView('table')" class="btn btn-sm active" id="tableViewBtn">
+                        <i class="fas fa-table"></i> Table
+                    </button>
+                    <button onclick="toggleView('cards')" class="btn btn-sm" id="cardsViewBtn">
+                        <i class="fas fa-th-large"></i> Cartes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Vue tableau -->
+            <div th:if="${hasPrets}" class="loans-table-container" id="tableView">
+                <table class="loans-table" id="loansTable">
+                    <thead>
+                        <tr>
+                            <th>Numéro</th>
+                            <th>Client</th>
+                            <th>Type</th>
+                            <th>Montant accordé</th>
+                            <th>Mensualité</th>
+                            <th>Statut</th>
+                            <th>Date demande</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pret : ${prets}">
+                            <td>
+                                <span class="loan-number" th:text="${pret.numeroPret}">PRET1698234782123</span>
+                            </td>
+                            <td>
+                                <div class="client-info">
+                                    <strong th:text="${pret.nomClient + ' ' + pret.prenomClient}">RAKOTO Jean</strong>
+                                    <br>
+                                    <small th:if="${pret.emailClient}" th:text="${pret.emailClient}">jean.rakoto@email.com</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="loan-type" th:text="${pret.libelleTypePret}">Prêt Personnel</span>
+                            </td>
+                            <td>
+                                <span class="amount" th:text="${#numbers.formatDecimal(pret.montantAccorde, 0, 'COMMA', 0, 'POINT') + ' XOF'}">
+                                    1,000,000 XOF
+                                </span>
+                            </td>
+                            <td>
+                                <span class="monthly-payment" th:text="${#numbers.formatDecimal(pret.mensualite, 0, 'COMMA', 2, 'POINT') + ' XOF'}">
+                                    45,678.90 XOF
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge" 
+                                      th:classappend="${pret.statut?.toLowerCase()}"
+                                      th:text="${pret.statut}">
+                                    EN_COURS
+                                </span>
+                            </td>
+                            <td th:text="${#temporals.format(pret.dateDemande, 'dd/MM/yyyy')}">
+                                15/10/2025
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button th:onclick="'showLoanDetails(' + ${pret.idPret} + ')'" 
+                                            class="btn btn-sm btn-info" title="Voir les détails">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button th:if="${pret.statut == 'EN_ATTENTE'}"
+                                       th:onclick="'approuverPret(' + ${pret.idPret} + ')'" 
+                                       class="btn btn-sm btn-success" title="Approuver">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button th:if="${pret.statut == 'EN_ATTENTE'}"
+                                       th:onclick="'refuserPret(' + ${pret.idPret} + ')'" 
+                                       class="btn btn-sm btn-danger" title="Refuser">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <a th:if="${pret.statut == 'EN_COURS'}"
+                                       th:href="@{'/admin/pret/remboursement?pretId=' + ${pret.idPret}}" 
+                                       class="btn btn-sm btn-warning" title="Remboursement">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Vue cartes -->
+            <div th:if="${hasPrets}" class="loans-cards-container" id="cardsView" style="display: none;">
+                <div class="cards-grid">
+                    <div th:each="pret : ${prets}" class="loan-card">
+                        <div class="card-header">
+                            <span class="loan-number" th:text="${pret.numeroPret}">PRET1698234782123</span>
+                            <span class="status-badge" 
+                                  th:classappend="${pret.statut?.toLowerCase()}"
+                                  th:text="${pret.statut}">
+                                EN_COURS
+                            </span>
+                        </div>
+                        
+                        <div class="card-client">
+                            <h4 th:text="${pret.nomClient + ' ' + pret.prenomClient}">RAKOTO Jean</h4>
+                            <p th:text="${pret.libelleTypePret}">Prêt Personnel</p>
+                        </div>
+                        
+                        <div class="card-amounts">
+                            <div class="amount-item">
+                                <label>Montant accordé</label>
+                                <span th:text="${#numbers.formatDecimal(pret.montantAccorde, 0, 'COMMA', 0, 'POINT') + ' XOF'}">
+                                    1,000,000 XOF
+                                </span>
+                            </div>
+                            <div class="amount-item">
+                                <label>Mensualité</label>
+                                <span th:text="${#numbers.formatDecimal(pret.mensualite, 0, 'COMMA', 2, 'POINT') + ' XOF'}">
+                                    45,678.90 XOF
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-info">
+                            <div class="info-item">
+                                <i class="fas fa-calendar"></i>
+                                <span th:text="'Demandé le ' + ${#temporals.format(pret.dateDemande, 'dd/MM/yyyy')}">
+                                    Demandé le 15/10/2025
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-clock"></i>
+                                <span th:text="${pret.dureeMois + ' mois'}">24 mois</span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-actions">
+                            <button th:onclick="'showLoanDetails(' + ${pret.idPret} + ')'" 
+                                    class="btn btn-sm btn-info">
+                                <i class="fas fa-eye"></i> Détails
+                            </button>
+                            <div class="action-group">
+                                <button th:if="${pret.statut == 'EN_ATTENTE'}"
+                                   th:onclick="'approuverPret(' + ${pret.idPret} + ')'" 
+                                   class="btn btn-sm btn-success">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button th:if="${pret.statut == 'EN_ATTENTE'}"
+                                   th:onclick="'refuserPret(' + ${pret.idPret} + ')'" 
+                                   class="btn btn-sm btn-danger">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <a th:if="${pret.statut == 'EN_COURS'}"
+                                   th:href="@{'/admin/pret/remboursement?pretId=' + ${pret.idPret}}" 
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aucun résultat -->
+            <div th:unless="${hasPrets}" class="no-results">
+                <div class="no-results-content">
+                    <i class="fas fa-search fa-3x"></i>
+                    <h4>Aucun prêt trouvé</h4>
+                    <p>Aucun prêt ne correspond aux critères de recherche.</p>
+                    <div class="suggestions">
+                        <h5>Suggestions :</h5>
+                        <ul>
+                            <li>Vérifiez les filtres appliqués</li>
+                            <li>Modifiez les critères de recherche</li>
+                            <li>Élargissez la fourchette de montants</li>
+                            <li><a th:href="@{/admin/pret/nouveau}">Créer une nouvelle demande</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raccourcis rapides -->
+        <div class="quick-actions">
+            <h4><i class="fas fa-bolt"></i> Actions rapides</h4>
+            <div class="action-buttons">
+                <a th:href="@{/admin/pret/nouveau}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouvelle demande
+                </a>
+                <a th:href="@{/admin/pret/simulation}" class="btn btn-secondary">
+                    <i class="fas fa-calculator"></i> Simuler un prêt
+                </a>
+                <a th:href="@{/admin/pret/remboursement}" class="btn btn-info">
+                    <i class="fas fa-money-bill-wave"></i> Enregistrer un remboursement
+                </a>
+                <button onclick="showPendingLoans()" class="btn btn-warning">
+                    <i class="fas fa-clock"></i> Prêts en attente
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal des détails du prêt -->
+    <div id="loanDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-alt"></i> Détails du prêt</h3>
+                <span class="close" onclick="closeLoanDetails()">&times;</span>
+            </div>
+            <div class="modal-body" id="loanDetailsContent">
+                <!-- Contenu des détails chargé dynamiquement -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Changement de vue
+        function toggleView(viewType) {
+            const tableView = document.getElementById('tableView');
+            const cardsView = document.getElementById('cardsView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardsBtn = document.getElementById('cardsViewBtn');
+
+            if (viewType === 'table') {
+                tableView.style.display = 'block';
+                cardsView.style.display = 'none';
+                tableBtn.classList.add('active');
+                cardsBtn.classList.remove('active');
+            } else {
+                tableView.style.display = 'none';
+                cardsView.style.display = 'block';
+                tableBtn.classList.remove('active');
+                cardsBtn.classList.add('active');
+            }
+
+            localStorage.setItem('loansViewPreference', viewType);
+        }
+
+        // Restaurer la préférence de vue
+        window.addEventListener('load', function() {
+            const preference = localStorage.getItem('loansViewPreference');
+            if (preference) {
+                toggleView(preference);
+            }
+        });
+
+        // Actualiser les données
+        function refreshData() {
+            window.location.reload();
+        }
+
+        // Export CSV
+        function exportPrets() {
+            const table = document.getElementById('loansTable');
+            let csv = [];
+            
+            // En-têtes
+            csv.push(['Numéro', 'Client', 'Type', 'Montant accordé', 'Mensualité', 'Statut', 'Date demande'].join(';'));
+            
+            // Données
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const data = [
+                    cells[0].textContent.trim(),
+                    cells[1].querySelector('strong').textContent.trim(),
+                    cells[2].textContent.trim(),
+                    cells[3].textContent.replace(' XOF', '').trim(),
+                    cells[4].textContent.replace(' XOF', '').trim(),
+                    cells[5].textContent.trim(),
+                    cells[6].textContent.trim()
+                ];
+                csv.push(data.join(';'));
+            });
+            
+            // Téléchargement
+            const csvContent = '\uFEFF' + csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `prets_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Validation des filtres
+        document.getElementById('montantMin').addEventListener('change', function() {
+            const montantMin = parseFloat(this.value);
+            const montantMaxInput = document.getElementById('montantMax');
+            const montantMax = parseFloat(montantMaxInput.value);
+            
+            if (montantMin && montantMax && montantMin > montantMax) {
+                alert('Le montant minimum ne peut pas être supérieur au montant maximum');
+                this.value = '';
+            }
+        });
+
+        // Afficher les détails d'un prêt
+        function showLoanDetails(pretId) {
+            // Simulation des détails (à remplacer par un appel AJAX)
+            const modal = document.getElementById('loanDetailsModal');
+            const content = document.getElementById('loanDetailsContent');
+            
+            content.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Chargement des détails...
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+            
+            // Simulation du chargement
+            setTimeout(() => {
+                content.innerHTML = `
+                    <div class="loan-details">
+                        <h4>Prêt #${pretId}</h4>
+                        <p>Détails complets du prêt seront affichés ici...</p>
+                        <div class="details-actions">
+                            <button class="btn btn-primary" onclick="closeLoanDetails()">Fermer</button>
+                        </div>
+                    </div>
+                `;
+            }, 1000);
+        }
+
+        // Fermer les détails
+        function closeLoanDetails() {
+            document.getElementById('loanDetailsModal').style.display = 'none';
+        }
+
+        // Afficher seulement les prêts en attente
+        function showPendingLoans() {
+            document.getElementById('statut').value = 'EN_ATTENTE';
+            document.querySelector('.filter-form').submit();
+        }
+
+        // Fermer la modal si clic à l'extérieur
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('loanDetailsModal');
+            if (event.target === modal) {
+                closeLoanDetails();
+            }
+        });
+
+        // Recherche en temps réel
+        let searchTimeout;
+        document.getElementById('search').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.length >= 3 || this.value.length === 0) {
+                    document.querySelector('.filter-form').submit();
+                }
+            }, 500);
+        });
+
+        function approuverPret(idPret) {
+            if (confirm('Êtes-vous sûr de vouloir approuver ce prêt ?')) {
+                // Créer un formulaire pour l'approbation
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/pret/gestion';
+                
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'approuver';
+                
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'idPret';
+                idInput.value = idPret;
+                
+                form.appendChild(actionInput);
+                form.appendChild(idInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function refuserPret(idPret) {
+            const motif = prompt('Motif de refus (optionnel):');
+            if (motif !== null) { // L'utilisateur n'a pas annulé
+                // Créer un formulaire pour le refus
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/pret/gestion';
+                
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'refuser';
+                
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'idPret';
+                idInput.value = idPret;
+                
+                const motifInput = document.createElement('input');
+                motifInput.type = 'hidden';
+                motifInput.name = 'motifRefus';
+                motifInput.value = motif;
+                
+                form.appendChild(actionInput);
+                form.appendChild(idInput);
+                form.appendChild(motifInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+        </div>
+    </div>
+</section>
+
+        </div>
+    </div>
+</section>
+</body>
+</html>

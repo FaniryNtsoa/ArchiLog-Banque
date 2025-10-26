@@ -2,9 +2,16 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle}">Dépôt Épargne</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
 </head>
 <body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+
 <section>
     <div class="page-content">
         <div class="container">
@@ -66,6 +73,10 @@
                     <button type="submit" class="btn btn-gold">💵 Effectuer le dépôt</button>
                 </div>
             </form>
+        </div>
+    </div>
+</section>
+
         </div>
     </div>
 </section>

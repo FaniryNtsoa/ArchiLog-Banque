@@ -20,6 +20,16 @@ public interface CompteCourantServiceRemote {
     CompteCourantDTO creerCompte(CompteCourantDTO compteDTO, Long idClient, Long idTypeCompte);
     
     /**
+     * Crée un nouveau compte courant avec traçabilité administrateur
+     * @param compteDTO Informations du compte
+     * @param idClient ID du client propriétaire
+     * @param idTypeCompte ID du type de compte
+     * @param idAdministrateur ID de l'administrateur créant le compte
+     * @return Le compte créé
+     */
+    CompteCourantDTO creerCompteAdmin(CompteCourantDTO compteDTO, Long idClient, Long idTypeCompte, Long idAdministrateur);
+    
+    /**
      * Récupère un compte par son ID
      * @param idCompte ID du compte
      * @return Le compte trouvé ou null
@@ -93,4 +103,10 @@ public interface CompteCourantServiceRemote {
      * @return true si le compte appartient au client, false sinon
      */
     boolean verifierProprietaireCompte(String numeroCompte, Long idClient);
+    
+    /**
+     * Récupère tous les comptes courants pour l'administration
+     * @return Liste de tous les comptes avec leurs soldes calculés
+     */
+    List<CompteCourantDTO> findAll();
 }

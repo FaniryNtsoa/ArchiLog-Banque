@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Remboursements - Administration</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+
+        <div class="page-header">
+            <h1><i class="fas fa-money-bill-wave"></i> Gestion des Remboursements</h1>
+            <div class="breadcrumb">
+                <span th:text="${moduleName}">Prêt</span> / 
+                <span>Remboursements</span>
+            </div>
+        </div>
+
+        <!-- Messages d'alerte -->
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span th:text="${errorMessage}">Message d'erreur</span>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}">Message de succès</span>
+        </div>
+
+        <!-- Sélection du prêt -->
+        <div class="selection-container">
+            <form method="get" class="selection-form">
+                <div class="form-section">
+                    <h3><i class="fas fa-search"></i> Recherche de prêt</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pretId">Prêt *</label>
+                            <select id="pretId" name="pretId" onchange="this.form.submit()">
+                                <option value="">-- Sélectionnez un prêt --</option>
+                                <option th:each="pret : ${pretsEnCours}" 
+                                        th:value="${pret.idPret}" 
+                                        th:selected="${pret.idPret == pretIdSelectionne}"
+                                        th:text="${pret.numeroPret + ' - ' + pret.nomClient + ' ' + pret.prenomClient + ' (' + #numbers.formatDecimal(pret.montantAccorde, 0, 'COMMA', 0, 'POINT') + ' XOF)'}">
+                                    PRET1698234782123 - RAKOTO Jean (1,000,000 XOF)
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="numeroPret">Ou numéro de prêt</label>
+                            <input type="text" 
+                                   id="numeroPret" 
+                                   name="numeroPret" 
+                                   th:value="${numeroPretrRecherche}"
+                                   placeholder="PRET1698234782123">
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Rechercher
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Informations du prêt sélectionné -->
+        <div th:if="${pretSelectionne}" class="loan-info-container">
+            <div class="loan-summary">
+                <h3><i class="fas fa-file-contract"></i> Prêt sélectionné</h3>
+                <div class="loan-details-grid">
+                    <div class="detail-item">
+                        <label>Numéro de prêt</label>
+                        <span class="loan-number" th:text="${pretSelectionne.numeroPret}">PRET1698234782123</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Client</label>
+                        <span th:text="${pretSelectionne.nomClient + ' ' + pretSelectionne.prenomClient}">RAKOTO Jean</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Montant accordé</label>
+                        <span th:text="${#numbers.formatDecimal(pretSelectionne.montantAccorde, 0, 'COMMA', 0, 'POINT') + ' XOF'}">1,000,000 XOF</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Mensualité</label>
+                        <span th:text="${#numbers.formatDecimal(pretSelectionne.mensualite, 0, 'COMMA', 2, 'POINT') + ' XOF'}">45,678.90 XOF</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Statut</label>
+                        <span class="status-badge" th:classappend="${pretSelectionne.statut?.toLowerCase()}" 
+                              th:text="${pretSelectionne.statut}">EN_COURS</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Durée restante</label>
+                        <span th:text="${echeancesRestantes + ' échéances'}">18 échéances</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Échéancier du prêt sélectionné -->
+        <div th:if="${hasEcheances}" class="schedule-container">
+            <div class="schedule-header">
+                <h3><i class="fas fa-calendar-alt"></i> Échéancier</h3>
+                <div class="schedule-actions">
+                    <button onclick="toggleScheduleView()" class="btn btn-outline" id="toggleScheduleBtn">
+                        <i class="fas fa-eye"></i> Afficher tout l'échéancier
+                    </button>
+                    <button onclick="exportSchedule()" class="btn btn-outline">
+                        <i class="fas fa-download"></i> Exporter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Échéances impayées (prioritaires) -->
+            <div class="unpaid-schedules">
+                <h4><i class="fas fa-exclamation-triangle"></i> Échéances à rembourser</h4>
+                <div class="schedule-table-container">
+                    <table class="schedule-table" id="unpaidScheduleTable">
+                        <thead>
+                            <tr>
+                                <th>N°</th>
+                                <th>Date échéance</th>
+                                <th>Capital</th>
+                                <th>Intérêts</th>
+                                <th>Mensualité</th>
+                                <th>Statut</th>
+                                <th>Retard</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="echeance : ${echeancesImpayees}">
+                                <td th:text="${echeance.numeroEcheance}">7</td>
+                                <td th:text="${#temporals.format(echeance.dateEcheance, 'dd/MM/yyyy')}">15/11/2025</td>
+                                <td th:text="${#numbers.formatDecimal(echeance.montantCapital, 0, 'COMMA', 2, 'POINT')}">35,678.90</td>
+                                <td th:text="${#numbers.formatDecimal(echeance.montantInteret, 0, 'COMMA', 2, 'POINT')}">10,000.00</td>
+                                <td class="amount-due" th:text="${#numbers.formatDecimal(echeance.montantEcheance, 0, 'COMMA', 2, 'POINT')}">45,678.90</td>
+                                <td>
+                                    <span class="status-badge" 
+                                          th:classappend="${echeance.statut?.toLowerCase()}"
+                                          th:text="${echeance.statut}">
+                                        A_VENIR
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:if="${echeance.joursRetard > 0}" 
+                                          class="overdue-days" 
+                                          th:text="${echeance.joursRetard + ' jours'}">5 jours</span>
+                                    <span th:unless="${echeance.joursRetard > 0}">-</span>
+                                </td>
+                                <td>
+                                    <button th:onclick="'preparePayment(' + ${echeance.idEcheance} + ', ' + ${echeance.montantEcheance} + ')'" 
+                                            class="btn btn-sm btn-success">
+                                        <i class="fas fa-money-bill-wave"></i> Payer
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Échéancier complet (masqué par défaut) -->
+            <div class="full-schedule" id="fullSchedule" style="display: none;">
+                <h4><i class="fas fa-table"></i> Échéancier complet</h4>
+                <div class="schedule-table-container">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th>N°</th>
+                                <th>Date échéance</th>
+                                <th>Capital restant</th>
+                                <th>Capital amorti</th>
+                                <th>Intérêts</th>
+                                <th>Mensualité</th>
+                                <th>Statut</th>
+                                <th>Date paiement</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="echeance : ${toutesLesEcheances}">
+                                <td th:text="${echeance.numeroEcheance}">1</td>
+                                <td th:text="${#temporals.format(echeance.dateEcheance, 'dd/MM/yyyy')}">15/11/2025</td>
+                                <td th:text="${#numbers.formatDecimal(echeance.capitalRestant, 0, 'COMMA', 2, 'POINT')}">958,333.33</td>
+                                <td th:text="${#numbers.formatDecimal(echeance.montantCapital, 0, 'COMMA', 2, 'POINT')}">35,678.90</td>
+                                <td th:text="${#numbers.formatDecimal(echeance.montantInteret, 0, 'COMMA', 2, 'POINT')}">10,000.00</td>
+                                <td th:text="${#numbers.formatDecimal(echeance.montantEcheance, 0, 'COMMA', 2, 'POINT')}">45,678.90</td>
+                                <td>
+                                    <span class="status-badge" 
+                                          th:classappend="${echeance.statut?.toLowerCase()}"
+                                          th:text="${echeance.statut}">
+                                        PAYE
+                                    </span>
+                                </td>
+                                <td th:text="${echeance.datePaiement != null ? #temporals.format(echeance.datePaiement, 'dd/MM/yyyy') : '-'}">
+                                    10/11/2025
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire de remboursement -->
+        <div th:if="${pretSelectionne}" class="payment-form-container">
+            <form method="post" th:action="@{/admin/pret/remboursement}" class="admin-form" id="remboursementForm">
+                <input type="hidden" name="pretId" th:value="${pretSelectionne.idPret}">
+                <input type="hidden" name="echeanceId" id="echeanceIdInput">
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-credit-card"></i> Enregistrer un remboursement</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="typeRemboursement">Type de remboursement *</label>
+                            <select id="typeRemboursement" name="typeRemboursement" required onchange="updatePaymentForm()">
+                                <option value="">-- Sélectionnez --</option>
+                                <option value="ECHEANCE">Paiement d'échéance</option>
+                                <option value="PARTIEL">Remboursement partiel</option>
+                                <option value="ANTICIPE">Remboursement anticipé</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="montantRemboursement">Montant (XOF) *</label>
+                            <input type="number" 
+                                   id="montantRemboursement" 
+                                   name="montantRemboursement" 
+                                   required 
+                                   min="1" 
+                                   step="0.01"
+                                   oninput="validatePaymentAmount()"
+                                   placeholder="Montant à rembourser">
+                            <div class="field-help">
+                                <span id="montantHelp">Saisissez le montant du remboursement</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="compteSource">Compte source</label>
+                            <select id="compteSource" name="compteSource">
+                                <option value="">-- Compte de débit --</option>
+                                <option th:each="compte : ${comptesClient}" 
+                                        th:value="${compte.idCompte}" 
+                                        th:text="${compte.numeroCompte + ' (Solde: ' + #numbers.formatDecimal(compte.solde, 0, 'COMMA', 2, 'POINT') + ' XOF)'}">
+                                    CC123456789 (Solde: 250,000.00 XOF)
+                                </option>
+                            </select>
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Optionnel - Compte à débiter si remboursement par virement
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="typePaiement">Mode de paiement *</label>
+                            <select id="typePaiement" name="typePaiement" required>
+                                <option value="">-- Mode de paiement --</option>
+                                <option value="VIREMENT">Virement bancaire</option>
+                                <option value="ESPECES">Espèces</option>
+                                <option value="CHEQUE">Chèque</option>
+                                <option value="CARTE">Carte bancaire</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="numeroTransaction">Numéro de transaction</label>
+                            <input type="text" 
+                                   id="numeroTransaction" 
+                                   name="numeroTransaction" 
+                                   placeholder="Ex: TRX123456789">
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Référence de la transaction (optionnel)
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="commentaire">Commentaire</label>
+                            <input type="text" 
+                                   id="commentaire" 
+                                   name="commentaire" 
+                                   placeholder="Remarques sur le remboursement...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Récapitulatif du remboursement -->
+                <div class="payment-summary" id="paymentSummary" style="display: none;">
+                    <h4><i class="fas fa-receipt"></i> Récapitulatif du remboursement</h4>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <label>Montant du remboursement</label>
+                            <span id="summaryMontant">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <label>Échéance concernée</label>
+                            <span id="summaryEcheance">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <label>Capital restant après</label>
+                            <span id="summaryCapitalRestant">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <label>Prochaine échéance</label>
+                            <span id="summaryProchaineEcheance">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="submitPaymentBtn" disabled>
+                        <i class="fas fa-paper-plane"></i> Enregistrer le remboursement
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetPaymentForm()">
+                        <i class="fas fa-eraser"></i> Réinitialiser
+                    </button>
+                    <a th:href="@{/admin/pret/gestion}" class="btn btn-outline">
+                        <i class="fas fa-arrow-left"></i> Retour à la gestion
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Historique des remboursements -->
+        <div th:if="${hasRemboursements}" class="payment-history">
+            <h3><i class="fas fa-history"></i> Historique des remboursements</h3>
+            <div class="history-table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Échéance</th>
+                            <th>Montant</th>
+                            <th>Mode</th>
+                            <th>Référence</th>
+                            <th>Administrateur</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="remboursement : ${historique}">
+                            <td th:text="${#temporals.format(remboursement.datePaiement, 'dd/MM/yyyy HH:mm')}">10/11/2025 14:30</td>
+                            <td th:text="'Échéance #' + ${remboursement.numeroEcheance}">Échéance #6</td>
+                            <td th:text="${#numbers.formatDecimal(remboursement.montant, 0, 'COMMA', 2, 'POINT') + ' XOF'}">45,678.90 XOF</td>
+                            <td th:text="${remboursement.typePaiement}">VIREMENT</td>
+                            <td th:text="${remboursement.numeroTransaction}">TRX123456789</td>
+                            <td>
+                                <span th:if="${remboursement.idAdministrateur}" 
+                                      class="admin-badge"
+                                      th:text="'Admin #' + ${remboursement.idAdministrateur}">
+                                    Admin #1
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Raccourcis rapides -->
+        <div class="quick-actions">
+            <h4><i class="fas fa-bolt"></i> Actions rapides</h4>
+            <div class="action-buttons">
+                <a th:href="@{/admin/pret/gestion}" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> Voir tous les prêts
+                </a>
+                <a th:href="@{/admin/pret/nouveau}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouvelle demande
+                </a>
+                <button onclick="showOverdueLoans()" class="btn btn-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Prêts en retard
+                </button>
+                <button onclick="exportPaymentReport()" class="btn btn-outline">
+                    <i class="fas fa-file-export"></i> Rapport des paiements
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedEcheanceId = null;
+        let selectedEcheanceMontant = 0;
+
+        // Préparer le paiement d'une échéance spécifique
+        function preparePayment(echeanceId, montantEcheance) {
+            selectedEcheanceId = echeanceId;
+            selectedEcheanceMontant = montantEcheance;
+            
+            document.getElementById('echeanceIdInput').value = echeanceId;
+            document.getElementById('typeRemboursement').value = 'ECHEANCE';
+            document.getElementById('montantRemboursement').value = montantEcheance;
+            document.getElementById('montantHelp').textContent = 
+                `Montant de l'échéance: ${montantEcheance.toLocaleString('fr-FR')} XOF`;
+            
+            updatePaymentForm();
+            validatePaymentAmount();
+            
+            // Faire défiler vers le formulaire
+            document.querySelector('.payment-form-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Mettre à jour le formulaire selon le type de remboursement
+        function updatePaymentForm() {
+            const type = document.getElementById('typeRemboursement').value;
+            const montantInput = document.getElementById('montantRemboursement');
+            const montantHelp = document.getElementById('montantHelp');
+            
+            switch (type) {
+                case 'ECHEANCE':
+                    if (selectedEcheanceMontant > 0) {
+                        montantInput.value = selectedEcheanceMontant;
+                        montantHelp.textContent = `Montant de l'échéance: ${selectedEcheanceMontant.toLocaleString('fr-FR')} XOF`;
+                    }
+                    break;
+                case 'PARTIEL':
+                    montantInput.value = '';
+                    montantHelp.textContent = 'Montant partiel (inférieur à la mensualité)';
+                    break;
+                case 'ANTICIPE':
+                    montantInput.value = '';
+                    montantHelp.textContent = 'Montant du remboursement anticipé';
+                    break;
+                default:
+                    montantInput.value = '';
+                    montantHelp.textContent = 'Saisissez le montant du remboursement';
+            }
+            
+            validatePaymentAmount();
+        }
+
+        // Valider le montant du remboursement
+        function validatePaymentAmount() {
+            const montant = parseFloat(document.getElementById('montantRemboursement').value);
+            const type = document.getElementById('typeRemboursement').value;
+            const submitBtn = document.getElementById('submitPaymentBtn');
+            const paymentSummary = document.getElementById('paymentSummary');
+            
+            let isValid = montant > 0 && type;
+            
+            if (type === 'ECHEANCE' && selectedEcheanceMontant > 0) {
+                isValid = isValid && Math.abs(montant - selectedEcheanceMontant) < 0.01;
+            }
+            
+            submitBtn.disabled = !isValid;
+            
+            if (isValid && montant) {
+                // Afficher le récapitulatif
+                document.getElementById('summaryMontant').textContent = 
+                    montant.toLocaleString('fr-FR') + ' XOF';
+                document.getElementById('summaryEcheance').textContent = 
+                    type === 'ECHEANCE' ? `Échéance courante` : `${type.toLowerCase()}`;
+                
+                paymentSummary.style.display = 'block';
+            } else {
+                paymentSummary.style.display = 'none';
+            }
+        }
+
+        // Réinitialiser le formulaire de paiement
+        function resetPaymentForm() {
+            document.getElementById('remboursementForm').reset();
+            document.getElementById('paymentSummary').style.display = 'none';
+            selectedEcheanceId = null;
+            selectedEcheanceMontant = 0;
+            validatePaymentAmount();
+        }
+
+        // Afficher/masquer l'échéancier complet
+        function toggleScheduleView() {
+            const fullSchedule = document.getElementById('fullSchedule');
+            const btn = document.getElementById('toggleScheduleBtn');
+            
+            if (fullSchedule.style.display === 'none') {
+                fullSchedule.style.display = 'block';
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i> Masquer l\'échéancier complet';
+            } else {
+                fullSchedule.style.display = 'none';
+                btn.innerHTML = '<i class="fas fa-eye"></i> Afficher tout l\'échéancier';
+            }
+        }
+
+        // Exporter l'échéancier
+        function exportSchedule() {
+            const table = document.getElementById('unpaidScheduleTable');
+            if (!table) return;
+            
+            let csv = [];
+            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
+            csv.push(headers.join(';'));
+            
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            rows.forEach(row => {
+                const cols = Array.from(row.querySelectorAll('td')).slice(0, -1).map(td => td.textContent.trim());
+                csv.push(cols.join(';'));
+            });
+            
+            const csvContent = '\uFEFF' + csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `echeancier_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Afficher les prêts en retard
+        function showOverdueLoans() {
+            // Rediriger vers la gestion avec filtre "EN_RETARD"
+            window.location.href = '/admin/pret/gestion?statut=EN_RETARD';
+        }
+
+        // Exporter un rapport de paiements
+        function exportPaymentReport() {
+            alert('Fonctionnalité d\'export de rapport à implémenter');
+        }
+
+        // Validation finale du formulaire
+        document.getElementById('remboursementForm').addEventListener('submit', function(e) {
+            const montant = parseFloat(document.getElementById('montantRemboursement').value);
+            const type = document.getElementById('typeRemboursement').value;
+            const typePaiement = document.getElementById('typePaiement').value;
+            
+            if (!montant || montant <= 0) {
+                e.preventDefault();
+                alert('Veuillez saisir un montant valide');
+                return;
+            }
+            
+            if (!type) {
+                e.preventDefault();
+                alert('Veuillez sélectionner un type de remboursement');
+                return;
+            }
+            
+            if (!typePaiement) {
+                e.preventDefault();
+                alert('Veuillez sélectionner un mode de paiement');
+                return;
+            }
+            
+            // Confirmation pour les gros montants
+            if (montant > 1000000) {
+                if (!confirm(`Confirmez-vous le remboursement de ${montant.toLocaleString('fr-FR')} XOF ?`)) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+        </div>
+    </div>
+</section>
+</body>
+</html>

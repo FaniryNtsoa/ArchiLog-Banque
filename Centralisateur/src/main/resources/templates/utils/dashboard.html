@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Tableau de bord - Administration Bancaire</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">📊 Tableau de bord</h1>
+                <p class="page-subtitle">Gestion centralisée des modules bancaires</p>
+            </div>
+
+            <!-- Modules Grid -->
+            <div class="modules-grid">
+            <!-- Module Situation Bancaire -->
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">🏦</div>
+                    <h3>Situation Bancaire</h3>
+                </div>
+                <div class="module-description">
+                    <p>Gestion des comptes courants, virements et mouvements bancaires.</p>
+                </div>
+                <div class="module-actions">
+                    <a th:href="@{/admin/situation/comptes}" class="btn btn-primary">
+                        <span class="btn-icon">👥</span>
+                        Comptes Courants
+                    </a>
+                    <a th:href="@{/admin/situation/virement}" class="btn btn--info">
+                        <span class="btn-icon">🔄</span>
+                        Virements
+                    </a>
+                    <a th:href="@{/admin/situation/depot}" class="btn btn--success">
+                        <span class="btn-icon">📥</span>
+                        Dépôts
+                    </a>
+                </div>
+            </div>
+
+            <!-- Module Épargne -->
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">💰</div>
+                    <h3>Épargne</h3>
+                </div>
+                <div class="module-description">
+                    <p>Gestion des comptes épargne, dépôts et retraits avec calcul d'intérêts.</p>
+                </div>
+                <div class="module-actions">
+                    <a th:href="@{/epargne/comptes}" class="btn btn-primary">
+                        <span class="btn-icon">💳</span>
+                        Comptes Épargne
+                    </a>
+                    <a th:href="@{/admin/epargne/depot}" class="btn btn--success">
+                        <span class="btn-icon">📥</span>
+                        Dépôts
+                    </a>
+                    <a th:href="@{/admin/epargne/retrait}" class="btn btn--warning">
+                        <span class="btn-icon">📤</span>
+                        Retraits
+                    </a>
+                </div>
+            </div>
+
+            <!-- Module Prêt -->
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">🏠</div>
+                    <h3>Prêt</h3>
+                </div>
+                <div class="module-description">
+                    <p>Gestion des demandes de prêt, simulations et remboursements.</p>
+                </div>
+                <div class="module-actions">
+                    <a th:href="@{/admin/pret/gestion}" class="btn btn-primary">
+                        <span class="btn-icon">📋</span>
+                        Gestion des Prêts
+                    </a>
+                    <a th:href="@{/admin/pret/simulation}" class="btn btn--info">
+                        <span class="btn-icon">🧮</span>
+                        Simulation
+                    </a>
+                    <a th:href="@{/admin/pret/nouveau}" class="btn btn--success">
+                        <span class="btn-icon">✨</span>
+                        Nouveau Prêt
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques rapides -->
+        <div class="stats-section">
+            <h3>Vue d'ensemble</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🏦</div>
+                    <div class="stat-content">
+                        <h4>Comptes Courants</h4>
+                        <p>Gestion complète</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-content">
+                        <h4>Comptes Épargne</h4>
+                        <p>Avec intérêts</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏠</div>
+                    <div class="stat-content">
+                        <h4>Prêts</h4>
+                        <p>Simulation & Gestion</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="quick-actions">
+            <h3>Actions rapides</h3>
+            <div class="actions-grid">
+                <a th:href="@{/admin/situation/virement}" class="action-card">
+                    <div class="action-icon">🔄</div>
+                    <h4>Virement rapide</h4>
+                    <p>Effectuer un virement entre comptes</p>
+                </a>
+                <a th:href="@{/admin/epargne/depot}" class="action-card">
+                    <div class="action-icon">📥</div>
+                    <h4>Dépôt épargne</h4>
+                    <p>Créditer un compte épargne</p>
+                </a>
+                <a th:href="@{/admin/pret/simulation}" class="action-card">
+                    <div class="action-icon">🧮</div>
+                    <h4>Simuler un prêt</h4>
+                    <p>Calculer les mensualités</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

@@ -110,4 +110,25 @@ public class OperationServiceImplTemp implements OperationServiceRemote {
         
         return mouvement;
     }
+
+    @Override
+    public MouvementDTO effectuerDepotAdmin(String numeroCompte, BigDecimal montant, String libelle,
+            Long idAdministrateur) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'effectuerDepotAdmin'");
+    }
+
+    @Override
+    public MouvementDTO effectuerRetraitAdmin(String numeroCompte, BigDecimal montant, String libelle,
+            Long idAdministrateur) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'effectuerRetraitAdmin'");
+    }
+
+    @Override
+    public VirementDTO effectuerVirementAdmin(String numeroCompteDebiteur, String numeroCompteCrediteur,
+            BigDecimal montant, String libelle, Long idAdministrateur) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'effectuerVirementAdmin'");
+    }
 }

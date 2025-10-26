@@ -1,201 +1,134 @@
 <!DOCTYPE html>
-<html lang="fr" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, content)">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:replace="${title}">Banque Premium</title>
+    <title th:replace="${title}">Administration Bancaire</title>
     
-    <!-- CSS -->
+    <!-- CSS principal -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     
-    <!-- Google Fonts -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="app-layout" th:classappend="${session.clientNom != null} ? 'authenticated' : 'guest'">
-    <div class="app-container">
-        <!-- Sidebar pour utilisateurs authentifiés -->
-        <aside class="sidebar" th:if="${session.clientNom != null}">
+<body th:fragment="layout (title, content)" class="app-layout">
+    <div class="app-container" th:classappend="${sidebarCollapsed} ? 'sidebar-collapsed' : ''">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
             <div class="sidebar__header">
                 <div class="sidebar__logo">
-                    <span class="sidebar__logo-icon">💳</span>
-                    <span class="sidebar__logo-text">Banque Premium</span>
+                    <div class="sidebar__logo-icon">🏦</div>
+                    <div class="sidebar__logo-text">Banque Premium</div>
                 </div>
-                <button class="sidebar__toggle" id="sidebarToggle" aria-label="Toggle menu">
+                <button class="sidebar__toggle" onclick="toggleSidebar()">
                     <span></span>
                     <span></span>
                     <span></span>
                 </button>
             </div>
-            
+
             <div class="sidebar__user">
-                <div class="sidebar__user-avatar">
-                    <span th:text="${#strings.substring(session.clientPrenom, 0, 1)} + ${#strings.substring(session.clientNom, 0, 1)}">JD</span>
-                </div>
+                <div class="sidebar__user-avatar" th:text="${#strings.substring(currentUser != null ? currentUser : 'Admin', 0, 1)}">A</div>
                 <div class="sidebar__user-info">
-                    <span class="sidebar__user-name" th:text="${session.clientPrenom} + ' ' + ${session.clientNom}">John Doe</span>
-                    <span class="sidebar__user-role">Client Premium</span>
+                    <div class="sidebar__user-name" th:text="${currentUser != null ? currentUser : 'Admin'}">Administrateur</div>
+                    <div class="sidebar__user-role">Administrateur</div>
                 </div>
             </div>
-            
+
             <nav class="sidebar__nav">
-                <!-- Section Tableau de bord -->
                 <ul class="sidebar__nav-list">
                     <li class="sidebar__nav-item">
                         <a th:href="@{/dashboard}" class="sidebar__nav-link" 
                            th:classappend="${currentPage == 'dashboard'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">🏠</span>
-                            <span class="sidebar__nav-text">Tableau de bord</span>
-                        </a>
-                    </li>
-                </ul>
-                
-                <!-- Séparateur avec titre -->
-                <div class="sidebar__nav-divider"></div>
-                <div class="sidebar__section-title">
-                    <span class="sidebar__section-icon">💳</span>
-                    <span class="sidebar__section-text">Situation Bancaire</span>
-                </div>
-                
-                <!-- Section Situation Bancaire -->
-                <ul class="sidebar__nav-list">
-                    <li class="sidebar__nav-item">
-                        <a th:href="@{/nouveau-compte}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'nouveau-compte'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">➕</span>
-                            <span class="sidebar__nav-text">Nouveau compte</span>
-                        </a>
-                    </li>
-                    <li class="sidebar__nav-item">
-                        <a th:href="@{/depot}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'depot'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">📈</span>
-                            <span class="sidebar__nav-text">Dépôt</span>
-                        </a>
-                    </li>
-                    <li class="sidebar__nav-item">
-                        <a th:href="@{/retrait}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'retrait'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">📉</span>
-                            <span class="sidebar__nav-text">Retrait</span>
-                        </a>
-                    </li>
-                    <li class="sidebar__nav-item">
-                        <a th:href="@{/virement}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'virement'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">💸</span>
-                            <span class="sidebar__nav-text">Virement</span>
-                        </a>
-                    </li>
-                    <li class="sidebar__nav-item">
-                        <a th:href="@{/solde}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'solde'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">💰</span>
-                            <span class="sidebar__nav-text">Consulter solde</span>
-                        </a>
-                    </li>
-                    <li class="sidebar__nav-item">
-                        <a th:href="@{/historique}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'historique'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">📋</span>
-                            <span class="sidebar__nav-text">Historique</span>
-                        </a>
-                    </li>
-                </ul>
-                
-                <!-- Séparateur avec titre -->
-                <div class="sidebar__nav-divider"></div>
-                <div class="sidebar__section-title">
-                    <span class="sidebar__section-icon">🏦</span>
-                    <span class="sidebar__section-text">Prêts</span>
-                </div>
-                
-                <!-- Section Prêts -->
-                <ul class="sidebar__nav-list">
-                    <li class="sidebar__nav-item">
-                        <a th:href="@{/pret/simulation}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'simulation-pret'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">🧮</span>
-                            <span class="sidebar__nav-text">Simuler un prêt</span>
-                        </a>
-                    </li>
-                    <li class="sidebar__nav-item">
-                        <a th:href="@{/pret/demande}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'demande-pret'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">📝</span>
-                            <span class="sidebar__nav-text">Demande de prêt</span>
-                        </a>
-                    </li>
-                    <li class="sidebar__nav-item">
-                        <a th:href="@{/pret/mes-prets}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'mes-prets'} ? 'active' : ''">
                             <span class="sidebar__nav-icon">📊</span>
-                            <span class="sidebar__nav-text">Mes prêts</span>
+                            <span class="sidebar__nav-text">Dashboard</span>
                         </a>
                     </li>
+                    
+                    <li class="sidebar__section-title">
+                        <span class="sidebar__section-icon">🏦</span>
+                        <span class="sidebar__section-text">Situation Bancaire</span>
+                    </li>
+                    
                     <li class="sidebar__nav-item">
-                        <a th:href="@{/pret/remboursement}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'remboursement'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">💳</span>
-                            <span class="sidebar__nav-text">Remboursement</span>
+                        <a th:href="@{/admin/situation/comptes}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'admin-comptes'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">👥</span>
+                            <span class="sidebar__nav-text">Comptes</span>
                         </a>
                     </li>
-                </ul>
-                
-                <!-- Séparateur avec titre -->
-                <div class="sidebar__nav-divider"></div>
-                <div class="sidebar__section-title">
-                    <span class="sidebar__section-icon">💰</span>
-                    <span class="sidebar__section-text">Épargne</span>
-                </div>
-                
-                <!-- Section Épargne -->
-                <ul class="sidebar__nav-list">
+                    
                     <li class="sidebar__nav-item">
-                        <a th:href="@{/epargne/nouveau-compte}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'nouveau-compte-epargne'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">✨</span>
-                            <span class="sidebar__nav-text">Ouvrir un compte</span>
+                        <a th:href="@{/admin/situation/virement}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'admin-virement'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">🔄</span>
+                            <span class="sidebar__nav-text">Virements</span>
                         </a>
                     </li>
+                    
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/admin/situation/depot}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'admin-depot'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">📥</span>
+                            <span class="sidebar__nav-text">Dépôts</span>
+                        </a>
+                    </li>
+                    
+                    <li class="sidebar__section-title">
+                        <span class="sidebar__section-icon">💰</span>
+                        <span class="sidebar__section-text">Épargne</span>
+                    </li>
+                    
                     <li class="sidebar__nav-item">
                         <a th:href="@{/epargne/comptes}" class="sidebar__nav-link"
                            th:classappend="${currentPage == 'comptes-epargne'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">📂</span>
-                            <span class="sidebar__nav-text">Mes comptes épargne</span>
+                            <span class="sidebar__nav-icon">💳</span>
+                            <span class="sidebar__nav-text">Comptes Épargne</span>
                         </a>
                     </li>
+                    
                     <li class="sidebar__nav-item">
-                        <a th:href="@{/epargne/depot}" class="sidebar__nav-link"
+                        <a th:href="@{/admin/epargne/depot}" class="sidebar__nav-link"
                            th:classappend="${currentPage == 'depot-epargne'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">💵</span>
-                            <span class="sidebar__nav-text">Déposer</span>
+                            <span class="sidebar__nav-icon">📥</span>
+                            <span class="sidebar__nav-text">Dépôts</span>
                         </a>
                     </li>
+                    
                     <li class="sidebar__nav-item">
-                        <a th:href="@{/epargne/retrait}" class="sidebar__nav-link"
+                        <a th:href="@{/admin/epargne/retrait}" class="sidebar__nav-link"
                            th:classappend="${currentPage == 'retrait-epargne'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">💸</span>
-                            <span class="sidebar__nav-text">Retirer</span>
+                            <span class="sidebar__nav-icon">📤</span>
+                            <span class="sidebar__nav-text">Retraits</span>
                         </a>
                     </li>
+                    
+                    <li class="sidebar__section-title">
+                        <span class="sidebar__section-icon">🏠</span>
+                        <span class="sidebar__section-text">Prêts</span>
+                    </li>
+                    
                     <li class="sidebar__nav-item">
-                        <a th:href="@{/epargne/historique}" class="sidebar__nav-link"
-                           th:classappend="${currentPage == 'historique-epargne'} ? 'active' : ''">
-                            <span class="sidebar__nav-icon">📜</span>
-                            <span class="sidebar__nav-text">Historique épargne</span>
+                        <a th:href="@{/admin/pret/gestion}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'admin-pret'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">📋</span>
+                            <span class="sidebar__nav-text">Gestion</span>
                         </a>
                     </li>
-                </ul>
-                
-                <div class="sidebar__nav-divider"></div>
-                
-                <!-- Déconnexion -->
-                <ul class="sidebar__nav-list">
+                    
+                    <li class="sidebar__nav-item">
+                        <a th:href="@{/admin/pret/simulation}" class="sidebar__nav-link"
+                           th:classappend="${currentPage == 'admin-simulation'} ? 'active' : ''">
+                            <span class="sidebar__nav-icon">🧮</span>
+                            <span class="sidebar__nav-text">Simulation</span>
+                        </a>
+                    </li>
+                    
+                    <li class="sidebar__nav-divider"></li>
+                    
                     <li class="sidebar__nav-item">
                         <a th:href="@{/logout}" class="sidebar__nav-link sidebar__nav-link--logout">
                             <span class="sidebar__nav-icon">🚪</span>
@@ -204,140 +137,73 @@
                     </li>
                 </ul>
             </nav>
-        </aside>
-        
-        <!-- Header pour utilisateurs non-authentifiés -->
-        <header class="header" th:unless="${session.clientNom != null}">
-            <div class="container">
-                <div class="header__content">
-                    <a th:href="@{/}" class="header__logo">
-                        Banque Premium
-                    </a>
-                    
-                    <nav class="header__nav">
-                        <a th:href="@{/login}" class="nav-link">Connexion</a>
-                        <a th:href="@{/register}" class="nav-link nav-link--active">Inscription</a>
-                    </nav>
-                </div>
-            </div>
-        </header>
+        </nav>
 
-        <!-- Main Content Area -->
-        <main class="main-content" th:classappend="${session.clientNom != null} ? 'main-content--sidebar' : ''">
-            <!-- Top Bar pour utilisateurs authentifiés -->
-            <div class="topbar" th:if="${session.clientNom != null}">
-                <button class="topbar__menu-btn" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+        <!-- Main Content -->
+        <div class="main-content main-content--sidebar">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <button class="topbar__menu-btn" onclick="toggleMobileSidebar()">
                     <span></span>
                     <span></span>
                     <span></span>
                 </button>
-                <h1 class="topbar__title" th:text="${pageTitle != null ? pageTitle : 'Tableau de bord'}">Tableau de bord</h1>
+                
+                <h1 class="topbar__title" th:text="${pageTitle != null ? pageTitle : 'Administration Bancaire'}">Administration</h1>
+                
                 <div class="topbar__actions">
-                    <button class="topbar__notification-btn" aria-label="Notifications">
-                        <span class="notification-icon">🔔</span>
+                    <button class="topbar__notification-btn">
+                        🔔
                         <span class="notification-badge">3</span>
                     </button>
                 </div>
-            </div>
-            
+            </header>
+
             <!-- Page Content -->
-            <div class="page-content" th:replace="${content}">
-                <!-- Le contenu de la page sera inséré ici -->
-            </div>
-        </main>
+            <main class="page-content" th:replace="${content}">
+                <div class="container">
+                    <h2>Contenu de la page</h2>
+                </div>
+            </main>
+        </div>
     </div>
 
-    <!-- Footer -->
-    <footer th:fragment="footer" style="background: #000; color: #fff; text-align: center; padding: 2rem 0; margin-top: auto;">
-        <div class="container">
-            <p>&copy; 2025 Banque Premium. Tous droits réservés.</p>
-            <p class="text-muted" style="color: #999;">Application bancaire sécurisée - Jakarta EE & Thymeleaf</p>
-        </div>
-    </footer>
-
     <!-- Scripts -->
-    <script th:fragment="scripts">
-        // Script pour les animations fluides
+    <script>
+        let sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        
+        function toggleSidebar() {
+            sidebarCollapsed = !sidebarCollapsed;
+            document.querySelector('.app-container').classList.toggle('sidebar-collapsed', sidebarCollapsed);
+            localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+        }
+        
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('sidebar--mobile-open');
+        }
+        
+        // Initialize sidebar state
         document.addEventListener('DOMContentLoaded', function() {
-            // Animation d'entrée pour les cartes
-            const cards = document.querySelectorAll('.card, .auth-card');
-            cards.forEach((card, index) => {
-                card.style.animationDelay = (index * 0.1) + 's';
-                card.classList.add('fade-in');
-            });
+            document.querySelector('.app-container').classList.toggle('sidebar-collapsed', sidebarCollapsed);
             
-            // Animation pour les boutons
-            const buttons = document.querySelectorAll('.btn');
-            buttons.forEach(button => {
-                button.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-2px) scale(1.02)';
-                });
-                button.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0) scale(1)';
-                });
-            });
-            
-            // Auto-hide des alertes après 5 secondes
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.style.transition = 'opacity 0.5s ease';
+            // Auto-hide alerts
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
                     alert.style.opacity = '0';
-                    setTimeout(() => {
-                        alert.remove();
-                    }, 500);
-                }, 5000);
-            });
-            
-            // Gestion de la sidebar
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+                    setTimeout(() => alert.remove(), 300);
+                });
+            }, 5000);
+        });
+        
+        // Close mobile sidebar when clicking outside
+        document.addEventListener('click', function(e) {
             const sidebar = document.querySelector('.sidebar');
-            const appContainer = document.querySelector('.app-container');
+            const menuBtn = document.querySelector('.topbar__menu-btn');
             
-            function toggleSidebar() {
-                sidebar?.classList.toggle('sidebar--collapsed');
-                appContainer?.classList.toggle('sidebar-collapsed');
+            if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+                sidebar.classList.remove('sidebar--mobile-open');
             }
-            
-            function toggleMobileSidebar() {
-                sidebar?.classList.toggle('sidebar--mobile-open');
-                appContainer?.classList.toggle('mobile-sidebar-open');
-            }
-            
-            // Événements de la sidebar
-            sidebarToggle?.addEventListener('click', toggleSidebar);
-            mobileMenuToggle?.addEventListener('click', toggleMobileSidebar);
-            
-            // Fermer la sidebar mobile en cliquant à l'extérieur
-            document.addEventListener('click', function(event) {
-                if (window.innerWidth <= 768) {
-                    const isClickInsideSidebar = sidebar?.contains(event.target);
-                    const isClickOnToggle = mobileMenuToggle?.contains(event.target);
-                    
-                    if (!isClickInsideSidebar && !isClickOnToggle && sidebar?.classList.contains('sidebar--mobile-open')) {
-                        toggleMobileSidebar();
-                    }
-                }
-            });
-            
-            // Responsive: fermer la sidebar mobile lors du redimensionnement
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768 && sidebar?.classList.contains('sidebar--mobile-open')) {
-                    toggleMobileSidebar();
-                }
-            });
-            
-            // Animation des liens de navigation
-            const navLinks = document.querySelectorAll('.sidebar__nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateX(5px)';
-                });
-                link.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateX(0)';
-                });
-            });
         });
     </script>
 </body>

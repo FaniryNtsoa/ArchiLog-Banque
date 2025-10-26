@@ -23,9 +23,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Servlet pour gérer les dépôts sur les comptes épargne
+ * Servlet admin pour gÃ©rer les dÃ©pÃ´ts sur les comptes Ã©pargne
  */
-@WebServlet(name = "DepotEpargneServlet", urlPatterns = {"/epargne/depot"})
+@WebServlet(name = "AdminDepotEpargneServlet", urlPatterns = {"/admin/epargne/depot"})
 public class DepotEpargneServlet extends HttpServlet {
     
     private static final Logger LOGGER = Logger.getLogger(DepotEpargneServlet.class.getName());
@@ -46,21 +46,20 @@ public class DepotEpargneServlet extends HttpServlet {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("clientId") == null) {
+        if (session == null || session.getAttribute("userSessionBean") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
         
-        Long clientId = (Long) session.getAttribute("clientId");
-        LOGGER.info("Affichage du formulaire de dépôt épargne pour le client: " + clientId);
+        LOGGER.info("Affichage du formulaire de dÃ©pÃ´t Ã©pargne - Interface Admin");
         
-        // Créer le contexte Thymeleaf
+        // CrÃ©er le contexte Thymeleaf
         IWebExchange webExchange = this.application.buildExchange(request, response);
         WebContext context = new WebContext(webExchange);
         
         try {
-            // Récupérer les comptes épargne du client
-            List<JsonObject> comptes = epargneClient.getComptesClient(clientId);
+            // RÃ©cupÃ©rer tous les comptes Ã©pargne pour l'admin
+            List<JsonObject> comptes = epargneClient.getAllComptes();
             
             // Filtrer uniquement les comptes actifs
             List<CompteSimpleView> comptesActifs = new ArrayList<>();
@@ -71,6 +70,15 @@ public class DepotEpargneServlet extends HttpServlet {
                     view.setIdCompte(JsonHelper.getSafeLong(compte, "idCompte"));
                     view.setNumeroCompte(JsonHelper.getSafeString(compte, "numeroCompte", ""));
                     view.setSolde(JsonHelper.getSafeBigDecimal(compte, "solde", BigDecimal.ZERO));
+                    
+                    // Ajouter info client pour l'admin
+                    if (compte.containsKey("client") || compte.containsKey("Client")) {
+                        JsonObject client = compte.containsKey("client") ? 
+                            compte.getJsonObject("client") : 
+                            compte.getJsonObject("Client");
+                        view.setClientNom(JsonHelper.getSafeString(client, "nom", ""));
+                        view.setClientPrenom(JsonHelper.getSafeString(client, "prenom", ""));
+                    }
                     
                     if (compte.containsKey("typeCompte") || compte.containsKey("TypeCompte")) {
                         JsonObject typeCompte = compte.containsKey("typeCompte") ? 
@@ -83,11 +91,11 @@ public class DepotEpargneServlet extends HttpServlet {
                 }
             }
             
-            // Ajouter les variables au contexte
-            context.setVariable("pageTitle", "Dépôt Épargne - Banque Premium");
-            context.setVariable("currentPage", "depot-epargne");
-            context.setVariable("clientPrenom", session.getAttribute("clientPrenom"));
-            context.setVariable("clientNom", session.getAttribute("clientNom"));
+            // Ajouter les variables au contexte pour l'admin
+            context.setVariable("pageTitle", "DÃ©pÃ´t Ã‰pargne - Administration");
+            context.setVariable("currentPage", "admin-depot-epargne");
+            context.setVariable("moduleName", "Ã‰pargne");
+            context.setVariable("operationType", "DÃ©pÃ´t");
             context.setVariable("comptes", comptesActifs);
             context.setVariable("hasComptes", !comptesActifs.isEmpty());
             
@@ -98,13 +106,13 @@ public class DepotEpargneServlet extends HttpServlet {
                 session.removeAttribute("errorMessage");
             }
             
-            // Rendre le template
+            // Rendu du template admin
             response.setContentType("text/html;charset=UTF-8");
-            templateEngine.process("epargne/depot-epargne", context, response.getWriter());
+            templateEngine.process("epargne/depot", context, response.getWriter());
             
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors du chargement du formulaire de dépôt épargne", e);
-            session.setAttribute("errorMessage", "Impossible de charger le formulaire. Veuillez réessayer.");
+            LOGGER.log(Level.SEVERE, "Erreur lors du chargement du formulaire de dÃ©pÃ´t Ã©pargne", e);
+            session.setAttribute("errorMessage", "Impossible de charger le formulaire. Veuillez rÃ©essayer.");
             response.sendRedirect(request.getContextPath() + "/dashboard");
         }
     }
@@ -114,14 +122,14 @@ public class DepotEpargneServlet extends HttpServlet {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("clientId") == null) {
+        if (session == null || session.getAttribute("userSessionBean") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
         
-        LOGGER.info("Traitement d'un dépôt sur compte épargne");
+        LOGGER.info("Traitement admin d'un dÃ©pÃ´t sur compte Ã©pargne");
         
-        // Récupérer les paramètres
+        // RÃ©cupÃ©rer les paramÃ¨tres
         String compteIdStr = request.getParameter("compteId");
         String montantStr = request.getParameter("montant");
         String description = request.getParameter("description");
@@ -129,7 +137,7 @@ public class DepotEpargneServlet extends HttpServlet {
         try {
             // Validation
             if (compteIdStr == null || compteIdStr.trim().isEmpty()) {
-                throw new IllegalArgumentException("Veuillez sélectionner un compte");
+                throw new IllegalArgumentException("Veuillez sÃ©lectionner un compte");
             }
             
             if (montantStr == null || montantStr.trim().isEmpty()) {
@@ -140,10 +148,10 @@ public class DepotEpargneServlet extends HttpServlet {
             BigDecimal montant = new BigDecimal(montantStr);
             
             if (montant.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Le montant doit être positif");
+                throw new IllegalArgumentException("Le montant doit Ãªtre positif");
             }
             
-            // Effectuer le dépôt via l'API (avec ID administrateur par défaut)
+            // Effectuer le dÃ©pÃ´t via l'API (avec ID administrateur par dÃ©faut)
             JsonObject responseJson = epargneClient.effectuerDepot(compteId, montant, description, 1L);
             
             if (responseJson != null && JsonHelper.getSafeBoolean(responseJson, "success", false)) {
@@ -151,44 +159,46 @@ public class DepotEpargneServlet extends HttpServlet {
                 BigDecimal nouveauSolde = JsonHelper.getSafeBigDecimal(operation, "soldeApres", BigDecimal.ZERO);
                 
                 session.setAttribute("successMessage", 
-                    String.format("Dépôt de %s effectué avec succès ! Nouveau solde : %s", 
+                    String.format("DÃ©pÃ´t de %s effectuÃ© avec succÃ¨s ! Nouveau solde : %s", 
                         montant, nouveauSolde));
-                response.sendRedirect(request.getContextPath() + "/epargne/comptes");
+                response.sendRedirect(request.getContextPath() + "/admin/epargne/comptes");
                 
             } else {
                 String errorMsg = responseJson != null ? 
-                    JsonHelper.getSafeString(responseJson, "message", "Erreur lors du dépôt") : 
-                    "Erreur lors du dépôt";
+                    JsonHelper.getSafeString(responseJson, "message", "Erreur lors du dÃ©pÃ´t") : 
+                    "Erreur lors du depot";
                     
                 session.setAttribute("errorMessage", errorMsg);
-                response.sendRedirect(request.getContextPath() + "/epargne/depot");
+                response.sendRedirect(request.getContextPath() + "/admin/epargne/depot");
             }
             
         } catch (NumberFormatException e) {
-            LOGGER.log(Level.WARNING, "Format de données invalide", e);
-            session.setAttribute("errorMessage", "Format de données invalide. Veuillez vérifier vos saisies.");
-            response.sendRedirect(request.getContextPath() + "/epargne/depot");
+            LOGGER.log(Level.WARNING, "Format de donnÃ©es invalide", e);
+            session.setAttribute("errorMessage", "Format de donnÃ©es invalide. Veuillez vÃ©rifier vos saisies.");
+            response.sendRedirect(request.getContextPath() + "/admin/epargne/depot");
             
         } catch (IllegalArgumentException e) {
-            LOGGER.log(Level.WARNING, "Validation échouée: " + e.getMessage(), e);
+            LOGGER.log(Level.WARNING, "Validation Ã©chouÃ©e: " + e.getMessage(), e);
             session.setAttribute("errorMessage", e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/epargne/depot");
+            response.sendRedirect(request.getContextPath() + "/admin/epargne/depot");
             
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors du dépôt épargne", e);
-            session.setAttribute("errorMessage", "Une erreur est survenue lors du dépôt. Veuillez réessayer.");
-            response.sendRedirect(request.getContextPath() + "/epargne/depot");
+            LOGGER.log(Level.SEVERE, "Erreur lors du dÃ©pÃ´t Ã©pargne", e);
+            session.setAttribute("errorMessage", "Une erreur est survenue lors du dÃ©pÃ´t. Veuillez rÃ©essayer.");
+            response.sendRedirect(request.getContextPath() + "/admin/epargne/depot");
         }
     }
     
     /**
-     * Classe interne pour afficher un compte de manière simplifiée
+     * Classe interne pour afficher un compte de maniÃ¨re simplifiÃ©e
      */
     public static class CompteSimpleView {
         private Long idCompte;
         private String numeroCompte;
         private BigDecimal solde;
         private String typeLibelle;
+        private String clientNom;
+        private String clientPrenom;
         
         public Long getIdCompte() { return idCompte; }
         public void setIdCompte(Long idCompte) { this.idCompte = idCompte; }
@@ -201,5 +211,12 @@ public class DepotEpargneServlet extends HttpServlet {
         
         public String getTypeLibelle() { return typeLibelle; }
         public void setTypeLibelle(String typeLibelle) { this.typeLibelle = typeLibelle; }
+        
+        public String getClientNom() { return clientNom; }
+        public void setClientNom(String clientNom) { this.clientNom = clientNom; }
+        
+        public String getClientPrenom() { return clientPrenom; }
+        public void setClientPrenom(String clientPrenom) { this.clientPrenom = clientPrenom; }
     }
 }
+

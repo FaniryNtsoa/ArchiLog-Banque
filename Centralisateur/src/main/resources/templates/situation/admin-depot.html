@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Effectuer un Dépôt - Administration</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+
+        <div class="page-header">
+            <h1><i class="fas fa-arrow-down text-success"></i> Effectuer un Dépôt</h1>
+            <div class="breadcrumb">
+                <span th:text="${moduleName}">Situation Bancaire</span> / 
+                <span>Opérations</span> /
+                <span>Dépôt</span>
+            </div>
+        </div>
+
+        <!-- Messages d'alerte -->
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span th:text="${errorMessage}">Message d'erreur</span>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}">Message de succès</span>
+        </div>
+
+        <!-- Formulaire de dépôt -->
+        <div class="form-container">
+            <form method="post" th:action="@{/admin/situation/depot}" class="admin-form">
+                <div class="form-section">
+                    <h3><i class="fas fa-piggy-bank"></i> Informations du dépôt</h3>
+                    
+                    <div class="form-group">
+                        <label for="compteId">Compte bénéficiaire *</label>
+                        <select id="compteId" name="compteId" required>
+                            <option value="">-- Sélectionnez un compte --</option>
+                            <option th:each="compte : ${comptes}" 
+                                    th:value="${compte.idCompte}" 
+                                    th:text="${compte.numeroCompte + ' - ' + compte.nomClient + ' ' + compte.prenomClient + ' (Solde: ' + compte.solde + ' XOF)'}">
+                                CC123456789 - RAZAFY Jean (Solde: 150,000 XOF)
+                            </option>
+                        </select>
+                        <div th:if="${!hasComptes}" class="form-help error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Aucun compte disponible. Veuillez d'abord créer des comptes.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="montant">Montant à déposer (XOF) *</label>
+                        <input type="number" 
+                               id="montant" 
+                               name="montant" 
+                               required 
+                               min="0.01" 
+                               max="10000000"
+                               step="0.01"
+                               placeholder="0.00">
+                        <div class="form-help">
+                            <i class="fas fa-info-circle"></i>
+                            Montant maximum autorisé : 10,000,000 XOF par transaction
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="motif">Motif du dépôt</label>
+                        <textarea id="motif" 
+                                  name="motif" 
+                                  rows="3"
+                                  placeholder="Ex: Dépôt d'espèces, virement reçu, etc."
+                                  maxlength="255"></textarea>
+                        <div class="form-help">
+                            <i class="fas fa-info-circle"></i>
+                            Optionnel - Précisez la nature ou l'origine du dépôt
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success" th:disabled="${!hasComptes}">
+                        <i class="fas fa-check"></i> Effectuer le dépôt
+                    </button>
+                    <a th:href="@{/admin/situation/comptes}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Raccourcis rapides -->
+        <div class="quick-actions">
+            <h4><i class="fas fa-bolt"></i> Actions rapides</h4>
+            <div class="action-buttons">
+                <a th:href="@{/admin/situation/retrait}" class="btn btn-warning">
+                    <i class="fas fa-arrow-up"></i> Effectuer un retrait
+                </a>
+                <a th:href="@{/admin/situation/virement}" class="btn btn-info">
+                    <i class="fas fa-exchange-alt"></i> Effectuer un virement
+                </a>
+                <a th:href="@{/admin/situation/historique}" class="btn btn-secondary">
+                    <i class="fas fa-history"></i> Consulter l'historique
+                </a>
+            </div>
+        </div>
+
+        <!-- Informations importantes -->
+        <div class="info-box warning">
+            <h4><i class="fas fa-exclamation-triangle"></i> Points importants</h4>
+            <ul>
+                <li>Cette opération sera <strong>immédiatement définitive</strong></li>
+                <li>Le solde du compte sera mis à jour en temps réel</li>
+                <li>L'opération sera <strong>tracée avec votre identifiant</strong> administrateur</li>
+                <li>Un reçu de transaction sera généré automatiquement</li>
+                <li>Vérifiez soigneusement le compte et le montant avant validation</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Validation côté client et formatage
+        document.getElementById('montant').addEventListener('input', function(e) {
+            const value = parseFloat(e.target.value);
+            if (value > 10000000) {
+                e.target.setCustomValidity('Le montant ne peut pas dépasser 10,000,000 XOF');
+            } else if (value <= 0) {
+                e.target.setCustomValidity('Le montant doit être positif');
+            } else {
+                e.target.setCustomValidity('');
+            }
+        });
+
+        document.querySelector('.admin-form').addEventListener('submit', function(e) {
+            const compteId = document.getElementById('compteId').value;
+            const montant = parseFloat(document.getElementById('montant').value || 0);
+            
+            if (!compteId) {
+                alert('Veuillez sélectionner un compte');
+                e.preventDefault();
+                return false;
+            }
+            
+            if (montant <= 0) {
+                alert('Le montant doit être positif');
+                e.preventDefault();
+                return false;
+            }
+            
+            if (montant > 10000000) {
+                alert('Le montant ne peut pas dépasser 10,000,000 XOF');
+                e.preventDefault();
+                return false;
+            }
+            
+            // Confirmation
+            if (!confirm(`Confirmer le dépôt de ${montant.toLocaleString('fr-FR')} XOF ?`)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Dropdown menu
+        document.querySelector('.dropdown-toggle').addEventListener('click', function(e) {
+            e.preventDefault();
+            const dropdown = this.parentElement;
+            dropdown.classList.toggle('show');
+        });
+
+        // Fermer dropdown si clic à l'extérieur
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav-dropdown')) {
+                document.querySelectorAll('.nav-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+        </div>
+    </div>
+</section>
+</body>
+</html>

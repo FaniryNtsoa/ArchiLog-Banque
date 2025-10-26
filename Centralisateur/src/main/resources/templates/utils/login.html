@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Connexion - Administration Bancaire</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body class="auth-container">
+    <div class="container-sm">
+        <div class="auth-card">
+            <div class="auth-card__header">
+                <h1 class="auth-card__title">🏦 Administration Bancaire</h1>
+                <p class="auth-card__subtitle">Système de Gestion Centralisé</p>
+            </div>
+
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <span class="alert__icon">⚠️</span>
+                <span th:text="${errorMessage}"></span>
+            </div>
+
+            <form th:action="@{/login}" method="post" class="form login-form">
+                <div class="form-group">
+                    <label for="username" class="form-label">👤 Nom d'utilisateur</label>
+                    <input type="text" id="username" name="username" required 
+                           class="form-input" placeholder="Votre nom d'utilisateur">
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">🔒 Mot de passe</label>
+                    <input type="password" id="password" name="password" required 
+                           class="form-input" placeholder="Votre mot de passe">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn--primary btn-block">
+                        <span class="btn__icon">🔐</span>
+                        Se connecter
+                    </button>
+                </div>
+            </form>
+
+            <div class="login-footer">
+                <p>Modules disponibles:</p>
+                <div class="modules-list">
+                    <span class="module-badge">Situation Bancaire</span>
+                    <span class="module-badge">Épargne</span>
+                    <span class="module-badge">Prêt</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-hide error messages
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+
+        // Focus on first input
+        document.getElementById('username').focus();
+    </script>
+</body>
+</html>

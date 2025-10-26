@@ -35,6 +35,7 @@ com\banque\situationbancaire\dto\LoginResponseDTO$LoginResponseDTOBuilder.class
 com\banque\situationbancaire\entity\enums\PeriodiciteFreais.class
 com\banque\situationbancaire\ejb\impl\OperationServiceImplTemp.class
 com\banque\situationbancaire\repository\TypeCompteRepository.class
+com\banque\situationbancaire\dto\VirementDTO$VirementDTOBuilder.class
 com\banque\situationbancaire\dto\DirectionDTO.class
 com\banque\situationbancaire\dto\ActionRoleDTO$ActionRoleDTOBuilder.class
 com\banque\situationbancaire\dto\DirectionDTO$DirectionDTOBuilder.class

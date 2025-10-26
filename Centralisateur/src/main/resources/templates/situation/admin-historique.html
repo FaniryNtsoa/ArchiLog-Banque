@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Historique des Mouvements - Administration</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+
+        <div class="page-header">
+            <h1><i class="fas fa-history"></i> Historique des Mouvements</h1>
+            <div class="breadcrumb">
+                <span th:text="${moduleName}">Situation Bancaire</span> / 
+                <span>Historique</span>
+            </div>
+        </div>
+
+        <!-- Messages d'alerte -->
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span th:text="${errorMessage}">Message d'erreur</span>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}">Message de succès</span>
+        </div>
+
+        <!-- Filtres -->
+        <div class="filter-container">
+            <form method="get" class="filter-form">
+                <div class="filter-section">
+                    <h3><i class="fas fa-filter"></i> Filtres de recherche</h3>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="compteId">Compte</label>
+                            <select id="compteId" name="compteId">
+                                <option value="">-- Tous les comptes --</option>
+                                <option th:each="compte : ${comptes}" 
+                                        th:value="${compte.idCompte}" 
+                                        th:selected="${compte.idCompte.toString() == compteIdSelectionne}"
+                                        th:text="${compte.numeroCompte + ' - ' + compte.nomClient + ' ' + compte.prenomClient}">
+                                    CC123456789 - RAZAFY Jean
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="dateDebut">Date début</label>
+                            <input type="date" 
+                                   id="dateDebut" 
+                                   name="dateDebut" 
+                                   th:value="${dateDebut}">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="dateFin">Date fin</label>
+                            <input type="date" 
+                                   id="dateFin" 
+                                   name="dateFin" 
+                                   th:value="${dateFin}">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="typeOperation">Type d'opération</label>
+                            <select id="typeOperation" name="typeOperation">
+                                <option value="">-- Tous types --</option>
+                                <option th:each="type : ${typesOperations}" 
+                                        th:value="${type}" 
+                                        th:selected="${type == typeOperationSelectionne}"
+                                        th:text="${type}">
+                                    DEPOT
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="filter-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Filtrer
+                            </button>
+                            <a th:href="@{/admin/situation/historique}" class="btn btn-secondary">
+                                <i class="fas fa-eraser"></i> Effacer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Informations sur le compte sélectionné -->
+        <div th:if="${compteSelectionne}" class="account-info">
+            <h4><i class="fas fa-user"></i> Compte sélectionné</h4>
+            <div class="account-details">
+                <span class="account-number" th:text="${compteSelectionne.numeroCompte}">CC123456789</span>
+                <span class="account-owner" th:text="${compteSelectionne.nomClient + ' ' + compteSelectionne.prenomClient}">RAZAFY Jean</span>
+                <span class="account-balance">
+                    Solde actuel: <strong th:text="${compteSelectionne.solde + ' XOF'}">150,000 XOF</strong>
+                </span>
+            </div>
+        </div>
+
+        <!-- Résultats -->
+        <div class="results-container">
+            <div class="results-header">
+                <h3>
+                    <i class="fas fa-list"></i> 
+                    <span th:if="${hasMouvements}">
+                        <span th:text="${#lists.size(mouvements)}">0</span> mouvement(s) trouvé(s)
+                    </span>
+                    <span th:unless="${hasMouvements}">Aucun mouvement trouvé</span>
+                </h3>
+                
+                <div class="results-actions" th:if="${hasMouvements}">
+                    <button onclick="exportToCSV()" class="btn btn-outline">
+                        <i class="fas fa-download"></i> Exporter CSV
+                    </button>
+                    <button onclick="printHistory()" class="btn btn-outline">
+                        <i class="fas fa-print"></i> Imprimer
+                    </button>
+                </div>
+            </div>
+
+            <div th:if="${hasMouvements}" class="movements-table-container">
+                <table class="movements-table" id="movementsTable">
+                    <thead>
+                        <tr>
+                            <th>Date/Heure</th>
+                            <th>Compte</th>
+                            <th>Type</th>
+                            <th>Libellé</th>
+                            <th>Montant</th>
+                            <th>Solde après</th>
+                            <th>Référence</th>
+                            <th>Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="mouvement : ${mouvements}" 
+                            th:classappend="${mouvement.montant > 0 ? 'credit' : 'debit'}">
+                            <td th:text="${#temporals.format(mouvement.dateOperation, 'dd/MM/yyyy HH:mm')}">
+                                26/10/2025 14:30
+                            </td>
+                            <td>
+                                <span class="account-number" th:text="${mouvement.numeroCompte}">CC123456789</span>
+                            </td>
+                            <td>
+                                <span class="operation-type" 
+                                      th:text="${mouvement.typeOperation}" 
+                                      th:classappend="${mouvement.typeOperation?.toLowerCase()}">
+                                    DEPOT
+                                </span>
+                            </td>
+                            <td th:text="${mouvement.libelleOperation}">Dépôt effectué par l'administration</td>
+                            <td class="amount">
+                                <span th:if="${mouvement.montant > 0}" class="credit">
+                                    +<span th:text="${#numbers.formatDecimal(mouvement.montant, 0, 'COMMA', 2, 'POINT')}">50,000.00</span> XOF
+                                </span>
+                                <span th:if="${mouvement.montant < 0}" class="debit">
+                                    <span th:text="${#numbers.formatDecimal(mouvement.montant, 0, 'COMMA', 2, 'POINT')}">-25,000.00</span> XOF
+                                </span>
+                            </td>
+                            <td class="balance" th:text="${#numbers.formatDecimal(mouvement.soldeApresOperation, 0, 'COMMA', 2, 'POINT') + ' XOF'}">
+                                125,000.00 XOF
+                            </td>
+                            <td>
+                                <code th:text="${mouvement.reference}">DEP16982347821234</code>
+                            </td>
+                            <td>
+                                <span th:if="${mouvement.idAdministrateur}" 
+                                      class="admin-badge"
+                                      th:text="'Admin #' + ${mouvement.idAdministrateur}">
+                                    Admin #1
+                                </span>
+                                <span th:unless="${mouvement.idAdministrateur}" class="auto-badge">
+                                    Auto
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:unless="${hasMouvements}" class="no-results">
+                <div class="no-results-content">
+                    <i class="fas fa-search fa-3x"></i>
+                    <h4>Aucun mouvement trouvé</h4>
+                    <p>Aucun mouvement ne correspond aux critères de recherche.</p>
+                    <div class="suggestions">
+                        <h5>Suggestions :</h5>
+                        <ul>
+                            <li>Vérifiez les dates sélectionnées</li>
+                            <li>Élargissez la période de recherche</li>
+                            <li>Modifiez les filtres appliqués</li>
+                            <li>Sélectionnez un autre compte</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raccourcis rapides -->
+        <div class="quick-actions">
+            <h4><i class="fas fa-bolt"></i> Actions rapides</h4>
+            <div class="action-buttons">
+                <a th:href="@{/admin/situation/depot}" class="btn btn-success">
+                    <i class="fas fa-arrow-down"></i> Nouveau dépôt
+                </a>
+                <a th:href="@{/admin/situation/retrait}" class="btn btn-warning">
+                    <i class="fas fa-arrow-up"></i> Nouveau retrait
+                </a>
+                <a th:href="@{/admin/situation/virement}" class="btn btn-info">
+                    <i class="fas fa-exchange-alt"></i> Nouveau virement
+                </a>
+                <a th:href="@{/admin/situation/comptes}" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> Voir tous les comptes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Export CSV
+        function exportToCSV() {
+            const table = document.getElementById('movementsTable');
+            let csv = [];
+            
+            // En-têtes
+            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
+            csv.push(headers.join(';'));
+            
+            // Données
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            rows.forEach(row => {
+                const cols = Array.from(row.querySelectorAll('td')).map(td => {
+                    return td.textContent.replace(/;/g, ',').trim();
+                });
+                csv.push(cols.join(';'));
+            });
+            
+            // Téléchargement
+            const csvContent = '\uFEFF' + csv.join('\n'); // \uFEFF pour UTF-8 BOM
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `historique_mouvements_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Impression
+        function printHistory() {
+            const printWindow = window.open('', '_blank');
+            const table = document.getElementById('movementsTable').outerHTML;
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Historique des Mouvements</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f5f5f5; font-weight: bold; }
+                        .credit { color: green; }
+                        .debit { color: red; }
+                        .admin-badge { background: #007bff; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; }
+                        .auto-badge { background: #6c757d; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; }
+                        @media print { body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <h1>Historique des Mouvements Bancaires</h1>
+                    <p>Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</p>
+                    ${table}
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }
+
+        // Validation des dates
+        document.getElementById('dateDebut').addEventListener('change', function() {
+            const dateDebut = this.value;
+            const dateFin = document.getElementById('dateFin').value;
+            
+            if (dateDebut && dateFin && new Date(dateDebut) > new Date(dateFin)) {
+                alert('La date de début ne peut pas être postérieure à la date de fin');
+                this.value = '';
+            }
+        });
+
+        document.getElementById('dateFin').addEventListener('change', function() {
+            const dateDebut = document.getElementById('dateDebut').value;
+            const dateFin = this.value;
+            
+            if (dateDebut && dateFin && new Date(dateDebut) > new Date(dateFin)) {
+                alert('La date de fin ne peut pas être antérieure à la date de début');
+                this.value = '';
+            }
+        });
+
+        // Dropdown menu
+        document.querySelector('.dropdown-toggle').addEventListener('click', function(e) {
+            e.preventDefault();
+            const dropdown = this.parentElement;
+            dropdown.classList.toggle('show');
+        });
+
+        // Fermer dropdown si clic à l'extérieur
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav-dropdown')) {
+                document.querySelectorAll('.nav-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+
+        // Auto-submit si changement de compte
+        document.getElementById('compteId').addEventListener('change', function() {
+            if (this.value) {
+                document.querySelector('.filter-form').submit();
+            }
+        });
+    </script>
+</body>
+</html>
+        </div>
+    </div>
+</section>
+</body>
+</html>

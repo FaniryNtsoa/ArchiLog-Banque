@@ -461,6 +461,234 @@ public class OperationServiceImpl implements OperationServiceRemote {
         }
     }
 
+    @Override
+    public MouvementDTO effectuerDepotAdmin(String numeroCompte, BigDecimal montant, String libelle, Long idAdministrateur) {
+        LOGGER.info("Dépôt ADMIN de " + montant + " XOF sur le compte " + numeroCompte + " par admin " + idAdministrateur);
+        
+        if (montant.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Le montant doit être positif");
+        }
+        
+        // Vérifier l'existence et le statut du compte
+        Optional<CompteCourant> compteOpt = compteCourantRepository.findByNumeroCompte(numeroCompte);
+        if (compteOpt.isEmpty()) {
+            throw new IllegalArgumentException("Compte non trouvé : " + numeroCompte);
+        }
+        
+        CompteCourant compte = compteOpt.get();
+        if (compte.getStatut() != StatutCompte.OUVERT) {
+            throw new IllegalStateException("Le compte n'est pas actif");
+        }
+        
+        // Récupérer le type d'opération DEPOT
+        Optional<TypeOperation> typeDepotOpt = typeOperationRepository.findByCode("DEPOT");
+        if (typeDepotOpt.isEmpty()) {
+            throw new IllegalStateException("Type d'opération DEPOT non configuré");
+        }
+        
+        // Calculer le solde actuel avant opération
+        BigDecimal soldeAvant = calculerSoldeCompte(compte);
+        
+        // Créer le mouvement avec traçabilité admin
+        Mouvement mouvement = Mouvement.builder()
+            .compte(compte)
+            .typeOperation(typeDepotOpt.get())
+            .montant(montant) // Positif pour un dépôt
+            .soldeAvantOperation(soldeAvant)
+            .soldeApresOperation(soldeAvant.add(montant))
+            .dateOperation(LocalDateTime.now())
+            .libelleOperation(libelle != null ? libelle : "Dépôt effectué par l'administration")
+            .reference(genererReference("DEP"))
+            .idAdministrateur(idAdministrateur.intValue()) // Traçabilité admin
+            .build();
+        
+        Mouvement mouvementCree = mouvementRepository.save(mouvement);
+        
+        // Appliquer les intérêts de découvert si nécessaire après le dépôt
+        gererInteretsDecouvertAutomatique(compte);
+        
+        LOGGER.info("Traçabilité: Dépôt effectué par l'administrateur " + idAdministrateur + " - Référence: " + mouvementCree.getReference());
+        
+        return MouvementMapper.toDTO(mouvementCree);
+    }
+
+    @Override
+    public MouvementDTO effectuerRetraitAdmin(String numeroCompte, BigDecimal montant, String libelle, Long idAdministrateur) {
+        LOGGER.info("Retrait ADMIN de " + montant + " XOF sur le compte " + numeroCompte + " par admin " + idAdministrateur);
+        
+        if (montant.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Le montant doit être positif");
+        }
+        
+        // Vérifier l'existence et le statut du compte
+        Optional<CompteCourant> compteOpt = compteCourantRepository.findByNumeroCompte(numeroCompte);
+        if (compteOpt.isEmpty()) {
+            throw new IllegalArgumentException("Compte non trouvé : " + numeroCompte);
+        }
+        
+        CompteCourant compte = compteOpt.get();
+        if (compte.getStatut() != StatutCompte.OUVERT) {
+            throw new IllegalStateException("Le compte n'est pas actif");
+        }
+        
+        // Calculer le solde actuel
+        BigDecimal soldeAvant = calculerSoldeCompte(compte);
+        BigDecimal nouveauSolde = soldeAvant.subtract(montant);
+        
+        // Vérifier le découvert autorisé (admin peut bypasser les plafonds journaliers)
+        BigDecimal decouvertAutorise = BigDecimal.ZERO;
+        if (compte.getTypeCompte() != null && compte.getTypeCompte().getParametreActuel() != null) {
+            decouvertAutorise = compte.getTypeCompte().getParametreActuel().getMontantDecouvertAutorise();
+        }
+        
+        if (nouveauSolde.compareTo(decouvertAutorise.negate()) < 0) {
+            throw new IllegalStateException("Solde insuffisant. Découvert autorisé : " + decouvertAutorise + " XOF");
+        }
+        
+        // Récupérer le type d'opération RETRAIT
+        Optional<TypeOperation> typeRetraitOpt = typeOperationRepository.findByCode("RETRAIT");
+        if (typeRetraitOpt.isEmpty()) {
+            throw new IllegalStateException("Type d'opération RETRAIT non configuré");
+        }
+        
+        // Créer le mouvement avec traçabilité admin
+        Mouvement mouvement = Mouvement.builder()
+            .compte(compte)
+            .typeOperation(typeRetraitOpt.get())
+            .montant(montant.negate()) // Négatif pour un retrait
+            .soldeAvantOperation(soldeAvant)
+            .soldeApresOperation(nouveauSolde)
+            .dateOperation(LocalDateTime.now())
+            .libelleOperation(libelle != null ? libelle : "Retrait effectué par l'administration")
+            .reference(genererReference("RET"))
+            .idAdministrateur(idAdministrateur.intValue()) // Traçabilité admin
+            .build();
+        
+        Mouvement mouvementCree = mouvementRepository.save(mouvement);
+        
+        // Appliquer les intérêts de découvert si nécessaire après le retrait
+        gererInteretsDecouvertAutomatique(compte);
+        
+        LOGGER.info("Traçabilité: Retrait effectué par l'administrateur " + idAdministrateur + " - Référence: " + mouvementCree.getReference());
+        
+        return MouvementMapper.toDTO(mouvementCree);
+    }
+
+    @Override
+    public VirementDTO effectuerVirementAdmin(String numeroCompteDebiteur, String numeroCompteCrediteur, BigDecimal montant, String libelle, Long idAdministrateur) {
+        LOGGER.info("Virement ADMIN de " + montant + " de " + numeroCompteDebiteur + " vers " + numeroCompteCrediteur + " par admin " + idAdministrateur);
+        
+        if (montant.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Le montant doit être positif");
+        }
+        
+        if (numeroCompteDebiteur.equals(numeroCompteCrediteur)) {
+            throw new IllegalArgumentException("Les comptes débiteur et créditeur doivent être différents");
+        }
+        
+        // Vérifier l'existence des deux comptes
+        Optional<CompteCourant> compteDebiteurOpt = compteCourantRepository.findByNumeroCompte(numeroCompteDebiteur);
+        if (compteDebiteurOpt.isEmpty()) {
+            throw new IllegalArgumentException("Compte débiteur non trouvé : " + numeroCompteDebiteur);
+        }
+        
+        Optional<CompteCourant> compteCrediteurOpt = compteCourantRepository.findByNumeroCompte(numeroCompteCrediteur);
+        if (compteCrediteurOpt.isEmpty()) {
+            throw new IllegalArgumentException("Compte créditeur non trouvé : " + numeroCompteCrediteur);
+        }
+        
+        CompteCourant compteDebiteur = compteDebiteurOpt.get();
+        CompteCourant compteCrediteur = compteCrediteurOpt.get();
+        
+        // Vérifier le statut des comptes
+        if (compteDebiteur.getStatut() != StatutCompte.OUVERT) {
+            throw new IllegalStateException("Le compte débiteur n'est pas actif");
+        }
+        
+        if (compteCrediteur.getStatut() != StatutCompte.OUVERT) {
+            throw new IllegalStateException("Le compte créditeur n'est pas actif");
+        }
+        
+        // Calculer le solde du compte débiteur
+        BigDecimal soldeAvantDebiteur = calculerSoldeCompte(compteDebiteur);
+        BigDecimal nouveauSoldeDebiteur = soldeAvantDebiteur.subtract(montant);
+        
+        // Vérifier le découvert autorisé du compte débiteur (admin peut bypasser les plafonds journaliers)
+        BigDecimal decouvertAutorise = BigDecimal.ZERO;
+        if (compteDebiteur.getTypeCompte() != null && compteDebiteur.getTypeCompte().getParametreActuel() != null) {
+            decouvertAutorise = compteDebiteur.getTypeCompte().getParametreActuel().getMontantDecouvertAutorise();
+        }
+        
+        if (nouveauSoldeDebiteur.compareTo(decouvertAutorise.negate()) < 0) {
+            throw new IllegalStateException("Solde insuffisant. Découvert autorisé : " + decouvertAutorise + " XOF");
+        }
+        
+        // Récupérer le type d'opération VIREMENT
+        Optional<TypeOperation> typeVirementOpt = typeOperationRepository.findByCode("VIREMENT");
+        if (typeVirementOpt.isEmpty()) {
+            throw new IllegalStateException("Type d'opération VIREMENT non configuré");
+        }
+        
+        // Calculer le solde du compte créditeur
+        BigDecimal soldeAvantCrediteur = calculerSoldeCompte(compteCrediteur);
+        
+        // Créer le mouvement de débit avec traçabilité admin
+        Mouvement mouvementDebit = Mouvement.builder()
+            .compte(compteDebiteur)
+            .typeOperation(typeVirementOpt.get())
+            .montant(montant.negate()) // Négatif pour le débit
+            .soldeAvantOperation(soldeAvantDebiteur)
+            .soldeApresOperation(nouveauSoldeDebiteur)
+            .dateOperation(LocalDateTime.now())
+            .libelleOperation(libelle != null ? libelle : "Virement admin émis vers " + numeroCompteCrediteur)
+            .reference(genererReference("VIR"))
+            .idAdministrateur(idAdministrateur.intValue()) // Traçabilité admin
+            .build();
+        
+        Mouvement mouvementDebitCree = mouvementRepository.save(mouvementDebit);
+        
+        // Créer le mouvement de crédit avec traçabilité admin
+        Mouvement mouvementCredit = Mouvement.builder()
+            .compte(compteCrediteur)
+            .typeOperation(typeVirementOpt.get())
+            .montant(montant) // Positif pour le crédit
+            .soldeAvantOperation(soldeAvantCrediteur)
+            .soldeApresOperation(soldeAvantCrediteur.add(montant))
+            .dateOperation(LocalDateTime.now())
+            .libelleOperation(libelle != null ? libelle : "Virement admin reçu de " + numeroCompteDebiteur)
+            .reference(genererReference("VIR"))
+            .idAdministrateur(idAdministrateur.intValue()) // Traçabilité admin
+            .build();
+        
+        Mouvement mouvementCreditCree = mouvementRepository.save(mouvementCredit);
+        
+        // Créer l'entité Virement qui lie les deux mouvements avec traçabilité admin
+        Virement virement = Virement.builder()
+            .montant(montant)
+            .mouvementDebit(mouvementDebitCree)
+            .mouvementCredit(mouvementCreditCree)
+            .dateVirement(LocalDateTime.now())
+            .idAdministrateur(idAdministrateur.intValue()) // Traçabilité admin
+            .build();
+        
+        Virement virementCree = virementRepository.save(virement);
+        
+        // Appliquer les intérêts de découvert si nécessaire après le virement
+        gererInteretsDecouvertAutomatique(compteDebiteur);
+        gererInteretsDecouvertAutomatique(compteCrediteur);
+        
+        // Créer le DTO de retour
+        VirementDTO virementDTO = VirementMapper.toDTO(virementCree);
+        virementDTO.setNumeroCompteDebiteur(numeroCompteDebiteur);
+        virementDTO.setNumeroCompteCrediteur(numeroCompteCrediteur);
+        virementDTO.setLibelle(libelle != null ? libelle : "Virement admin");
+        virementDTO.setStatut("EXECUTE");
+        
+        LOGGER.info("Traçabilité: Virement effectué par l'administrateur " + idAdministrateur + " - Référence débit: " + mouvementDebitCree.getReference());
+        
+        return virementDTO;
+    }
+
     /**
      * Calcule et applique les intérêts de découvert
      */

@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 /**
  * Servlet pour gérer l'historique des opérations sur les comptes épargne
  */
-@WebServlet(name = "HistoriqueEpargneServlet", urlPatterns = {"/epargne/historique"})
+@WebServlet(name = "AdminHistoriqueEpargneServlet", urlPatterns = {"/admin/epargne/historique"})
 public class HistoriqueEpargneServlet extends HttpServlet {
     
     private static final Logger LOGGER = Logger.getLogger(HistoriqueEpargneServlet.class.getName());

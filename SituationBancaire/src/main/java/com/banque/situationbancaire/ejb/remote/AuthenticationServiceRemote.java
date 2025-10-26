@@ -2,7 +2,6 @@ package com.banque.situationbancaire.ejb.remote;
 
 import com.banque.situationbancaire.dto.LoginRequestDTO;
 import com.banque.situationbancaire.dto.LoginResponseDTO;
-import com.banque.situationbancaire.session.UserSessionBean;
 
 import jakarta.ejb.Remote;
 
@@ -12,7 +11,7 @@ import jakarta.ejb.Remote;
 @Remote
 public interface AuthenticationServiceRemote {
     
-    LoginResponseDTO authenticate(LoginRequestDTO loginRequest, UserSessionBean userSession);
+    LoginResponseDTO authenticate(LoginRequestDTO loginRequest, UserSessionBeanRemote userSession);
     
-    void logout(UserSessionBean userSession);
+    void logout(UserSessionBeanRemote userSession);
 }

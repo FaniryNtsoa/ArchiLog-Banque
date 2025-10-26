@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Effectuer un Virement - Administration</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+
+        <div class="page-header">
+            <h1><i class="fas fa-exchange-alt text-info"></i> Effectuer un Virement</h1>
+            <div class="breadcrumb">
+                <span th:text="${moduleName}">Situation Bancaire</span> / 
+                <span>Opérations</span> /
+                <span>Virement</span>
+            </div>
+        </div>
+
+        <!-- Messages d'alerte -->
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span th:text="${errorMessage}">Message d'erreur</span>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}">Message de succès</span>
+        </div>
+
+        <!-- Formulaire de virement -->
+        <div class="form-container">
+            <form method="post" th:action="@{/admin/situation/virement}" class="admin-form">
+                <div class="form-section">
+                    <h3><i class="fas fa-users"></i> Comptes impliqués</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="compteDebiteurId">Compte débiteur (source) *</label>
+                            <select id="compteDebiteurId" name="compteDebiteurId" required onchange="updateCompteInfo('debiteur', this)">
+                                <option value="">-- Compte à débiter --</option>
+                                <option th:each="compte : ${comptes}" 
+                                        th:value="${compte.idCompte}" 
+                                        th:data-solde="${compte.solde}"
+                                        th:data-decouvert="${compte.decouvertAutorise ?: 0}"
+                                        th:data-numero="${compte.numeroCompte}"
+                                        th:text="${compte.numeroCompte + ' - ' + compte.nomClient + ' ' + compte.prenomClient + ' (Solde: ' + compte.solde + ' XOF)'}">
+                                    CC123456789 - RAZAFY Jean (Solde: 150,000 XOF)
+                                </option>
+                            </select>
+                            <div id="debiteurInfo" class="form-help" style="display: none;">
+                                <i class="fas fa-info-circle"></i>
+                                <div id="debiteurSolde">Solde disponible:</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="compteCrediteurId">Compte créditeur (destination) *</label>
+                            <select id="compteCrediteurId" name="compteCrediteurId" required onchange="updateCompteInfo('crediteur', this)">
+                                <option value="">-- Compte bénéficiaire --</option>
+                                <option th:each="compte : ${comptes}" 
+                                        th:value="${compte.idCompte}" 
+                                        th:data-numero="${compte.numeroCompte}"
+                                        th:text="${compte.numeroCompte + ' - ' + compte.nomClient + ' ' + compte.prenomClient + ' (Solde: ' + compte.solde + ' XOF)'}">
+                                    CC987654321 - RAKOTO Marie (Solde: 75,000 XOF)
+                                </option>
+                            </select>
+                            <div id="crediteurInfo" class="form-help" style="display: none;">
+                                <i class="fas fa-check-circle"></i>
+                                <div id="crediteurNumero">Compte sélectionné:</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${!hasComptes}" class="form-help error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Aucun compte disponible. Veuillez d'abord créer des comptes.
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fas fa-money-bill-wave"></i> Détails du virement</h3>
+                    
+                    <div class="form-group">
+                        <label for="montant">Montant du virement (XOF) *</label>
+                        <input type="number" 
+                               id="montant" 
+                               name="montant" 
+                               required 
+                               min="0.01" 
+                               max="10000000"
+                               step="0.01"
+                               placeholder="0.00">
+                        <div class="form-help">
+                            <i class="fas fa-info-circle"></i>
+                            Montant maximum autorisé : 10,000,000 XOF par virement
+                        </div>
+                        <div id="montantWarning" class="form-help error" style="display: none;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span id="warningText">Le montant dépasse le solde disponible</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="motif">Motif du virement</label>
+                        <textarea id="motif" 
+                                  name="motif" 
+                                  rows="3"
+                                  placeholder="Ex: Transfert de fonds, remboursement, etc."
+                                  maxlength="255"></textarea>
+                        <div class="form-help">
+                            <i class="fas fa-info-circle"></i>
+                            Optionnel - Précisez la nature ou la raison du virement
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Récapitulatif -->
+                <div id="recapitulatif" class="form-section recap" style="display: none;">
+                    <h3><i class="fas fa-clipboard-check"></i> Récapitulatif du virement</h3>
+                    <div class="recap-content">
+                        <div class="recap-row">
+                            <span>Compte débiteur:</span>
+                            <span id="recapDebiteur">-</span>
+                        </div>
+                        <div class="recap-row">
+                            <span>Compte créditeur:</span>
+                            <span id="recapCrediteur">-</span>
+                        </div>
+                        <div class="recap-row highlight">
+                            <span>Montant:</span>
+                            <span id="recapMontant">0 XOF</span>
+                        </div>
+                        <div class="recap-row">
+                            <span>Nouveau solde débiteur:</span>
+                            <span id="recapNouveauSolde">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-info" th:disabled="${!hasComptes}">
+                        <i class="fas fa-check"></i> Effectuer le virement
+                    </button>
+                    <a th:href="@{/admin/situation/comptes}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Informations importantes -->
+        <div class="info-box danger">
+            <h4><i class="fas fa-shield-alt"></i> Contrôles de sécurité</h4>
+            <ul>
+                <li><strong>Vérifiez soigneusement</strong> les comptes source et destination</li>
+                <li>Cette opération sera <strong>immédiatement définitive</strong></li>
+                <li>Les comptes doivent être <strong>différents</strong> et <strong>actifs</strong></li>
+                <li>Le solde source doit être <strong>suffisant</strong> (avec découvert si autorisé)</li>
+                <li>L'opération sera <strong>tracée avec votre identifiant</strong> administrateur</li>
+                <li>Les <strong>plafonds journaliers</strong> sont bypassés pour les admins</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let debiteurSolde = 0;
+        let debiteurDecouvert = 0;
+        let debiteurNumero = '';
+        let crediteurNumero = '';
+
+        function updateCompteInfo(type, selectElement) {
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            
+            if (type === 'debiteur') {
+                const debiteurInfo = document.getElementById('debiteurInfo');
+                if (selectedOption.value) {
+                    debiteurSolde = parseFloat(selectedOption.dataset.solde) || 0;
+                    debiteurDecouvert = parseFloat(selectedOption.dataset.decouvert) || 0;
+                    debiteurNumero = selectedOption.dataset.numero || '';
+                    
+                    const disponible = debiteurSolde + debiteurDecouvert;
+                    document.getElementById('debiteurSolde').textContent = 
+                        `Solde: ${debiteurSolde.toLocaleString('fr-FR')} XOF | Disponible: ${disponible.toLocaleString('fr-FR')} XOF`;
+                    
+                    debiteurInfo.style.display = 'block';
+                } else {
+                    debiteurInfo.style.display = 'none';
+                    debiteurSolde = 0;
+                    debiteurDecouvert = 0;
+                    debiteurNumero = '';
+                }
+            } else {
+                const crediteurInfo = document.getElementById('crediteurInfo');
+                if (selectedOption.value) {
+                    crediteurNumero = selectedOption.dataset.numero || '';
+                    document.getElementById('crediteurNumero').textContent = 
+                        `Compte ${crediteurNumero} sélectionné`;
+                    crediteurInfo.style.display = 'block';
+                } else {
+                    crediteurInfo.style.display = 'none';
+                    crediteurNumero = '';
+                }
+            }
+            
+            updateRecapitulatif();
+            checkMontant();
+            verifyDifferentAccounts();
+        }
+
+        function checkMontant() {
+            const montant = parseFloat(document.getElementById('montant').value) || 0;
+            const maxDisponible = debiteurSolde + debiteurDecouvert;
+            const montantWarning = document.getElementById('montantWarning');
+            
+            if (montant > 0 && debiteurSolde > 0 && montant > maxDisponible) {
+                document.getElementById('warningText').textContent = 
+                    `Le montant dépasse les fonds disponibles (${maxDisponible.toLocaleString('fr-FR')} XOF)`;
+                montantWarning.style.display = 'block';
+            } else {
+                montantWarning.style.display = 'none';
+            }
+            
+            updateRecapitulatif();
+        }
+
+        function verifyDifferentAccounts() {
+            const debiteurId = document.getElementById('compteDebiteurId').value;
+            const crediteurId = document.getElementById('compteCrediteurId').value;
+            
+            if (debiteurId && crediteurId && debiteurId === crediteurId) {
+                alert('Les comptes source et destination doivent être différents !');
+                document.getElementById('compteCrediteurId').value = '';
+                crediteurNumero = '';
+                document.getElementById('crediteurInfo').style.display = 'none';
+                updateRecapitulatif();
+            }
+        }
+
+        function updateRecapitulatif() {
+            const montant = parseFloat(document.getElementById('montant').value) || 0;
+            const recap = document.getElementById('recapitulatif');
+            
+            if (debiteurNumero && crediteurNumero && montant > 0) {
+                document.getElementById('recapDebiteur').textContent = debiteurNumero;
+                document.getElementById('recapCrediteur').textContent = crediteurNumero;
+                document.getElementById('recapMontant').textContent = `${montant.toLocaleString('fr-FR')} XOF`;
+                document.getElementById('recapNouveauSolde').textContent = 
+                    `${(debiteurSolde - montant).toLocaleString('fr-FR')} XOF`;
+                recap.style.display = 'block';
+            } else {
+                recap.style.display = 'none';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('montant').addEventListener('input', function(e) {
+            const value = parseFloat(e.target.value);
+            if (value > 10000000) {
+                e.target.setCustomValidity('Le montant ne peut pas dépasser 10,000,000 XOF');
+            } else if (value <= 0) {
+                e.target.setCustomValidity('Le montant doit être positif');
+            } else {
+                e.target.setCustomValidity('');
+            }
+            
+            checkMontant();
+        });
+
+        document.getElementById('compteDebiteurId').addEventListener('change', function() {
+            verifyDifferentAccounts();
+        });
+
+        document.getElementById('compteCrediteurId').addEventListener('change', function() {
+            verifyDifferentAccounts();
+        });
+
+        document.querySelector('.admin-form').addEventListener('submit', function(e) {
+            const compteDebiteurId = document.getElementById('compteDebiteurId').value;
+            const compteCrediteurId = document.getElementById('compteCrediteurId').value;
+            const montant = parseFloat(document.getElementById('montant').value || 0);
+            
+            if (!compteDebiteurId) {
+                alert('Veuillez sélectionner le compte débiteur');
+                e.preventDefault();
+                return false;
+            }
+            
+            if (!compteCrediteurId) {
+                alert('Veuillez sélectionner le compte créditeur');
+                e.preventDefault();
+                return false;
+            }
+            
+            if (compteDebiteurId === compteCrediteurId) {
+                alert('Les comptes source et destination doivent être différents');
+                e.preventDefault();
+                return false;
+            }
+            
+            if (montant <= 0) {
+                alert('Le montant doit être positif');
+                e.preventDefault();
+                return false;
+            }
+            
+            if (montant > 10000000) {
+                alert('Le montant ne peut pas dépasser 10,000,000 XOF');
+                e.preventDefault();
+                return false;
+            }
+            
+            const maxDisponible = debiteurSolde + debiteurDecouvert;
+            if (montant > maxDisponible) {
+                alert(`Fonds insuffisants. Disponible: ${maxDisponible.toLocaleString('fr-FR')} XOF`);
+                e.preventDefault();
+                return false;
+            }
+            
+            // Confirmation avec récapitulatif
+            const confirmation = `Confirmer le virement ?\n\n` +
+                `De: ${debiteurNumero}\n` +
+                `Vers: ${crediteurNumero}\n` +
+                `Montant: ${montant.toLocaleString('fr-FR')} XOF\n` +
+                `Nouveau solde source: ${(debiteurSolde - montant).toLocaleString('fr-FR')} XOF`;
+                
+            if (!confirm(confirmation)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Dropdown menu
+        document.querySelector('.dropdown-toggle').addEventListener('click', function(e) {
+            e.preventDefault();
+            const dropdown = this.parentElement;
+            dropdown.classList.toggle('show');
+        });
+
+        // Fermer dropdown si clic à l'extérieur
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav-dropdown')) {
+                document.querySelectorAll('.nav-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+        </div>
+    </div>
+</section>
+</body>
+</html>

@@ -70,4 +70,7 @@ public class Mouvement implements Serializable {
     @OneToOne(mappedBy = "mouvementCredit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     private Virement virementRecu;
+
+    @Column(name = "id_administrateur")
+    private Integer idAdministrateur;
 }

@@ -248,6 +248,33 @@ public class CompteCourantServiceImpl implements CompteCourantServiceRemote {
         }
     }
 
+    @Override
+    public List<CompteCourantDTO> findAll() {
+        LOGGER.info("Récupération de tous les comptes courants pour l'administration");
+        
+        List<CompteCourant> comptes = compteCourantRepository.findAll();
+        return comptes.stream()
+                .map(compte -> {
+                    CompteCourantDTO dto = CompteCourantMapper.toDTO(compte);
+                    dto.setSolde(calculerSoldeActuel(compte.getNumeroCompte()));
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public CompteCourantDTO creerCompteAdmin(CompteCourantDTO compteDTO, Long idClient, Long idTypeCompte, Long idAdministrateur) {
+        LOGGER.info("Création de compte ADMIN pour le client : " + idClient + " par admin " + idAdministrateur);
+        
+        // Déléguer à la méthode standard et ajouter la traçabilité
+        CompteCourantDTO compte = creerCompte(compteDTO, idClient, idTypeCompte);
+        
+        // TODO: Ajouter la traçabilité admin dans une table d'audit si nécessaire
+        LOGGER.info("Traçabilité: Compte créé par l'administrateur " + idAdministrateur);
+        
+        return compte;
+    }
+
     /**
      * Génère un numéro de compte unique
      */

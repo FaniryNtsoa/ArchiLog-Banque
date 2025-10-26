@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Comptes Courants - Administration</title>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body>
+    <header class="admin-header">
+        <div class="header-content">
+            <div class="admin-info">
+                <h1>Administration Bancaire</h1>
+                <span class="module-name" th:text="${moduleName}">Situation Bancaire</span>
+            </div>
+            <nav class="admin-nav">
+                <a th:href="@{/dashboard}" class="nav-link">Tableau de bord</a>
+                <a th:href="@{/logout}" class="nav-link logout">Déconnexion</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <div class="page-header">
+            <h2>Gestion des Comptes Courants</h2>
+            <div class="breadcrumb">
+                <a th:href="@{/dashboard}">Administration</a>
+                <span>/</span>
+                <span>Situation Bancaire</span>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div th:if="${successMessage}" class="alert alert-success">
+            <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <span th:text="${errorMessage}"></span>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🏦</div>
+                <div class="stat-content">
+                    <h3 th:text="${totalComptes}">0</h3>
+                    <p>Comptes Courants</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions principales -->
+        <div class="actions-bar">
+            <a th:href="@{/situation/depot}" class="btn btn-primary">
+                <span class="btn-icon">📥</span>
+                Effectuer un dépôt
+            </a>
+            <a th:href="@{/situation/retrait}" class="btn btn-warning">
+                <span class="btn-icon">📤</span>
+                Effectuer un retrait
+            </a>
+            <a th:href="@{/situation/virement}" class="btn btn-info">
+                <span class="btn-icon">🔄</span>
+                Effectuer un virement
+            </a>
+        </div>
+
+        <!-- Liste des comptes -->
+        <div class="content-section">
+            <div th:if="${comptes == null || comptes.empty}" class="no-data">
+                <div class="no-data-icon">🏦</div>
+                <h3>Aucun compte courant</h3>
+                <p>Il n'y a actuellement aucun compte courant dans le système.</p>
+            </div>
+
+            <div th:unless="${comptes == null || comptes.empty}" class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Numéro de compte</th>
+                            <th>Client</th>
+                            <th>Type de compte</th>
+                            <th>Solde</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="compte : ${comptes}">
+                            <td class="compte-numero" th:text="${compte.numeroCompte}"></td>
+                            <td class="client-info">
+                                <div class="client-nom" th:text="|${compte.client?.prenom} ${compte.client?.nom}|"></div>
+                            </td>
+                            <td class="type-compte" th:text="${compte.typeCompte?.libelle}"></td>
+                            <td class="solde" th:text="${#numbers.formatCurrency(compte.solde)}"></td>
+                            <td>
+                                <span class="status-badge status-active">ACTIF</span>
+                            </td>
+                            <td class="actions">
+                                <a th:href="@{/situation/historique(compteId=${compte.id})}" 
+                                   class="btn btn-sm btn-secondary" title="Voir l'historique">
+                                    📋
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Résumé des soldes -->
+        <div th:unless="${comptes == null || comptes.empty}" class="summary-section">
+            <h3>Résumé des soldes</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">Total des soldes :</span>
+                    <span class="summary-value" 
+                          th:text="${#numbers.formatCurrency(comptes.stream().mapToDouble(c -> c.solde.doubleValue()).sum())}">
+                    </span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Nombre de comptes :</span>
+                    <span class="summary-value" th:text="${comptes.size()}"></span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Auto-hide success/error messages
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+
+        // Highlight row on hover
+        document.querySelectorAll('.data-table tbody tr').forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = '#f8f9fa';
+            });
+            row.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = '';
+            });
+        });
+    </script>
+</body>
+</html>

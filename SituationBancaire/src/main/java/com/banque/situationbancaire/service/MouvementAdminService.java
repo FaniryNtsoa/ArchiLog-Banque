@@ -7,7 +7,7 @@ import com.banque.situationbancaire.entity.TypeOperation;
 import com.banque.situationbancaire.repository.MouvementRepository;
 import com.banque.situationbancaire.repository.CompteCourantRepository;
 import com.banque.situationbancaire.repository.TypeOperationRepository;
-import com.banque.situationbancaire.session.UserSessionBean;
+import com.banque.situationbancaire.ejb.remote.UserSessionBeanRemote;
 import com.banque.situationbancaire.ejb.remote.MouvementAdminServiceRemote;
 
 import jakarta.ejb.EJB;
@@ -40,7 +40,7 @@ public class MouvementAdminService implements MouvementAdminServiceRemote {
     /**
      * Crée un mouvement (INSERT) avec vérification des permissions
      */
-    public MouvementDTO create(MouvementDTO mouvementDTO, UserSessionBean userSession) {
+    public MouvementDTO create(MouvementDTO mouvementDTO, UserSessionBeanRemote userSession) {
         // Vérifier la permission INSERT
         if (!authorizationService.checkPermission(userSession, TABLE_MOUVEMENT, "INSERT")) {
             throw new SecurityException("Vous n'avez pas la permission d'insérer un mouvement");
@@ -61,6 +61,7 @@ public class MouvementAdminService implements MouvementAdminServiceRemote {
                 .dateOperation(LocalDateTime.now())
                 .reference(mouvementDTO.getReference())
                 .libelleOperation(mouvementDTO.getLibelleOperation())
+                .idAdministrateur(userSession.getUtilisateur().getIdUtilisateur())
                 .build();
 
         mouvement = mouvementRepository.save(mouvement);
@@ -70,7 +71,7 @@ public class MouvementAdminService implements MouvementAdminServiceRemote {
     /**
      * Récupère un mouvement par ID (SELECT) avec vérification des permissions
      */
-    public Optional<MouvementDTO> findById(Long id, UserSessionBean userSession) {
+    public Optional<MouvementDTO> findById(Long id, UserSessionBeanRemote userSession) {
         // Vérifier la permission SELECT
         if (!authorizationService.checkPermission(userSession, TABLE_MOUVEMENT, "SELECT")) {
             throw new SecurityException("Vous n'avez pas la permission de consulter les mouvements");
@@ -83,7 +84,7 @@ public class MouvementAdminService implements MouvementAdminServiceRemote {
     /**
      * Récupère tous les mouvements (SELECT) avec vérification des permissions
      */
-    public List<MouvementDTO> findAll(UserSessionBean userSession) {
+    public List<MouvementDTO> findAll(UserSessionBeanRemote userSession) {
         // Vérifier la permission SELECT
         if (!authorizationService.checkPermission(userSession, TABLE_MOUVEMENT, "SELECT")) {
             throw new SecurityException("Vous n'avez pas la permission de consulter les mouvements");
@@ -97,7 +98,7 @@ public class MouvementAdminService implements MouvementAdminServiceRemote {
     /**
      * Met à jour un mouvement (UPDATE) avec vérification des permissions
      */
-    public MouvementDTO update(MouvementDTO mouvementDTO, UserSessionBean userSession) {
+    public MouvementDTO update(MouvementDTO mouvementDTO, UserSessionBeanRemote userSession) {
         // Vérifier la permission UPDATE
         if (!authorizationService.checkPermission(userSession, TABLE_MOUVEMENT, "UPDATE")) {
             throw new SecurityException("Vous n'avez pas la permission de modifier un mouvement");
@@ -132,7 +133,7 @@ public class MouvementAdminService implements MouvementAdminServiceRemote {
     /**
      * Supprime un mouvement (DELETE) avec vérification des permissions
      */
-    public void delete(Long id, UserSessionBean userSession) {
+    public void delete(Long id, UserSessionBeanRemote userSession) {
         // Vérifier la permission DELETE
         if (!authorizationService.checkPermission(userSession, TABLE_MOUVEMENT, "DELETE")) {
             throw new SecurityException("Vous n'avez pas la permission de supprimer un mouvement");
@@ -153,6 +154,7 @@ public class MouvementAdminService implements MouvementAdminServiceRemote {
                 .dateOperation(mouvement.getDateOperation())
                 .reference(mouvement.getReference())
                 .libelleOperation(mouvement.getLibelleOperation())
+                .idAdministrateur(mouvement.getIdAdministrateur())
                 .build();
     }
 }

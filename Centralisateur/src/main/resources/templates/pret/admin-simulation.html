@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Simulation de Prêt - Administration</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+
+        <div class="page-header">
+            <h1><i class="fas fa-calculator"></i> Simulation de Prêt</h1>
+            <div class="breadcrumb">
+                <span th:text="${moduleName}">Prêt</span> / 
+                <span>Simulation</span>
+            </div>
+        </div>
+
+        <!-- Messages d'alerte -->
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span th:text="${errorMessage}">Message d'erreur</span>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}">Message de succès</span>
+        </div>
+
+        <!-- Formulaire de simulation -->
+        <div class="form-container">
+            <form method="post" th:action="@{/admin/pret/simulation}" class="admin-form" id="simulationForm">
+                <div class="form-section">
+                    <h3><i class="fas fa-cogs"></i> Paramètres de simulation</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="montant">Montant souhaité (XOF) *</label>
+                            <input type="number" 
+                                   id="montant" 
+                                   name="montant" 
+                                   required 
+                                   min="50000" 
+                                   max="50000000" 
+                                   step="1000"
+                                   placeholder="Ex: 1000000">
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Montant entre 50 000 et 50 000 000 XOF
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="duree">Durée (mois) *</label>
+                            <input type="number" 
+                                   id="duree" 
+                                   name="duree" 
+                                   required 
+                                   min="3" 
+                                   max="360" 
+                                   placeholder="Ex: 24">
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Durée entre 3 et 360 mois
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="typePretId">Type de prêt *</label>
+                            <select id="typePretId" name="typePretId" required>
+                                <option value="">-- Sélectionnez un type --</option>
+                                <option th:each="type : ${typesPrets}" 
+                                        th:value="${type.idTypePret}" 
+                                        th:text="${type.libelle + ' (' + type.tauxInteretAnnuel + '% / an)'}">
+                                    Prêt Personnel (12% / an)
+                                </option>
+                            </select>
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Le taux varie selon le type de prêt
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tauxPersonnalise">Taux personnalisé (% / an)</label>
+                            <input type="number" 
+                                   id="tauxPersonnalise" 
+                                   name="tauxPersonnalise" 
+                                   step="0.01" 
+                                   min="0.1" 
+                                   max="50"
+                                   placeholder="Ex: 8.5">
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Optionnel - Remplace le taux du type sélectionné
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-calculator"></i> Calculer la simulation
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-eraser"></i> Réinitialiser
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Résultats de simulation -->
+        <div th:if="${hasSimulation}" class="results-container">
+            <div class="simulation-results">
+                <h3><i class="fas fa-chart-line"></i> Résultats de la simulation</h3>
+                
+                <div class="results-summary">
+                    <div class="result-card">
+                        <div class="result-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="result-content">
+                            <div class="result-label">Montant demandé</div>
+                            <div class="result-value" th:text="${#numbers.formatDecimal(simulationResultat.montantDemande, 0, 'COMMA', 0, 'POINT') + ' XOF'}">
+                                1,000,000 XOF
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card highlight">
+                        <div class="result-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="result-content">
+                            <div class="result-label">Mensualité</div>
+                            <div class="result-value" th:text="${#numbers.formatDecimal(simulationResultat.mensualite, 0, 'COMMA', 2, 'POINT') + ' XOF'}">
+                                45,678.90 XOF
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="result-content">
+                            <div class="result-label">Durée</div>
+                            <div class="result-value" th:text="${simulationResultat.dureeMois + ' mois'}">
+                                24 mois
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="result-content">
+                            <div class="result-label">Taux annuel</div>
+                            <div class="result-value" th:text="${simulationResultat.tauxInteretAnnuel + '%'}">
+                                12%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cost-breakdown">
+                    <h4><i class="fas fa-receipt"></i> Détail des coûts</h4>
+                    <table class="cost-table">
+                        <tr>
+                            <td>Montant total à rembourser</td>
+                            <td class="amount" th:text="${#numbers.formatDecimal(simulationResultat.montantTotalDu, 0, 'COMMA', 2, 'POINT') + ' XOF'}">
+                                1,096,293.60 XOF
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Total des intérêts</td>
+                            <td class="amount interest" th:text="${#numbers.formatDecimal(simulationResultat.totalInterets, 0, 'COMMA', 2, 'POINT') + ' XOF'}">
+                                96,293.60 XOF
+                            </td>
+                        </tr>
+                        <tr th:if="${simulationResultat.fraisDossier != null && simulationResultat.fraisDossier > 0}">
+                            <td>Frais de dossier</td>
+                            <td class="amount fees" th:text="${#numbers.formatDecimal(simulationResultat.fraisDossier, 0, 'COMMA', 2, 'POINT') + ' XOF'}">
+                                5,000.00 XOF
+                            </td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Coût total du crédit</strong></td>
+                            <td class="amount total" th:text="${#numbers.formatDecimal(simulationResultat.coutTotalCredit, 0, 'COMMA', 2, 'POINT') + ' XOF'}">
+                                101,293.60 XOF
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Tableau d'amortissement -->
+                <div th:if="${simulationResultat.tableauAmortissement != null && !simulationResultat.tableauAmortissement.empty}" 
+                     class="amortissement-container">
+                    <h4><i class="fas fa-table"></i> Tableau d'amortissement</h4>
+                    
+                    <div class="table-controls">
+                        <button onclick="toggleAmortissement()" class="btn btn-outline" id="toggleAmortissementBtn">
+                            <i class="fas fa-eye"></i> Afficher le tableau complet
+                        </button>
+                        <button onclick="exportAmortissement()" class="btn btn-outline">
+                            <i class="fas fa-download"></i> Exporter CSV
+                        </button>
+                    </div>
+
+                    <div class="amortissement-table-container" id="amortissementTable" style="display: none;">
+                        <table class="amortissement-table">
+                            <thead>
+                                <tr>
+                                    <th>N°</th>
+                                    <th>Date</th>
+                                    <th>Capital restant</th>
+                                    <th>Intérêts</th>
+                                    <th>Capital amorti</th>
+                                    <th>Mensualité</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="echeance : ${simulationResultat.tableauAmortissement}">
+                                    <td th:text="${echeance.numeroEcheance}">1</td>
+                                    <td th:text="${#temporals.format(echeance.dateEcheance, 'dd/MM/yyyy')}">01/11/2025</td>
+                                    <td th:text="${#numbers.formatDecimal(echeance.capitalRestant, 0, 'COMMA', 2, 'POINT')}">958,333.33</td>
+                                    <td th:text="${#numbers.formatDecimal(echeance.montantInteret, 0, 'COMMA', 2, 'POINT')}">10,000.00</td>
+                                    <td th:text="${#numbers.formatDecimal(echeance.montantCapital, 0, 'COMMA', 2, 'POINT')}">35,678.90</td>
+                                    <td th:text="${#numbers.formatDecimal(echeance.montantEcheance, 0, 'COMMA', 2, 'POINT')}">45,678.90</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="simulation-actions">
+                    <a th:href="@{/admin/pret/nouveau}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Créer une demande de prêt
+                    </a>
+                    <button onclick="printSimulation()" class="btn btn-outline">
+                        <i class="fas fa-print"></i> Imprimer
+                    </button>
+                    <button onclick="saveSimulation()" class="btn btn-outline">
+                        <i class="fas fa-save"></i> Sauvegarder
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raccourcis rapides -->
+        <div class="quick-actions">
+            <h4><i class="fas fa-bolt"></i> Actions rapides</h4>
+            <div class="action-buttons">
+                <a th:href="@{/admin/pret/gestion}" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> Voir tous les prêts
+                </a>
+                <a th:href="@{/admin/pret/nouveau}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouvelle demande
+                </a>
+                <a th:href="@{/admin/pret/remboursement}" class="btn btn-info">
+                    <i class="fas fa-money-bill-wave"></i> Enregistrer un remboursement
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Validation du formulaire
+        document.getElementById('simulationForm').addEventListener('submit', function(e) {
+            const montant = parseFloat(document.getElementById('montant').value);
+            const duree = parseInt(document.getElementById('duree').value);
+            const typePret = document.getElementById('typePretId').value;
+            
+            if (!montant || montant < 50000 || montant > 50000000) {
+                e.preventDefault();
+                alert('Le montant doit être entre 50 000 et 50 000 000 XOF');
+                return;
+            }
+            
+            if (!duree || duree < 3 || duree > 360) {
+                e.preventDefault();
+                alert('La durée doit être entre 3 et 360 mois');
+                return;
+            }
+            
+            if (!typePret) {
+                e.preventDefault();
+                alert('Veuillez sélectionner un type de prêt');
+                return;
+            }
+        });
+
+        // Réinitialiser le formulaire
+        function resetForm() {
+            document.getElementById('simulationForm').reset();
+            // Masquer les résultats s'ils sont affichés
+            const results = document.querySelector('.results-container');
+            if (results) {
+                results.style.display = 'none';
+            }
+        }
+
+        // Afficher/masquer le tableau d'amortissement
+        function toggleAmortissement() {
+            const table = document.getElementById('amortissementTable');
+            const btn = document.getElementById('toggleAmortissementBtn');
+            
+            if (table.style.display === 'none') {
+                table.style.display = 'block';
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i> Masquer le tableau';
+            } else {
+                table.style.display = 'none';
+                btn.innerHTML = '<i class="fas fa-eye"></i> Afficher le tableau complet';
+            }
+        }
+
+        // Export CSV du tableau d'amortissement
+        function exportAmortissement() {
+            const table = document.querySelector('.amortissement-table');
+            if (!table) return;
+            
+            let csv = [];
+            const rows = table.querySelectorAll('tr');
+            
+            for (let row of rows) {
+                const cols = row.querySelectorAll('th, td');
+                const csvRow = Array.from(cols).map(col => col.textContent.trim()).join(';');
+                csv.push(csvRow);
+            }
+            
+            const csvContent = '\uFEFF' + csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `tableau_amortissement_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Impression de la simulation
+        function printSimulation() {
+            const simulationContent = document.querySelector('.simulation-results').innerHTML;
+            const printWindow = window.open('', '_blank');
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Simulation de Prêt</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .result-card { display: inline-block; margin: 10px; padding: 15px; border: 1px solid #ddd; }
+                        .cost-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        .cost-table td { border: 1px solid #ddd; padding: 8px; }
+                        .total-row td { font-weight: bold; background: #f5f5f5; }
+                        .amortissement-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        .amortissement-table th, .amortissement-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+                        .amortissement-table th { background: #f5f5f5; }
+                        @media print { body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <h1>Simulation de Prêt</h1>
+                    <p>Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</p>
+                    ${simulationContent}
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }
+
+        // Sauvegarder la simulation
+        function saveSimulation() {
+            // Implémentation à définir selon les besoins
+            alert('Fonction de sauvegarde à implémenter');
+        }
+
+        // Calcul automatique lors des modifications
+        document.getElementById('montant').addEventListener('input', updateEstimation);
+        document.getElementById('duree').addEventListener('input', updateEstimation);
+        document.getElementById('typePretId').addEventListener('change', updateEstimation);
+
+        function updateEstimation() {
+            const montant = parseFloat(document.getElementById('montant').value);
+            const duree = parseInt(document.getElementById('duree').value);
+            const typePretSelect = document.getElementById('typePretId');
+            
+            if (montant && duree && typePretSelect.value) {
+                // Estimation rapide (approximation)
+                const tauxAnnuel = 12; // Taux par défaut
+                const tauxMensuel = tauxAnnuel / 100 / 12;
+                const mensualite = (montant * tauxMensuel) / (1 - Math.pow(1 + tauxMensuel, -duree));
+                
+                // Affichage de l'estimation dans le titre du bouton
+                const btn = document.querySelector('button[type="submit"]');
+                if (mensualite && !isNaN(mensualite)) {
+                    btn.innerHTML = `<i class="fas fa-calculator"></i> Calculer (~${mensualite.toLocaleString('fr-FR')} XOF/mois)`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+        </div>
+    </div>
+</section>
+</body>
+</html>

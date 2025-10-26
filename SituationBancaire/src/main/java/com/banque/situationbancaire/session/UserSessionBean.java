@@ -1,8 +1,8 @@
 package com.banque.situationbancaire.session;
 
-import com.banque.situationbancaire.entity.ActionRole;
-import com.banque.situationbancaire.entity.Direction;
-import com.banque.situationbancaire.entity.Utilisateur;
+import com.banque.situationbancaire.dto.ActionRoleDTO;
+import com.banque.situationbancaire.dto.DirectionDTO;
+import com.banque.situationbancaire.dto.UtilisateurDTO;
 import com.banque.situationbancaire.ejb.remote.UserSessionBeanRemote;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,18 +29,18 @@ public class UserSessionBean implements UserSessionBeanRemote, Serializable {
     private String sessionId;
     
     // Utilisateur connecté
-    private Utilisateur utilisateur;
+    private UtilisateurDTO utilisateur;
     
     // Liste des directions (si nécessaire pour vérification)
-    private List<Direction> directions;
+    private List<DirectionDTO> directions;
     
     // Liste des permissions (actions autorisées pour le rôle de l'utilisateur)
-    private List<ActionRole> actionsAutorisees;
+    private List<ActionRoleDTO> actionsAutorisees;
     
     /**
      * Initialise la session utilisateur
      */
-    public void initSession(Utilisateur user, List<Direction> dirs, List<ActionRole> actions) {
+    public void initSession(UtilisateurDTO user, List<DirectionDTO> dirs, List<ActionRoleDTO> actions) {
         this.sessionId = UUID.randomUUID().toString();
         this.utilisateur = user;
         this.directions = dirs != null ? new ArrayList<>(dirs) : new ArrayList<>();
@@ -67,10 +67,10 @@ public class UserSessionBean implements UserSessionBeanRemote, Serializable {
      * Vérifie si l'utilisateur appartient à une direction spécifique
      */
     public boolean isInDirection(Integer idDirection) {
-        if (utilisateur == null || utilisateur.getDirection() == null) {
+        if (utilisateur == null || utilisateur.getIdDirection() == null) {
             return false;
         }
-        return utilisateur.getDirection().getIdDirection().equals(idDirection);
+        return utilisateur.getIdDirection().equals(idDirection);
     }
 
     /**
@@ -84,10 +84,7 @@ public class UserSessionBean implements UserSessionBeanRemote, Serializable {
      * Récupère l'ID de la direction de l'utilisateur
      */
     public Integer getUserDirectionId() {
-        if (utilisateur != null && utilisateur.getDirection() != null) {
-            return utilisateur.getDirection().getIdDirection();
-        }
-        return null;
+        return utilisateur != null ? utilisateur.getIdDirection() : null;
     }
 
     /**
@@ -106,5 +103,19 @@ public class UserSessionBean implements UserSessionBeanRemote, Serializable {
      */
     public boolean isValid() {
         return this.utilisateur != null && this.sessionId != null;
+    }
+
+    /**
+     * Récupère l'utilisateur de la session
+     */
+    public UtilisateurDTO getUtilisateur() {
+        return this.utilisateur;
+    }
+
+    /**
+     * Récupère la liste des actions autorisées pour l'utilisateur
+     */
+    public List<ActionRoleDTO> getActionsAutorisees() {
+        return this.actionsAutorisees != null ? new ArrayList<>(this.actionsAutorisees) : new ArrayList<>();
     }
 }

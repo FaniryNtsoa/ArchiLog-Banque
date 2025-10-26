@@ -12,8 +12,6 @@
     --danger-color: #ef4444;
     --warning-color: #f59e0b;
 
-/* Utility container present in markup but missing */
-.align-items-center { align-items: center; }
     --info-color: #06b6d4;
     
     --gold-color: #fbbf24;
@@ -1602,4 +1600,417 @@ body {
 
 .text-muted {
     color: var(--gray-500);
+}
+
+/* ==========================================================================
+   Classes manquantes pour les templates
+   ========================================================================== */
+
+/* Utility classes */
+.align-items-center { align-items: center; }
+.justify-content-between { justify-content: space-between; }
+.flex-wrap { flex-wrap: wrap; }
+.gap-1 { gap: 0.5rem; }
+.gap-2 { gap: 1rem; }
+
+/* Admin specific styles for dashboard */
+.admin-header {
+    background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 100%);
+    color: white;
+    padding: 1rem 2rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.admin-info h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.admin-welcome {
+    font-size: 0.875rem;
+    color: var(--gray-300);
+}
+
+.admin-nav .nav-link {
+    color: var(--gray-300);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    font-weight: 500;
+}
+
+.admin-nav .nav-link:hover {
+    color: white;
+    background-color: var(--gray-700);
+}
+
+.admin-nav .nav-link.logout {
+    background: var(--danger-color);
+    color: white;
+}
+
+.admin-nav .nav-link.logout:hover {
+    background: #c53030;
+}
+
+.admin-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    min-height: calc(100vh - 120px);
+}
+
+/* Modules grid for dashboard */
+.modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.module-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+    border-left: 4px solid var(--primary-color);
+}
+
+.module-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.module-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.module-icon {
+    font-size: 2.5rem;
+}
+
+.module-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.module-description p {
+    color: var(--gray-600);
+    margin-bottom: 1.5rem;
+}
+
+.module-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.module-actions .btn {
+    justify-content: flex-start;
+    text-decoration: none;
+}
+
+.btn-icon {
+    margin-right: 0.5rem;
+}
+
+/* Stats section */
+.stats-section {
+    margin-bottom: 3rem;
+}
+
+.stats-section h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 1.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-icon {
+    font-size: 2rem;
+}
+
+.stat-content h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 0.25rem 0;
+}
+
+.stat-content p {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+/* Quick actions */
+.quick-actions h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 1.5rem;
+}
+
+.action-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    color: var(--gray-800);
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+}
+
+.action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    color: var(--primary-color);
+}
+
+.action-icon {
+    font-size: 2.5rem;
+}
+
+.action-card h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.action-card p {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+/* Login page specific styles */
+.login-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    padding: 2.5rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 0.5rem;
+}
+
+.login-header p {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+.alert-error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.login-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+.login-footer p {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.modules-list {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.module-badge {
+    background: var(--gray-100);
+    color: var(--gray-700);
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Compte card specific styles */
+.comptes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.compte-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    border: 2px solid rgba(217, 177, 91, 0.2);
+    transition: var(--transition);
+}
+
+.compte-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--gold-color);
+    box-shadow: var(--shadow-lg);
+}
+
+.compte-card__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(217, 177, 91, 0.1), rgba(217, 177, 91, 0.05));
+    border-bottom: 1px solid rgba(217, 177, 91, 0.2);
+}
+
+.compte-card__icon {
+    font-size: 2.5rem;
+}
+
+.compte-card__title h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--gold-color);
+    font-weight: 600;
+}
+
+.compte-numero {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    font-family: 'Courier New', monospace;
+}
+
+.compte-card__body {
+    padding: 1.5rem;
+}
+
+.solde-display {
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(217, 177, 91, 0.15), rgba(217, 177, 91, 0.05));
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.solde-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    margin-bottom: 0.5rem;
+}
+
+.solde-montant {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold-color);
+}
+
+.compte-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.compte-info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: var(--gray-500);
+    font-size: 0.875rem;
+}
+
+.info-value {
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.compte-card__footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--gray-100);
+}
+
+/* Actions panels */
+.actions-panel {
+    margin-top: 3rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--gold-color);
+    font-weight: 700;
+}
+
+/* Fix color variables */
+:root {
+    --color-gold: var(--gold-color);
 }

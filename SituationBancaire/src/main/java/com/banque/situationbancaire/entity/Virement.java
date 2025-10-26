@@ -46,4 +46,7 @@ public class Virement implements Serializable {
     @Column(name = "date_virement", nullable = false)
     @Builder.Default
     private LocalDateTime dateVirement = LocalDateTime.now();
+
+    @Column(name = "id_administrateur")
+    private Integer idAdministrateur;
 }

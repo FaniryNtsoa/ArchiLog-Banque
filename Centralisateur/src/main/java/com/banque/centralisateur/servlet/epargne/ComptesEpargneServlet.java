@@ -23,10 +23,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Servlet pour gérer les comptes épargne
- * Affiche la liste des comptes épargne d'un client
+ * Servlet admin pour gérer les comptes épargne
+ * Affiche la liste de tous les comptes épargne pour l'administration
  */
-@WebServlet(name = "ComptesEpargneServlet", urlPatterns = {"/epargne/comptes"})
+@WebServlet(name = "EpargneComptesServlet", urlPatterns = {"/epargne/comptes"})
 public class ComptesEpargneServlet extends HttpServlet {
     
     private static final Logger LOGGER = Logger.getLogger(ComptesEpargneServlet.class.getName());
@@ -47,13 +47,12 @@ public class ComptesEpargneServlet extends HttpServlet {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("clientId") == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
+        if (session == null || session.getAttribute("userSessionBean") == null) {
+            response.sendRedirect(request.getContextPath() + "/admin-login.html");
             return;
         }
         
-        Long clientId = (Long) session.getAttribute("clientId");
-        LOGGER.info("Affichage des comptes épargne pour le client: " + clientId);
+        LOGGER.info("Affichage de tous les comptes épargne - Interface Admin");
         
         // Créer le contexte Thymeleaf
         IWebExchange webExchange = this.application.buildExchange(request, response);
@@ -61,7 +60,7 @@ public class ComptesEpargneServlet extends HttpServlet {
         
         try {
             // Récupérer les comptes épargne du client
-            List<JsonObject> comptes = epargneClient.getComptesClient(clientId);
+            List<JsonObject> comptes = epargneClient.getAllComptes();
             
             // Préparer les données pour l'affichage
             List<CompteEpargneView> comptesView = new ArrayList<>();

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Nouvelle Demande de Prêt - Administration</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+
+        <div class="page-header">
+            <h1><i class="fas fa-plus"></i> Nouvelle Demande de Prêt</h1>
+            <div class="breadcrumb">
+                <span th:text="${moduleName}">Prêt</span> / 
+                <span>Nouvelle demande</span>
+            </div>
+        </div>
+
+        <!-- Messages d'alerte -->
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span th:text="${errorMessage}">Message d'erreur</span>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}">Message de succès</span>
+        </div>
+
+        <!-- Informations client sélectionné -->
+        <div th:if="${clientSelectionne}" class="client-info-selected">
+            <h4><i class="fas fa-user"></i> Client sélectionné</h4>
+            <div class="client-details">
+                <span class="client-name" th:text="${clientSelectionne.nom + ' ' + clientSelectionne.prenom}">RAKOTO Jean</span>
+                <span class="client-email" th:text="${clientSelectionne.email}">jean.rakoto@email.com</span>
+                <span class="client-phone" th:text="${clientSelectionne.telephone}">+261 34 12 345 67</span>
+                <span class="client-revenue">
+                    Revenus: <strong th:text="${#numbers.formatDecimal(clientSelectionne.revenuMensuel, 0, 'COMMA', 0, 'POINT') + ' XOF'}">500,000 XOF</strong>
+                </span>
+            </div>
+        </div>
+
+        <!-- Formulaire principal -->
+        <div class="form-container">
+            <form method="post" th:action="@{/admin/pret/nouveau}" class="admin-form" id="demandePretForm">
+                <!-- Section Client -->
+                <div class="form-section">
+                    <h3><i class="fas fa-user"></i> Informations client</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="clientId">Client *</label>
+                            <select id="clientId" name="clientId" required onchange="loadClientInfo()">
+                                <option value="">-- Sélectionnez un client --</option>
+                                <option th:each="client : ${clients}" 
+                                        th:value="${client.idClient}" 
+                                        th:selected="${client.idClient == clientIdSelectionne}"
+                                        th:text="${client.nom + ' ' + client.prenom + ' (' + client.email + ')'}">
+                                    RAKOTO Jean (jean.rakoto@email.com)
+                                </option>
+                            </select>
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Les informations du client sélectionné s'afficheront automatiquement
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="clientInfoDisplay" class="client-info-display" style="display: none;">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Revenus mensuels</label>
+                                <span id="clientRevenu">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Charges existantes</label>
+                                <span id="clientCharges">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Capacité d'endettement</label>
+                                <span id="clientCapacite">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Prêt -->
+                <div class="form-section">
+                    <h3><i class="fas fa-file-contract"></i> Paramètres du prêt</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="typePretId">Type de prêt *</label>
+                            <select id="typePretId" name="typePretId" required onchange="updateLoanConstraints()">
+                                <option value="">-- Sélectionnez un type --</option>
+                                <option th:each="type : ${typesPrets}" 
+                                        th:value="${type.idTypePret}" 
+                                        th:data-taux="${type.tauxInteretAnnuel}"
+                                        th:data-montant-min="${type.montantMin}"
+                                        th:data-montant-max="${type.montantMax}"
+                                        th:data-duree-min="${type.dureeMin}"
+                                        th:data-duree-max="${type.dureeMax}"
+                                        th:text="${type.libelle + ' (' + type.tauxInteretAnnuel + '% / an)'}">
+                                    Prêt Personnel (12% / an)
+                                </option>
+                            </select>
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Les contraintes de montant et durée s'adapteront au type choisi
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="montantDemande">Montant demandé (XOF) *</label>
+                            <input type="number" 
+                                   id="montantDemande" 
+                                   name="montantDemande" 
+                                   required 
+                                   min="50000" 
+                                   max="50000000" 
+                                   step="1000"
+                                   oninput="calculateEstimate()"
+                                   placeholder="Ex: 1000000">
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                <span id="montantConstraints">Montant entre 50 000 et 50 000 000 XOF</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dureeMois">Durée (mois) *</label>
+                            <input type="number" 
+                                   id="dureeMois" 
+                                   name="dureeMois" 
+                                   required 
+                                   min="3" 
+                                   max="360"
+                                   oninput="calculateEstimate()"
+                                   placeholder="Ex: 24">
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                <span id="dureeConstraints">Durée entre 3 et 360 mois</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tauxInteretAnnuel">Taux d'intérêt (% / an)</label>
+                            <input type="number" 
+                                   id="tauxInteretAnnuel" 
+                                   name="tauxInteretAnnuel" 
+                                   step="0.01" 
+                                   min="0.1" 
+                                   max="50"
+                                   readonly
+                                   placeholder="Automatique">
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Taux défini automatiquement selon le type de prêt
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estimation en temps réel -->
+                <div class="estimation-container" id="estimationContainer" style="display: none;">
+                    <h3><i class="fas fa-calculator"></i> Estimation</h3>
+                    <div class="estimation-grid">
+                        <div class="estimation-item">
+                            <label>Mensualité estimée</label>
+                            <span id="mensualiteEstimee" class="estimation-value">-</span>
+                        </div>
+                        <div class="estimation-item">
+                            <label>Total à rembourser</label>
+                            <span id="totalEstime" class="estimation-value">-</span>
+                        </div>
+                        <div class="estimation-item">
+                            <label>Coût du crédit</label>
+                            <span id="coutEstime" class="estimation-value">-</span>
+                        </div>
+                        <div class="estimation-item">
+                            <label>Taux d'endettement</label>
+                            <span id="tauxEndettement" class="estimation-value">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation et informations complémentaires -->
+                <div class="form-section">
+                    <h3><i class="fas fa-clipboard-check"></i> Validation</h3>
+                    
+                    <div class="validation-checks" id="validationChecks">
+                        <div class="validation-item" id="checkMontant">
+                            <i class="fas fa-circle-notch fa-spin"></i>
+                            <span>Vérification du montant...</span>
+                        </div>
+                        <div class="validation-item" id="checkDuree">
+                            <i class="fas fa-circle-notch fa-spin"></i>
+                            <span>Vérification de la durée...</span>
+                        </div>
+                        <div class="validation-item" id="checkEndettement">
+                            <i class="fas fa-circle-notch fa-spin"></i>
+                            <span>Vérification du taux d'endettement...</span>
+                        </div>
+                        <div class="validation-item" id="checkCapacite">
+                            <i class="fas fa-circle-notch fa-spin"></i>
+                            <span>Vérification de la capacité de remboursement...</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="commentaire">Commentaire administratif</label>
+                            <textarea id="commentaire" 
+                                      name="commentaire" 
+                                      rows="3" 
+                                      placeholder="Commentaires ou notes spécifiques à cette demande..."></textarea>
+                            <div class="field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Optionnel - Notes internes pour le suivi de la demande
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i> Créer la demande de prêt
+                    </button>
+                    <a th:href="@{/admin/pret/simulation}" class="btn btn-secondary">
+                        <i class="fas fa-calculator"></i> Faire une simulation d'abord
+                    </a>
+                    <a th:href="@{/admin/pret/gestion}" class="btn btn-outline">
+                        <i class="fas fa-arrow-left"></i> Retour à la gestion
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Raccourcis rapides -->
+        <div class="quick-actions">
+            <h4><i class="fas fa-bolt"></i> Actions rapides</h4>
+            <div class="action-buttons">
+                <a th:href="@{/admin/pret/simulation}" class="btn btn-info">
+                    <i class="fas fa-calculator"></i> Faire une simulation
+                </a>
+                <a th:href="@{/admin/pret/gestion}" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> Voir tous les prêts
+                </a>
+                <a th:href="@{/admin/situation/nouveau-compte}" class="btn btn-outline">
+                    <i class="fas fa-plus"></i> Créer un nouveau client
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let clientsData = {};
+
+        // Initialiser les données des clients
+        window.addEventListener('load', function() {
+            // Récupérer les données clients (simulation - à remplacer par un appel AJAX)
+            /*[# th:each="client : ${clients}"]*/
+            clientsData[/*[[${client.idClient}]]*/ '1'] = {
+                nom: /*[[${client.nom}]]*/ 'RAKOTO',
+                prenom: /*[[${client.prenom}]]*/ 'Jean',
+                email: /*[[${client.email}]]*/ 'jean.rakoto@email.com',
+                revenuMensuel: /*[[${client.revenuMensuel}]]*/ 500000,
+                chargesMensuelles: /*[[${client.chargesMensuelles}]]*/ 150000
+            };
+            /*[/]*/
+        });
+
+        // Charger les informations du client sélectionné
+        function loadClientInfo() {
+            const clientId = document.getElementById('clientId').value;
+            const clientDisplay = document.getElementById('clientInfoDisplay');
+            
+            if (clientId && clientsData[clientId]) {
+                const client = clientsData[clientId];
+                const capaciteEndettement = client.revenuMensuel * 0.33;
+                const capaciteDisponible = capaciteEndettement - client.chargesMensuelles;
+                
+                document.getElementById('clientRevenu').textContent = 
+                    client.revenuMensuel.toLocaleString('fr-FR') + ' XOF';
+                document.getElementById('clientCharges').textContent = 
+                    client.chargesMensuelles.toLocaleString('fr-FR') + ' XOF';
+                document.getElementById('clientCapacite').textContent = 
+                    Math.max(0, capaciteDisponible).toLocaleString('fr-FR') + ' XOF';
+                
+                clientDisplay.style.display = 'block';
+            } else {
+                clientDisplay.style.display = 'none';
+            }
+            
+            calculateEstimate(); // Recalculer l'estimation
+        }
+
+        // Mettre à jour les contraintes selon le type de prêt
+        function updateLoanConstraints() {
+            const typePretSelect = document.getElementById('typePretId');
+            const selectedOption = typePretSelect.options[typePretSelect.selectedIndex];
+            
+            if (selectedOption && selectedOption.value) {
+                const taux = selectedOption.getAttribute('data-taux');
+                const montantMin = selectedOption.getAttribute('data-montant-min');
+                const montantMax = selectedOption.getAttribute('data-montant-max');
+                const dureeMin = selectedOption.getAttribute('data-duree-min');
+                const dureeMax = selectedOption.getAttribute('data-duree-max');
+                
+                // Mettre à jour le taux
+                document.getElementById('tauxInteretAnnuel').value = taux;
+                
+                // Mettre à jour les contraintes de montant
+                document.getElementById('montantDemande').setAttribute('min', montantMin);
+                document.getElementById('montantDemande').setAttribute('max', montantMax);
+                document.getElementById('montantConstraints').textContent = 
+                    `Montant entre ${parseInt(montantMin).toLocaleString('fr-FR')} et ${parseInt(montantMax).toLocaleString('fr-FR')} XOF`;
+                
+                // Mettre à jour les contraintes de durée
+                document.getElementById('dureeMois').setAttribute('min', dureeMin);
+                document.getElementById('dureeMois').setAttribute('max', dureeMax);
+                document.getElementById('dureeConstraints').textContent = 
+                    `Durée entre ${dureeMin} et ${dureeMax} mois`;
+            }
+            
+            calculateEstimate(); // Recalculer l'estimation
+        }
+
+        // Calculer l'estimation en temps réel
+        function calculateEstimate() {
+            const clientId = document.getElementById('clientId').value;
+            const montant = parseFloat(document.getElementById('montantDemande').value);
+            const duree = parseInt(document.getElementById('dureeMois').value);
+            const taux = parseFloat(document.getElementById('tauxInteretAnnuel').value);
+            
+            const estimationContainer = document.getElementById('estimationContainer');
+            
+            if (montant && duree && taux && clientId && clientsData[clientId]) {
+                const tauxMensuel = taux / 100 / 12;
+                const mensualite = (montant * tauxMensuel) / (1 - Math.pow(1 + tauxMensuel, -duree));
+                const totalArembourser = mensualite * duree;
+                const coutCredit = totalArembourser - montant;
+                
+                const client = clientsData[clientId];
+                const nouvellesCharges = client.chargesMensuelles + mensualite;
+                const tauxEndettementPct = (nouvellesCharges / client.revenuMensuel) * 100;
+                
+                // Affichage des estimations
+                document.getElementById('mensualiteEstimee').textContent = 
+                    mensualite.toLocaleString('fr-FR', {maximumFractionDigits: 2}) + ' XOF';
+                document.getElementById('totalEstime').textContent = 
+                    totalArembourser.toLocaleString('fr-FR', {maximumFractionDigits: 2}) + ' XOF';
+                document.getElementById('coutEstime').textContent = 
+                    coutCredit.toLocaleString('fr-FR', {maximumFractionDigits: 2}) + ' XOF';
+                document.getElementById('tauxEndettement').textContent = 
+                    tauxEndettementPct.toFixed(2) + '%';
+                
+                // Colorisation du taux d'endettement
+                const tauxElement = document.getElementById('tauxEndettement');
+                tauxElement.className = 'estimation-value';
+                if (tauxEndettementPct > 33) {
+                    tauxElement.classList.add('danger');
+                } else if (tauxEndettementPct > 25) {
+                    tauxElement.classList.add('warning');
+                } else {
+                    tauxElement.classList.add('success');
+                }
+                
+                estimationContainer.style.display = 'block';
+                
+                // Validation en temps réel
+                validateForm(montant, duree, taux, mensualite, tauxEndettementPct, client);
+                
+            } else {
+                estimationContainer.style.display = 'none';
+                resetValidation();
+            }
+        }
+
+        // Validation du formulaire
+        function validateForm(montant, duree, taux, mensualite, tauxEndettement, client) {
+            const typePretSelect = document.getElementById('typePretId');
+            const selectedOption = typePretSelect.options[typePretSelect.selectedIndex];
+            
+            let isValid = true;
+            
+            // Vérification du montant
+            if (selectedOption && selectedOption.value) {
+                const montantMin = parseInt(selectedOption.getAttribute('data-montant-min'));
+                const montantMax = parseInt(selectedOption.getAttribute('data-montant-max'));
+                
+                updateValidationItem('checkMontant', 
+                    montant >= montantMin && montant <= montantMax,
+                    `Montant entre ${montantMin.toLocaleString('fr-FR')} et ${montantMax.toLocaleString('fr-FR')} XOF`);
+                
+                isValid = isValid && (montant >= montantMin && montant <= montantMax);
+            }
+            
+            // Vérification de la durée
+            if (selectedOption && selectedOption.value) {
+                const dureeMin = parseInt(selectedOption.getAttribute('data-duree-min'));
+                const dureeMax = parseInt(selectedOption.getAttribute('data-duree-max'));
+                
+                updateValidationItem('checkDuree', 
+                    duree >= dureeMin && duree <= dureeMax,
+                    `Durée entre ${dureeMin} et ${dureeMax} mois`);
+                
+                isValid = isValid && (duree >= dureeMin && duree <= dureeMax);
+            }
+            
+            // Vérification du taux d'endettement
+            const endettementOk = tauxEndettement <= 33;
+            updateValidationItem('checkEndettement', 
+                endettementOk,
+                `Taux d'endettement: ${tauxEndettement.toFixed(2)}% (max 33%)`);
+            isValid = isValid && endettementOk;
+            
+            // Vérification de la capacité de remboursement
+            const capaciteRemboursement = client.revenuMensuel - client.chargesMensuelles;
+            const seuilCapacite = mensualite * 1.3;
+            const capaciteOk = capaciteRemboursement >= seuilCapacite;
+            
+            updateValidationItem('checkCapacite', 
+                capaciteOk,
+                `Capacité: ${capaciteRemboursement.toLocaleString('fr-FR')} XOF (requis: ${seuilCapacite.toLocaleString('fr-FR')} XOF)`);
+            isValid = isValid && capaciteOk;
+            
+            // Activation/désactivation du bouton de soumission
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = !isValid;
+            
+            if (isValid) {
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Créer la demande de prêt';
+                submitBtn.classList.remove('disabled');
+            } else {
+                submitBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Critères non respectés';
+                submitBtn.classList.add('disabled');
+            }
+        }
+
+        // Mettre à jour un item de validation
+        function updateValidationItem(itemId, isValid, message) {
+            const item = document.getElementById(itemId);
+            const icon = item.querySelector('i');
+            const text = item.querySelector('span');
+            
+            item.className = 'validation-item';
+            if (isValid) {
+                item.classList.add('valid');
+                icon.className = 'fas fa-check-circle';
+            } else {
+                item.classList.add('invalid');
+                icon.className = 'fas fa-times-circle';
+            }
+            
+            text.textContent = message;
+        }
+
+        // Réinitialiser la validation
+        function resetValidation() {
+            const items = ['checkMontant', 'checkDuree', 'checkEndettement', 'checkCapacite'];
+            items.forEach(itemId => {
+                const item = document.getElementById(itemId);
+                item.className = 'validation-item';
+                item.querySelector('i').className = 'fas fa-circle-notch fa-spin';
+                item.querySelector('span').textContent = 'En attente de paramètres...';
+            });
+            
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        // Validation finale du formulaire
+        document.getElementById('demandePretForm').addEventListener('submit', function(e) {
+            const clientId = document.getElementById('clientId').value;
+            const montant = parseFloat(document.getElementById('montantDemande').value);
+            const duree = parseInt(document.getElementById('dureeMois').value);
+            const typePret = document.getElementById('typePretId').value;
+            
+            if (!clientId) {
+                e.preventDefault();
+                alert('Veuillez sélectionner un client');
+                return;
+            }
+            
+            if (!montant || montant <= 0) {
+                e.preventDefault();
+                alert('Veuillez saisir un montant valide');
+                return;
+            }
+            
+            if (!duree || duree <= 0) {
+                e.preventDefault();
+                alert('Veuillez saisir une durée valide');
+                return;
+            }
+            
+            if (!typePret) {
+                e.preventDefault();
+                alert('Veuillez sélectionner un type de prêt');
+                return;
+            }
+        });
+
+        // Initialisation
+        resetValidation();
+    </script>
+</body>
+</html>
+        </div>
+    </div>
+</section>
+</body>
+</html>

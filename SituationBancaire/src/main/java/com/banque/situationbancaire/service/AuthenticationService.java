@@ -3,14 +3,18 @@ package com.banque.situationbancaire.service;
 import com.banque.situationbancaire.dto.LoginRequestDTO;
 import com.banque.situationbancaire.dto.LoginResponseDTO;
 import com.banque.situationbancaire.dto.UtilisateurDTO;
+import com.banque.situationbancaire.dto.DirectionDTO;
+import com.banque.situationbancaire.dto.ActionRoleDTO;
 import com.banque.situationbancaire.entity.ActionRole;
 import com.banque.situationbancaire.entity.Direction;
 import com.banque.situationbancaire.entity.Utilisateur;
 import com.banque.situationbancaire.repository.ActionRoleRepository;
 import com.banque.situationbancaire.repository.DirectionRepository;
 import com.banque.situationbancaire.repository.UtilisateurRepository;
-import com.banque.situationbancaire.session.UserSessionBean;
+import com.banque.situationbancaire.ejb.remote.UserSessionBeanRemote;
 import com.banque.situationbancaire.ejb.remote.AuthenticationServiceRemote;
+
+import java.util.stream.Collectors;
 
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
@@ -38,7 +42,7 @@ public class AuthenticationService implements AuthenticationServiceRemote {
      * @param userSession Session utilisateur (Stateful bean)
      * @return Réponse de connexion
      */
-    public LoginResponseDTO authenticate(LoginRequestDTO loginRequest, UserSessionBean userSession) {
+    public LoginResponseDTO authenticate(LoginRequestDTO loginRequest, UserSessionBeanRemote userSession) {
         try {
             // Vérifier les identifiants
             Optional<Utilisateur> utilisateurOpt = utilisateurRepository.findByLogin(loginRequest.getLogin());
@@ -66,10 +70,7 @@ public class AuthenticationService implements AuthenticationServiceRemote {
             // Récupérer les actions autorisées pour le rôle de l'utilisateur
             List<ActionRole> actionsAutorisees = actionRoleRepository.findByRole(utilisateur.getRoleUtilisateur());
 
-            // Initialiser la session utilisateur (Stateful bean)
-            userSession.initSession(utilisateur, directions, actionsAutorisees);
-
-            // Préparer le DTO utilisateur
+            // Convertir les entités en DTOs pour l'interface Remote
             UtilisateurDTO utilisateurDTO = UtilisateurDTO.builder()
                     .idUtilisateur(utilisateur.getIdUtilisateur())
                     .loginUtilisateur(utilisateur.getLoginUtilisateur())
@@ -77,6 +78,25 @@ public class AuthenticationService implements AuthenticationServiceRemote {
                     .idDirection(utilisateur.getDirection() != null ? utilisateur.getDirection().getIdDirection() : null)
                     .niveauDirection(utilisateur.getDirection() != null ? utilisateur.getDirection().getNiveau() : null)
                     .build();
+
+            List<DirectionDTO> directionsDTO = directions.stream()
+                    .map(dir -> DirectionDTO.builder()
+                            .idDirection(dir.getIdDirection())
+                            .niveau(dir.getNiveau())
+                            .build())
+                    .collect(Collectors.toList());
+
+            List<ActionRoleDTO> actionsDTO = actionsAutorisees.stream()
+                    .map(action -> ActionRoleDTO.builder()
+                            .idActionRole(action.getIdActionRole())
+                            .nomTable(action.getNomTable())
+                            .actionAutorisee(action.getActionAutorisee())
+                            .roleRequis(action.getRoleRequis())
+                            .build())
+                    .collect(Collectors.toList());
+
+            // Initialiser la session utilisateur (Stateful bean) avec les DTOs
+            userSession.initSession(utilisateurDTO, directionsDTO, actionsDTO);
 
             return LoginResponseDTO.builder()
                     .success(true)
@@ -96,7 +116,7 @@ public class AuthenticationService implements AuthenticationServiceRemote {
     /**
      * Déconnecte un utilisateur et détruit sa session
      */
-    public void logout(UserSessionBean userSession) {
+    public void logout(UserSessionBeanRemote userSession) {
         if (userSession != null) {
             userSession.destroy();
         }

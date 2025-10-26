@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Gestion des Comptes - Administration</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</head>
+<body th:replace="~{base :: layout(~{::title}, ~{::section})}">
+<section>
+    <div class="page-content">
+        <div class="container">
+
+<section>
+    <div class="page-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span class="page-icon">🏦</span> 
+                    Gestion des Comptes Courants
+                </h1>
+                <p class="page-subtitle">
+                    <span th:text="${moduleName}">Situation Bancaire</span> - Administration des comptes
+                </p>
+            </div>
+        </div>
+
+        <!-- Messages d'alerte -->
+        <div th:if="${errorMessage}" class="alert alert-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span th:text="${errorMessage}">Message d'erreur</span>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}">Message de succès</span>
+        </div>
+
+        <!-- Barre d'actions principale -->
+        <div class="main-actions">
+            <div class="action-buttons">
+                <a th:href="@{/admin/situation/nouveau-compte}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Créer un nouveau compte
+                </a>
+                <button onclick="refreshData()" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Actualiser
+                </button>
+                <button onclick="exportAccounts()" class="btn btn-outline">
+                    <i class="fas fa-download"></i> Exporter
+                </button>
+            </div>
+        </div>
+
+        <!-- Filtres et recherche -->
+        <div class="filter-container">
+            <form method="get" class="filter-form">
+                <div class="filter-section">
+                    <h3><i class="fas fa-search"></i> Recherche et filtres</h3>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="search">Recherche</label>
+                            <input type="text" 
+                                   id="search" 
+                                   name="search" 
+                                   th:value="${searchTerm}"
+                                   placeholder="Nom, prénom, numéro de compte...">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="soldeMin">Solde minimum</label>
+                            <input type="number" 
+                                   id="soldeMin" 
+                                   name="soldeMin" 
+                                   th:value="${soldeMin}"
+                                   placeholder="0"
+                                   step="1000">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="soldeMax">Solde maximum</label>
+                            <input type="number" 
+                                   id="soldeMax" 
+                                   name="soldeMax" 
+                                   th:value="${soldeMax}"
+                                   placeholder="10000000"
+                                   step="1000">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="dateCreation">Date création (après)</label>
+                            <input type="date" 
+                                   id="dateCreation" 
+                                   name="dateCreation" 
+                                   th:value="${dateCreation}">
+                        </div>
+
+                        <div class="filter-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Rechercher
+                            </button>
+                            <a th:href="@{/admin/situation/comptes}" class="btn btn-secondary">
+                                <i class="fas fa-eraser"></i> Réinitialiser
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Statistiques rapides -->
+        <div class="stats-container" th:if="${hasComptes}">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" th:text="${#lists.size(comptes)}">42</div>
+                        <div class="stat-label">Comptes actifs</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" th:text="${#numbers.formatDecimal(soldeTotalFormate, 0, 'COMMA', 0, 'POINT')}">1,250,000</div>
+                        <div class="stat-label">Solde total (XOF)</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" th:text="${#numbers.formatDecimal(soldeMoyenFormate, 0, 'COMMA', 0, 'POINT')}">29,762</div>
+                        <div class="stat-label">Solde moyen (XOF)</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" th:text="${comptesRecents}">7</div>
+                        <div class="stat-label">Créés ce mois</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des comptes -->
+        <div class="results-container">
+            <div class="results-header">
+                <h3>
+                    <i class="fas fa-list"></i> 
+                    <span th:if="${hasComptes}">
+                        <span th:text="${#lists.size(comptes)}">0</span> compte(s) trouvé(s)
+                    </span>
+                    <span th:unless="${hasComptes}">Aucun compte trouvé</span>
+                </h3>
+                
+                <div class="view-options">
+                    <button onclick="toggleView('table')" class="btn btn-sm active" id="tableViewBtn">
+                        <i class="fas fa-table"></i> Table
+                    </button>
+                    <button onclick="toggleView('cards')" class="btn btn-sm" id="cardsViewBtn">
+                        <i class="fas fa-th-large"></i> Cartes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Vue tableau -->
+            <div th:if="${hasComptes}" class="accounts-table-container" id="tableView">
+                <table class="accounts-table" id="accountsTable">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a th:href="@{/admin/situation/comptes(sort='numeroCompte', order=${currentOrder == 'asc' ? 'desc' : 'asc'})}">
+                                    Numéro de compte
+                                    <i th:if="${currentSort == 'numeroCompte'}" 
+                                       th:class="${'fas fa-sort-' + (currentOrder == 'asc' ? 'up' : 'down')}"></i>
+                                    <i th:unless="${currentSort == 'numeroCompte'}" class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a th:href="@{/admin/situation/comptes(sort='nomClient', order=${currentOrder == 'asc' ? 'desc' : 'asc'})}">
+                                    Client
+                                    <i th:if="${currentSort == 'nomClient'}" 
+                                       th:class="${'fas fa-sort-' + (currentOrder == 'asc' ? 'up' : 'down')}"></i>
+                                    <i th:unless="${currentSort == 'nomClient'}" class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a th:href="@{/admin/situation/comptes(sort='solde', order=${currentOrder == 'asc' ? 'desc' : 'asc'})}">
+                                    Solde
+                                    <i th:if="${currentSort == 'solde'}" 
+                                       th:class="${'fas fa-sort-' + (currentOrder == 'asc' ? 'up' : 'down')}"></i>
+                                    <i th:unless="${currentSort == 'solde'}" class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a th:href="@{/admin/situation/comptes(sort='dateCreation', order=${currentOrder == 'asc' ? 'desc' : 'asc'})}">
+                                    Date création
+                                    <i th:if="${currentSort == 'dateCreation'}" 
+                                       th:class="${'fas fa-sort-' + (currentOrder == 'asc' ? 'up' : 'down')}"></i>
+                                    <i th:unless="${currentSort == 'dateCreation'}" class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="compte : ${comptes}">
+                            <td>
+                                <span class="account-number" th:text="${compte.numeroCompte}">CC123456789</span>
+                            </td>
+                            <td>
+                                <div class="client-info">
+                                    <strong th:text="${compte.nomClient + ' ' + compte.prenomClient}">RAZAFY Jean</strong>
+                                    <br>
+                                    <small th:text="${compte.emailClient}">jean.razafy@email.com</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="balance" 
+                                      th:classappend="${compte.solde < 0 ? 'negative' : (compte.solde > 1000000 ? 'high' : '')}"
+                                      th:text="${#numbers.formatDecimal(compte.solde, 0, 'COMMA', 2, 'POINT') + ' XOF'}">
+                                    150,000.00 XOF
+                                </span>
+                            </td>
+                            <td th:text="${#temporals.format(compte.dateCreation, 'dd/MM/yyyy')}">
+                                15/10/2025
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a th:href="@{'/admin/situation/historique?compteId=' + ${compte.idCompte}}" 
+                                       class="btn btn-sm btn-info" title="Voir l'historique">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                    <a th:href="@{'/admin/situation/depot?compteId=' + ${compte.idCompte}}" 
+                                       class="btn btn-sm btn-success" title="Effectuer un dépôt">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </a>
+                                    <a th:href="@{'/admin/situation/retrait?compteId=' + ${compte.idCompte}}" 
+                                       class="btn btn-sm btn-warning" title="Effectuer un retrait">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </a>
+                                    <a th:href="@{'/admin/situation/virement?compteSourceId=' + ${compte.idCompte}}" 
+                                       class="btn btn-sm btn-primary" title="Effectuer un virement">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Vue cartes -->
+            <div th:if="${hasComptes}" class="accounts-cards-container" id="cardsView" style="display: none;">
+                <div class="cards-grid">
+                    <div th:each="compte : ${comptes}" class="account-card">
+                        <div class="card-header">
+                            <span class="account-number" th:text="${compte.numeroCompte}">CC123456789</span>
+                            <span class="card-status" 
+                                  th:classappend="${compte.solde < 0 ? 'negative' : 'positive'}">
+                                <i th:class="${compte.solde < 0 ? 'fas fa-exclamation-triangle' : 'fas fa-check-circle'}"></i>
+                            </span>
+                        </div>
+                        
+                        <div class="card-client">
+                            <h4 th:text="${compte.nomClient + ' ' + compte.prenomClient}">RAZAFY Jean</h4>
+                            <p th:text="${compte.emailClient}">jean.razafy@email.com</p>
+                        </div>
+                        
+                        <div class="card-balance">
+                            <label>Solde actuel</label>
+                            <span class="balance" 
+                                  th:classappend="${compte.solde < 0 ? 'negative' : (compte.solde > 1000000 ? 'high' : '')}"
+                                  th:text="${#numbers.formatDecimal(compte.solde, 0, 'COMMA', 2, 'POINT') + ' XOF'}">
+                                150,000.00 XOF
+                            </span>
+                        </div>
+                        
+                        <div class="card-info">
+                            <div class="info-item">
+                                <i class="fas fa-calendar"></i>
+                                <span th:text="'Créé le ' + ${#temporals.format(compte.dateCreation, 'dd/MM/yyyy')}">
+                                    Créé le 15/10/2025
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-actions">
+                            <a th:href="@{'/admin/situation/historique?compteId=' + ${compte.idCompte}}" 
+                               class="btn btn-sm btn-info">
+                                <i class="fas fa-history"></i> Historique
+                            </a>
+                            <div class="action-group">
+                                <a th:href="@{'/admin/situation/depot?compteId=' + ${compte.idCompte}}" 
+                                   class="btn btn-sm btn-success">
+                                    <i class="fas fa-arrow-down"></i>
+                                </a>
+                                <a th:href="@{'/admin/situation/retrait?compteId=' + ${compte.idCompte}}" 
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-arrow-up"></i>
+                                </a>
+                                <a th:href="@{'/admin/situation/virement?compteSourceId=' + ${compte.idCompte}}" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aucun résultat -->
+            <div th:unless="${hasComptes}" class="no-results">
+                <div class="no-results-content">
+                    <i class="fas fa-search fa-3x"></i>
+                    <h4>Aucun compte trouvé</h4>
+                    <p>Aucun compte ne correspond aux critères de recherche.</p>
+                    <div class="suggestions">
+                        <h5>Suggestions :</h5>
+                        <ul>
+                            <li>Vérifiez les filtres appliqués</li>
+                            <li>Modifiez les critères de recherche</li>
+                            <li>Élargissez la fourchette de soldes</li>
+                            <li><a th:href="@{/admin/situation/nouveau-compte}">Créer un nouveau compte</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raccourcis rapides -->
+        <div class="quick-actions">
+            <h4><i class="fas fa-bolt"></i> Actions rapides</h4>
+            <div class="action-buttons">
+                <a th:href="@{/admin/situation/nouveau-compte}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouveau compte
+                </a>
+                <a th:href="@{/admin/situation/depot}" class="btn btn-success">
+                    <i class="fas fa-arrow-down"></i> Dépôt rapide
+                </a>
+                <a th:href="@{/admin/situation/retrait}" class="btn btn-warning">
+                    <i class="fas fa-arrow-up"></i> Retrait rapide
+                </a>
+                <a th:href="@{/admin/situation/virement}" class="btn btn-info">
+                    <i class="fas fa-exchange-alt"></i> Virement rapide
+                </a>
+                <a th:href="@{/admin/situation/historique}" class="btn btn-secondary">
+                    <i class="fas fa-history"></i> Voir l'historique général
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Changement de vue (tableau/cartes)
+        function toggleView(viewType) {
+            const tableView = document.getElementById('tableView');
+            const cardsView = document.getElementById('cardsView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const cardsBtn = document.getElementById('cardsViewBtn');
+
+            if (viewType === 'table') {
+                tableView.style.display = 'block';
+                cardsView.style.display = 'none';
+                tableBtn.classList.add('active');
+                cardsBtn.classList.remove('active');
+            } else {
+                tableView.style.display = 'none';
+                cardsView.style.display = 'block';
+                tableBtn.classList.remove('active');
+                cardsBtn.classList.add('active');
+            }
+
+            localStorage.setItem('accountsViewPreference', viewType);
+        }
+
+        // Restaurer la préférence de vue
+        window.addEventListener('load', function() {
+            const preference = localStorage.getItem('accountsViewPreference');
+            if (preference) {
+                toggleView(preference);
+            }
+        });
+
+        // Actualiser les données
+        function refreshData() {
+            window.location.reload();
+        }
+
+        // Export CSV
+        function exportAccounts() {
+            const table = document.getElementById('accountsTable');
+            let csv = [];
+            
+            // En-têtes
+            csv.push(['Numéro de compte', 'Nom', 'Prénom', 'Email', 'Solde (XOF)', 'Date création'].join(';'));
+            
+            // Données
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const numeroCompte = cells[0].textContent.trim();
+                const clientInfo = cells[1].querySelector('strong').textContent.trim().split(' ');
+                const nom = clientInfo[0] || '';
+                const prenom = clientInfo.slice(1).join(' ') || '';
+                const email = cells[1].querySelector('small').textContent.trim();
+                const solde = cells[2].textContent.replace(' XOF', '').trim();
+                const dateCreation = cells[3].textContent.trim();
+                
+                csv.push([numeroCompte, nom, prenom, email, solde, dateCreation].join(';'));
+            });
+            
+            // Téléchargement
+            const csvContent = '\uFEFF' + csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `comptes_bancaires_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Validation des filtres
+        document.getElementById('soldeMin').addEventListener('change', function() {
+            const soldeMin = parseFloat(this.value);
+            const soldeMaxInput = document.getElementById('soldeMax');
+            const soldeMax = parseFloat(soldeMaxInput.value);
+            
+            if (soldeMin && soldeMax && soldeMin > soldeMax) {
+                alert('Le solde minimum ne peut pas être supérieur au solde maximum');
+                this.value = '';
+            }
+        });
+
+        document.getElementById('soldeMax').addEventListener('change', function() {
+            const soldeMin = parseFloat(document.getElementById('soldeMin').value);
+            const soldeMax = parseFloat(this.value);
+            
+            if (soldeMin && soldeMax && soldeMin > soldeMax) {
+                alert('Le solde maximum ne peut pas être inférieur au solde minimum');
+                this.value = '';
+            }
+        });
+
+        // Recherche en temps réel
+        let searchTimeout;
+        document.getElementById('search').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.length >= 3 || this.value.length === 0) {
+                    document.querySelector('.filter-form').submit();
+                }
+            }, 500);
+        });
+
+        // Dropdown menu
+        document.querySelector('.dropdown-toggle').addEventListener('click', function(e) {
+            e.preventDefault();
+            const dropdown = this.parentElement;
+            dropdown.classList.toggle('show');
+        });
+
+        // Fermer dropdown si clic à l'extérieur
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav-dropdown')) {
+                document.querySelectorAll('.nav-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+    </script>
+
+        </div>
+    </div>
+</section>
+</body>
+</html>

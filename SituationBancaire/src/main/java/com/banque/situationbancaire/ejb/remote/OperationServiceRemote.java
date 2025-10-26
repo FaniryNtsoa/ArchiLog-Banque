@@ -23,6 +23,16 @@ public interface OperationServiceRemote {
     MouvementDTO effectuerDepot(String numeroCompte, BigDecimal montant, String libelle);
     
     /**
+     * Effectue un dépôt sur un compte avec traçabilité administrateur
+     * @param numeroCompte Numéro du compte
+     * @param montant Montant à déposer
+     * @param libelle Libellé de l'opération
+     * @param idAdministrateur ID de l'administrateur effectuant l'opération
+     * @return L'opération créée
+     */
+    MouvementDTO effectuerDepotAdmin(String numeroCompte, BigDecimal montant, String libelle, Long idAdministrateur);
+    
+    /**
      * Effectue un retrait sur un compte
      * @param numeroCompte Numéro du compte
      * @param montant Montant à retirer
@@ -30,6 +40,16 @@ public interface OperationServiceRemote {
      * @return L'opération créée
      */
     MouvementDTO effectuerRetrait(String numeroCompte, BigDecimal montant, String libelle);
+    
+    /**
+     * Effectue un retrait sur un compte avec traçabilité administrateur
+     * @param numeroCompte Numéro du compte
+     * @param montant Montant à retirer
+     * @param libelle Libellé de l'opération
+     * @param idAdministrateur ID de l'administrateur effectuant l'opération
+     * @return L'opération créée
+     */
+    MouvementDTO effectuerRetraitAdmin(String numeroCompte, BigDecimal montant, String libelle, Long idAdministrateur);
     
     /**
      * Effectue un virement entre deux comptes
@@ -40,6 +60,17 @@ public interface OperationServiceRemote {
      * @return Le virement créé
      */
     VirementDTO effectuerVirement(String numeroCompteDebiteur, String numeroCompteCrediteur, BigDecimal montant, String libelle);
+    
+    /**
+     * Effectue un virement entre deux comptes avec traçabilité administrateur
+     * @param numeroCompteDebiteur Compte à débiter
+     * @param numeroCompteCrediteur Compte à créditer
+     * @param montant Montant du virement
+     * @param libelle Libellé du virement
+     * @param idAdministrateur ID de l'administrateur effectuant l'opération
+     * @return Le virement créé
+     */
+    VirementDTO effectuerVirementAdmin(String numeroCompteDebiteur, String numeroCompteCrediteur, BigDecimal montant, String libelle, Long idAdministrateur);
     
     /**
      * Récupère l'historique des mouvements d'un compte

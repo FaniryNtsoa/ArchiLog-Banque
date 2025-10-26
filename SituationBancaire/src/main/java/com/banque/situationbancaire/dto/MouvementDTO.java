@@ -26,6 +26,7 @@ public class MouvementDTO implements Serializable {
     private LocalDateTime dateOperation;
     private String reference;
     private String libelleOperation;
+    private Integer idAdministrateur;
     
     // Anciens champs pour compatibilité
     private String typeOperation;
